@@ -2,12 +2,12 @@ import cryptogr as cg
 import time
 
 
-class Blockchain:
+class Blockchain:    # класс для цепочки блоков
     def __init__(self):
         self.blocks=[]
 
 
-class Block:
+class Block:     # класс для блоков
     def __init__(self, ind, previousHash, txs, creator):
         self.i = ind
         self.prevhash = previousHash
@@ -16,7 +16,7 @@ class Block:
         self.creator = creator
         self.update()
 
-    def append(self, txn):
+    def append(self, txn):    # функция для добавления транзакции в блок
         self.txs.append(txn)
         self.update()
 
@@ -26,7 +26,7 @@ class Block:
             h = h + str(t.hash)
         self.head = cg.h(str(h))
 
-    def isValid(self, previndex):
+    def isValid(self, previndex):    # проверка валидности каждой транзакции блока и соответствия хэша
         h = str(self.i) + str(self.prevhash) + str(self.timestamp)
         for t in self.txs:
             h = h + str(t.hash)
@@ -58,7 +58,7 @@ class Transaction(dict):
             x = x + str(f)
         self.hash = cg.h(str(x))
 
-    def isvalid(self, bch):
+    def isvalid(self, bch):    # проверка наличия требуемых денег в транзакциях, из которых берутся деньги и соответствия хэша
         if not cg.verify_sign(self['sign'], str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']), self['author']):
             return False
         inp=0
