@@ -42,7 +42,7 @@ class Transaction(dict):
         self['outns'] = outns  # how much money to each of outs
         self['time'] = time.time()
         self['author'] = author
-        if sign=='signing':
+        if sign=='signing':    # транзакция может быть уже подписана, или может создаваться новая транзакция с помощью Transaction(). Соответственно может быть новая подпись.
             self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']))
         else:
             self['sign'] = sign
