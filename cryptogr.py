@@ -25,9 +25,10 @@ def genkeys():
     f2.write(keys.publickey().exportKey())  # write public key
 
 
-def sign(data):
+def sign(data, key='my key'):
+    if key=='my key':
+        key = open(f[0], "r").read()
     data=bytes(data, 'utf-8')
-    key = open(f[0], "r").read()
     rsakey = RSA.importKey(key)
     signer = PKCS1_v1_5.new(rsakey)
     digest = SHA256.new()

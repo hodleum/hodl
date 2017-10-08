@@ -15,32 +15,34 @@ class Blockchain:    # класс для цепочки блоков
                     money += txs['outns'][txs['outs'].index(wallet)]
         return money
 
+    def newblock(self, n, creator, txs=[]):
+        self.append(Block(n, creator, self, txs))
+
 
 class Block:     # класс для блоков
-    def __init__(self, ind, previousHash, txs, creator):
-        self.i = ind
-        self.prevhash = previousHash
+    def __init__(self, n, creator, bch, txs=[]):
+        self.n = n
+        self.prevhash = bch.blocks[-1].h
         self.timestamp = time.time()
         self.txs = txs
         self.creator = creator
-        self.update()
+        self.update(bch)
 
-    def append(self, txn):    # функция для добавления транзакции в блок
+    def append(self, txn, bch):    # функция для добавления транзакции в блок
         self.txs.append(txn)
-        self.update()
+        self.update(bch)
 
-    def update(self):    # обновляет хэш
-        h = str(self.i) + str(self.prevhash) + str(self.timestamp)
+    def update(self, bch):    # обновляет хэш
+        h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         for t in self.txs:
             h = h + str(t.hash)
-        self.head = cg.h(str(h))
+        self.h = cg.h(str(h))
 
-    def isValid(self, previndex):    # проверка валидности каждой транзакции блока и соответствия хэша
-        h = str(self.i) + str(self.prevhash) + str(self.timestamp)
+    def isValid(self, bch):    # проверка валидности каждой транзакции блока и соответствия хэша
+        h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         for t in self.txs:
             h = h + str(t.hash)
-
-        v = cg.h(str(h)) == self.head and self.i == previndex + 1
+        v = cg.h(str(h)) == self.h and self.prevhash == bch.blocks[bch.blocks.index(self)-1].h
         return v
 
 
@@ -54,13 +56,16 @@ class Transaction(dict):
         self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), l[5], float(l[4]))
 
 
-    def gen(self, author, froms, outs, outns, sign='signing', timestamp='signing'):
+    def gen(self, author, froms, outs, outns, sign='signing', privkey='me', timestamp='signing'):
         self['froms'] = froms  # numbers of transactions([number of block, number of needed tnx in this block]), from which this transaction takes money
         self['outs'] = outs  # numbers of wallets, to which is this tnx
         self['outns'] = outns  # how much money to each of outs
         self['author'] = author  # тот, кто проводит транзакцию
         if sign=='signing':    # транзакция может быть уже подписана, или может создаваться новая транзакция с помощью Transaction(). Соответственно может быть новая подпись.
-            self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']))
+            if privkey=='me':
+                self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']))
+            else:
+                self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']), privkey)
             self['time'] = time.time()
         else:
             self['sign'] = sign
