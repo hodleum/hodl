@@ -5,6 +5,15 @@ import time
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
         self.blocks=[]
+    def append(self, block):    # добавить новый блок
+        self.blocks.append(block)
+    def money(self, wallet):    # проверяет, сколько денег у wallet
+        money = 0
+        for block in self.blocks:
+            for txs in block.txs:
+                if wallet in txs['outs']:
+                    money += txs['outns'][txs['outs'].index(wallet)]
+        return money
 
 
 class Block:     # класс для блоков
@@ -20,7 +29,7 @@ class Block:     # класс для блоков
         self.txs.append(txn)
         self.update()
 
-    def update(self):
+    def update(self):    # обновляет хэш
         h = str(self.i) + str(self.prevhash) + str(self.timestamp)
         for t in self.txs:
             h = h + str(t.hash)
@@ -37,7 +46,7 @@ class Block:     # класс для блоков
 
 class Transaction(dict):
     # форма для передачи транзакций строкой: txs['author']+'а'(русское а)+';'.join(self['froms'])+'а'+';'.join(self['outs']+'а'+';'.join(self['outns'])+'а'+str(self['time'])+'а'+str(self['sign']))
-    def tostr(self):
+    def tostr(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
         return self['author'] + 'а'+str(self['froms']) + 'а' + str(self['outs']) + 'а' + str(self['outns']) + 'а' + str(self['time']) + 'а' + str(self['sign'])
 
     def fromstr(self, str):
@@ -49,7 +58,7 @@ class Transaction(dict):
         self['froms'] = froms  # numbers of transactions([number of block, number of needed tnx in this block]), from which this transaction takes money
         self['outs'] = outs  # numbers of wallets, to which is this tnx
         self['outns'] = outns  # how much money to each of outs
-        self['author'] = author
+        self['author'] = author  # тот, кто проводит транзакцию
         if sign=='signing':    # транзакция может быть уже подписана, или может создаваться новая транзакция с помощью Transaction(). Соответственно может быть новая подпись.
             self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']))
             self['time'] = time.time()
