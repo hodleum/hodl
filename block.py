@@ -2,6 +2,8 @@ import cryptogr as cg
 import time
 
 
+minerfee = 1
+
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
         self.blocks = []
@@ -26,7 +28,9 @@ class Block:     # класс для блоков
         self.n = n
         self.prevhash = bch.blocks[-1].h
         self.timestamp = time.time()
-        self.txs = txs
+        tnx0 = Transaction()
+        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch), 0], 'mining', 'mining', self.timestamp)
+        self.txs = [tnx0] + txs
         self.creator = creator
         self.update(bch)
 
@@ -42,7 +46,10 @@ class Block:     # класс для блоков
 
     def isValid(self, bch):    # проверка валидности каждой транзакции блока и соответствия хэша
         h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
-        for t in self.txs:
+        if self.txs[0]['froms'] != [['nothing']] or self.txs[0]['author'] != 'mining' or self.txs[0]['outs'] != [self.creator]\
+                or self.txs[0]['outns'] != minerfee or self.txs[0]['time'] != self.timestamp:
+            return False
+        for t in self.txs[1::]:
             h = h + str(t.hash)
             if not t.isvalid():
                 return False
