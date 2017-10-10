@@ -3,7 +3,7 @@ from socket import socket
 
 
 def listen():    # слушает, если что-то пришло, возвращает tuple (IP откуда пришло, адрес в системе того устройства, сообщение)
-    pass
+    s = socket()
 
 def send(myaddr, ip, mess):    # отправляет сообщение на адрес ip, ничего не возвращает
     pass
