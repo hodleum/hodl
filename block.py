@@ -19,7 +19,7 @@ class Blockchain:    # класс для цепочки блоков
                     money += txs['outns'][txs['outs'].index(wallet)]
         return money
 
-    def newblock(self, n, creator, txs = []):   # создает новый блок и сразу же добавляет его в цепочку. Удобно, правда?
+    def newblock(self, n, creator, txsb=[]):   # создает новый блок и сразу же добавляет его в цепочку.
         self.append(Block(n, creator, self, txs))
 
 
@@ -46,10 +46,11 @@ class Block:     # класс для блоков
 
     def isValid(self, bch):    # проверка валидности каждой транзакции блока и соответствия хэша
         h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
-        if self.txs[0]['froms'] != [['nothing']] or self.txs[0]['author'] != 'mining' or self.txs[0]['outs'] != [self.creator]\
+        if self.txs[0]['froms'] != [['nothing']] or self.txs[0]['author'] != 'mining' \
+                or self.txs[0]['outs'] != [self.creator]\
                 or self.txs[0]['outns'] != minerfee or self.txs[0]['time'] != self.timestamp:
             return False
-        for t in self.txs[1::]:
+        for t in self.txs[1:]:
             h = h + str(t.hash)
             if not t.isvalid():
                 return False
@@ -59,14 +60,14 @@ class Block:     # класс для блоков
 
 class Transaction(dict):
     # форма для передачи транзакций строкой(разделитель - русское а):
-    # authorаstr(froms)аstr(outs)аstr(outns)аstr(time)аsign
+    # authorа + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def tostr(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
-        return self['author'] + 'а'+str(self['froms']) + 'а' + str(self['outs']) + 'а' + str(self['outns']) + 'а' + str(self['time']) + 'а' + str(self['sign'])
+        return self['author'] + 'а'+str(self['froms']) + 'а' + str(self['outs']) + 'а' + str(self['outns']) + 'а' \
+               + str(self['time']) + 'а' + str(self['sign'])
 
     def fromstr(self, s):   # Обратная функция tostr
         l = s.split('а')
         self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), l[5], float(l[4]))
-
 
     def gen(self, author, froms, outs, outns, index, sign = 'signing', privkey = 'me', timestamp = 'signing'):
         self['froms'] = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
@@ -76,13 +77,14 @@ class Transaction(dict):
         self['outns'] = outns  # количество денег на каждый кошелек-адресат
         self['author'] = author# тот, кто проводит транзакцию
         self['index'] = index
-        if sign=='signing':    # транзакция может быть уже подписана,
+        if sign == 'signing':    # транзакция может быть уже подписана,
                                # или может создаваться новая транзакция с помощью Transaction().
                                # Соответственно может быть нужна новая подпись.
             if privkey=='me':     # Подписываем транзакцию тем ключом, который сохранен на этом компьютере как основной
                 self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']))
             else:    # Или кастомным
-                self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']), privkey)
+                self['sign'] = cg.sign(str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']),
+                                       privkey)
             self['time'] = time.time()
         else:    # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self['sign'] = sign
@@ -104,9 +106,10 @@ class Transaction(dict):
                                 # в транзакциях, из которых берутся деньги и соответствия подписи и хэша
 
                                 # Проверка соответствия подписи
-        if not cg.verify_sign(self['sign'], str(self['froms']) + str(self['outs']) + str(self['outns']) + str(self['time']), self['author']):
+        if not cg.verify_sign(self['sign'], str(self['froms']) + str(self['outs'])
+                + str(self['outns']) + str(self['time']), self['author']):
             return False
-        inp=0
+        inp = 0
         for t in self['froms']:    # Проверка наличия требуемых денег в транзакциях-донорах
             try:
                 txs = bch.blocks[t[0]].txs[t[1]]
@@ -137,6 +140,7 @@ class Transaction(dict):
         if not self.hash == cg.h(str(x)):
             return False
         return True
+
     def isopen(self, bch):  # Проверяет, не является ли эта транзакция чьим-то донором
         for block in bch.blocks:   # перебираем все транзакции в каждом блоке
             for txs in block.txs:
