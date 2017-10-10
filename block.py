@@ -3,6 +3,7 @@ import time
 
 
 minerfee = 1
+txs_in_block = 50
 
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
@@ -15,7 +16,7 @@ class Blockchain:    # класс для цепочки блоков
         money = 0
         for block in self.blocks:   # перебираем все транзакции в каждом блоке
             for txs in block.txs:
-                if wallet in txs['outs'] and txs.is_open():
+                if wallet in txs['outs'] and txs.is_open(self):
                     money += txs['outns'][txs['outs'].index(wallet)]
         return money
 
@@ -26,10 +27,13 @@ class Blockchain:    # класс для цепочки блоков
 class Block:     # класс для блоков
     def __init__(self, n, creator, bch, txs=[]):
         self.n = n
-        self.prevhash = bch.blocks[-1].h
+        try:
+            self.prevhash = bch.blocks[-1].h
+        except:
+            self.prevhash = 0
         self.timestamp = time.time()
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch), 0], 'mining', 'mining', self.timestamp)
+        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch.blocks), 0], 'mining', 'mining', self.timestamp)
         self.txs = [tnx0] + txs
         self.creator = creator
         self.update(bch)
@@ -39,7 +43,7 @@ class Block:     # класс для блоков
         self.update(bch)    # обновляем хэш
 
     def update(self, bch):    # обновляет хэш
-        h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
+        h = str(len(bch.blocks)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         for t in self.txs:
             h = h + str(t.hash)
         self.h = cg.h(str(h))
@@ -146,3 +150,4 @@ class Transaction(dict):
             for txs in block.txs:
                 if self['index'] in txs['froms']:
                     return False
+        return True
