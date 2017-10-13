@@ -11,16 +11,7 @@ def listen():    # слушает, если что-то пришло, возвр
 	conn, ip = sock.accept()
 	data = conn.recv(4096)
 	data = str(data)
-	mess = ''
-	addr = ''
-	flag = False
-	for i in data :
-		if i == ' ' :
-			flag = True
-		if flag == True :
-			mess += i
-		else :
-			addr += i
+	addr, mess = data.split() 
 	summary_tuple = (ip, addr, mess)
 	return summary_tuple
 
@@ -35,4 +26,4 @@ def is_my_ip_white():    # возвращает True/False белый ли IP у
 
 
 def is_ip_white(ip):    # возвращает True/False, белый ли ip
-    pass
+    passr
