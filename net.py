@@ -8,13 +8,15 @@ sock_listen = socket()
 
 def listen():    # слушает, если что-то пришло, возвращает tuple (IP откуда пришло, адрес в системе того устройства, сообщение)
 	sock.listen(1)
-	conn, addr = sock.accept()
+	conn, ip = sock.accept()
 	data = conn.recv(4096)
+	data = str(data)
 	mess = ''
 	addr = ''
-	ip = ''
-	flag = false
+	flag = False
 	for i in data :
+		if i == ' ' :
+			flag = True
 		if flag == True :
 			mess += i
 		else :
