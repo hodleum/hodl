@@ -26,4 +26,4 @@ def is_my_ip_white():    # возвращает True/False белый ли IP у
 
 
 def is_ip_white(ip):    # возвращает True/False, белый ли ip
-    passr
+    pass
