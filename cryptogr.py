@@ -6,7 +6,7 @@ from base64 import b64encode, b64decode
 
 
 global f
-f = ['priv', 'pub']
+f = ['priv.key', 'pub.key']
 
 def h(s):    # Хэш, МЕНЯТЬ НИНАДА
     return MD5.new(bytes(str(s), 'utf-8')).digest()
