@@ -1,4 +1,3 @@
-from Crypto import *
 import Crypto.Hash.MD5 as MD5
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
@@ -42,14 +41,15 @@ def sign(data, key='my key'):    # подписывает data (тип str) се
 
 
 def verify_sign(signature, data, pub_key):  # проверяет, подписал ли pub_key(тип str) data(тип str) и получил signature
-    try:
-        rsakey = RSA.importKey(pub_key)
-        signer = PKCS1_v1_5.new(rsakey)
-        digest = SHA256.new()
-        # Assumes the data is base64 encoded to begin with
-        digest.update(b64decode(data))
-        if signer.verify(digest, b64decode(signature)):
-            return True
-    except:
-        pass
+    #try:
+    rsakey = RSA.importKey(pub_key)
+    signer = PKCS1_v1_5.new(rsakey)
+    digest = SHA256.new()
+    # Assumes the data is base64 encoded to begin with
+    digest.update(b64decode(data))
+    if signer.verify(digest, b64decode(signature)):
+        return True
+    #except:
+    #    pass
+    #print('exception')
     return False
