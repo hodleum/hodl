@@ -28,16 +28,16 @@ def sign(data, key='my key'):    # подписывает data (тип str) се
     # Если key == 'my key', подписывает ключом из f[0]
     # Возвращает подпись (тип str)
     # ВАЖНО: verify_str должна нормально работать с подписью, которую дает эта функция
-    if key =='my key':
-        key = open(f[0], "r").read()
-    data = bytes(data, 'utf-8')
+    if key == 'my key':
+        key = open(f[1], "r").read()
+    #data = bytes(data, 'utf-8')
     rsakey = RSA.importKey(key)
     signer = PKCS1_v1_5.new(rsakey)
     digest = SHA256.new()
     # It's being assumed the data is base64 encoded, so it's decoded before updating the digest
-    digest.update(data)
+    digest.update(bytearray(data, 'utf8'))
     sign = signer.sign(digest)
-    return b64encode(sign)
+    return sign
 
 
 def verify_sign(signature, data, pub_key):  # проверяет, подписал ли pub_key(тип str) data(тип str) и получил signature
@@ -47,7 +47,8 @@ def verify_sign(signature, data, pub_key):  # проверяет, подписа
     digest = SHA256.new()
     # Assumes the data is base64 encoded to begin with
     digest.update(b64decode(data))
-    if signer.verify(digest, b64decode(signature)):
+    print(b64decode(signature))
+    if signer.verify(digest, signature):
         return True
     #except:
     #    pass

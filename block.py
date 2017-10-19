@@ -4,6 +4,7 @@ import time
 
 minerfee = 1
 txs_in_block = 50
+maxblocksize = 40000
 
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
@@ -29,9 +30,17 @@ class Blockchain:    # класс для цепочки блоков
                 return False
         return True
 
+    def new_transaction(self, author, froms, outs, outns, sign = 'signing', privkey = 'me'):
+        tnx = Transaction()
+        for block in self.blocks:
+            if not block.is_full():
+                tnx.gen(author, froms, outs, outns, (self.blocks.index(block), len(block.txs)), sign, privkey)
+                block.append(tnx, self)
+                break
+
 
 class Block:     # класс для блоков
-    def __init__(self, n, creator, bch, txs=[]):
+    def __init__(self, n, creator, bch, txs=[], contracts=[]):
         self.n = n
         try:
             self.prevhash = bch.blocks[-1].h
@@ -41,8 +50,21 @@ class Block:     # класс для блоков
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch.blocks), 0], 'mining', 'mining')
         self.txs = [tnx0] + txs
+        self.contracts = contracts
         self.creator = creator
         self.update(bch)
+
+    def tostr(self):
+        s = ''
+        for t in self.txs:
+            s += t.tostr() + 'б'
+        s += 'г' + str(self.n) + 'б' + str(self.timestamp) + 'б' + str(self.prevhash) + 'б' + str(self.creator)
+        s += 'г'
+        for c in self.contracts:
+            s += c.tostr + 'б'
+        return s
+    def fromstr(self, s):
+        pass    # todo: дописать Block.fromstr()
 
     def append(self, txn, bch):    # функция для добавления транзакции в блок
         self.txs.append(txn)    # добавляем транзакцию в список транзакций
@@ -66,6 +88,9 @@ class Block:     # класс для блоков
                 return False
         v = cg.h(str(h)) == self.h and self.prevhash == bch.blocks[bch.blocks.index(self)-1].h
         return v
+
+    def is_full(self):
+        return self.tostr >= maxblocksize
 
 
 class Transaction:
@@ -111,7 +136,7 @@ class Transaction:
 
     def is_valid(self, bch):    # Проверка наличия требуемых денег
                                 # в транзакциях, из которых берутся деньги и соответствия подписи и хэша
-
+                                # todo: сделать, чтобы транзакция, совершенная смарт-контрактом, обрабатывалась отдельно
                                 # Проверка соответствия подписи
         if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs)
                 + str(self.outns), self.author):
@@ -151,3 +176,34 @@ class Transaction:
                 if self.index in txs.froms:
                     return False
         return True
+
+class Smart_contract:
+    def __init__(self, text, author, index, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
+        self.text = text
+        self.author = author
+        self.payment_method = payment_method
+        self.index = index
+        self.result = ''
+
+    def execute(self, addr, bch):
+        froms = []
+        outs = []
+        outns = []
+        result = ''
+        import kcvm
+        exec(self.text)    # Смарт-контракт изменяет переменные froms, outs и outns на параметры совершаемой
+        # им транзакции. Если ему не надо совершать транзакцию, он их не изменяет. Также он может возвращать result.
+        # класс result - str
+        try:
+            bch.new_transaction('sc' + self.index[0] + ';' + self.index[1], froms, outs, outns,
+                                'sc' + self.index[0] + ';' + self.index[1],
+                                'sc' + self.index[0] + ';' + self.index[1])
+        except:
+            pass
+        self.result = result
+
+    def tostr(self):
+        pass    # todo: дописать Smart_contract.tostr() и Smart_contract.fromstr()
+
+    def fromstr(self, s):
+        pass
