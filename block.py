@@ -40,13 +40,21 @@ class Blockchain:    # класс для цепочки блоков
                 break
 
     def tostr(self):
-        pass    # todo: написать Blockchain.tostr()
-    def fromstr(self):
-        pass    # todo: написать Blockchain.fromstr() совместимое с Blockchain.tostr()
+        s = ''
+        for block in self.blocks:
+            s += 'д' + block.tostr()
+
+    def fromstr(self, s):
+        self.blocks = []
+        s = s.split('д')
+        for b in s:
+            block = Block()
+            block.fromstr(b)
+            self.append(block)
 
 
 class Block:     # класс для блоков
-    def __init__(self, n, creator, bch, txs=[], contracts=[]):
+    def __init__(self, n = 0, creator = '', bch = Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
             self.prevhash = bch.blocks[-1].h
