@@ -52,6 +52,11 @@ class Blockchain:    # класс для цепочки блоков
             block.fromstr(b)
             self.append(block)
 
+    def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
+        for i in range(len(self.blocks)):
+            if not self.blocks[i].is_full():
+                self.blocks[i].contracts.append(text, author, (i,len(self.blocks[i].contracts)), needsinf, payment_method, payment_opts)
+
 
 class Block:     # класс для блоков
     def __init__(self, n = 0, creator = '', bch = Blockchain(), txs=[], contracts=[]):
@@ -206,33 +211,67 @@ class Transaction:
         return True
 
 class Smart_contract:
-    # todo: дописать Smart_contract: добавить виды контрактов, входную информацию, ограничения
-    def __init__(self, text, author, index, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
+    # todo: дописать Smart_contract: добавить виды контрактов, ограничения
+    def __init__(self, text, author, index, needsinf=False, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
         self.text = text
         self.author = author
         self.payment_method = payment_method
         self.index = index
         self.result = ''
+        self.needsinf = needsinf
+        self.payment_opts = payment_opts
 
-    def execute(self, addr, bch):
-        froms = []
-        outs = []
-        outns = []
-        result = ''
+    def execute(self, addr, bch, inf=''):
+        loc = {}
         import kcvm
-        exec(self.text)    # Смарт-контракт изменяет переменные froms, outs и outns на параметры совершаемой
+        if self.needsinf:
+            exec(self.text, {'inf': str(inf)}, loc)
+        else:
+            exec(self.text, {}, loc)
+        result = loc['result']
+        tnx_needed = loc['tnx_needed']    # смарт-контракт может проводить транзакции от своего имени
+        tnx_created = loc['tnx_created']
+        froms = loc['froms']
+        outs = loc['outs']
+        outns = loc['outns']
+        sc_needed = loc['sc_needed']    # смарт-контракт может создавать смарт-контракты
+        sc_created = loc['sc_created']
+        sc_text = loc['sc_text']
+        sc_author = loc['sc_author']
+        sc_payment_method = loc['sc_payment_method']
+        sc_needsinf = loc['sc_needsinf']
+        sc_payment_opts = loc['sc_payment_opts']
+        # Смарт-контракт изменяет переменные froms, outs и outns на параметры совершаемой
         # им транзакции. Если ему не надо совершать транзакцию, он их не изменяет. Также он может возвращать result.
         # класс result - str
-        try:
-            bch.new_transaction('sc' + self.index[0] + ';' + self.index[1], froms, outs, outns,
-                                'sc' + self.index[0] + ';' + self.index[1],
-                                'sc' + self.index[0] + ';' + self.index[1])
-        except:
-            pass
+        if tnx_needed:
+            for i in range(len(froms)):
+                if not tnx_created[i]:
+                    try:
+                        bch.new_transaction('sc' + self.index[0] + ';' + self.index[1], froms[i], outs[i], outns[i],
+                                            'sc' + self.index[0] + ';' + self.index[1],
+                                            'sc' + self.index[0] + ';' + self.index[1])
+                    except:
+                        pass
+        if sc_needed:
+            for i in range(len(sc_created)):
+                if not sc_created[i]:
+                    try:
+                        bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i], sc_payment_opts[i])
+                    except:
+                        pass
         self.result = result
 
     def tostr(self):
-        pass    # todo: дописать Smart_contract.tostr() и Smart_contract.fromstr()
+        return str(self.text) + 'е' + str(self.author) + 'е' + str(self.index[0]) + ';' + str(self.index[1]) + 'e' + \
+             str(self.needsinf) + 'е' + str(self.payment_method) + 'е' + str(self.payment_opts)
+
 
     def fromstr(self, s):
-        pass
+        s = s.split('е')
+        self.text = s[0]
+        self.author = s[1]
+        self.index = [int(s[2].split(';')[0]), int(s[2].split(';')[1])]
+        self.needsinf = eval(s[3])
+        self.payment_method = s[4]
+        self.payment_opts = eval(s[5])
