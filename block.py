@@ -5,6 +5,7 @@ import time
 minerfee = 1
 txs_in_block = 50
 maxblocksize = 40000
+# todo: ТЕСТЫ! ОЧЕНЬ НАДО ПОТЕСТИТЬ! (для этого надо НАКОНЕЦ ДОПИСАТЬ cryptogr.py) Файл практически не тестился.
 
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
@@ -69,7 +70,21 @@ class Block:     # класс для блоков
             s += c.tostr + 'б'
         return s
     def fromstr(self, s):
-        pass    # todo: дописать Block.fromstr()
+        s = s.split('г')
+        txs = s[0].split('б')
+        self.txs = []
+        for t in txs:
+            tnx = Transaction()
+            tnx.fromstr(t)
+            self.txs.append(tnx)
+        scs = s[2].split('б')
+        self.contracts = []
+        for sc in scs:
+            contract = Smart_contract()
+            contract.fromstr(sc)
+            self.contracts.append(contract)
+        pars = s[1].split('б')
+        self.n, self.timestamp, self.prevhash, self.creator = pars[0], pars[1], pars[2], pars[3]
 
     def append(self, txn, bch):    # функция для добавления транзакции в блок
         self.txs.append(txn)    # добавляем транзакцию в список транзакций
