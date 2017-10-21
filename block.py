@@ -38,6 +38,11 @@ class Blockchain:    # класс для цепочки блоков
                 block.append(tnx, self)
                 break
 
+    def tostr(self):
+        pass    # todo: написать Blockchain.tostr()
+    def fromstr(self):
+        pass    # todo: написать Blockchain.fromstr() совместимое с Blockchain.tostr()
+
 
 class Block:     # класс для блоков
     def __init__(self, n, creator, bch, txs=[], contracts=[]):
@@ -178,6 +183,7 @@ class Transaction:
         return True
 
 class Smart_contract:
+    # todo: дописать Smart_contract: добавить виды контрактов, входную информацию, ограничения
     def __init__(self, text, author, index, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
         self.text = text
         self.author = author
