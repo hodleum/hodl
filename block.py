@@ -169,11 +169,24 @@ class Transaction:
 
     def is_valid(self, bch):    # Проверка наличия требуемых денег
                                 # в транзакциях, из которых берутся деньги и соответствия подписи и хэша
-                                # todo: сделать, чтобы транзакция, совершенная смарт-контрактом, обрабатывалась отдельно
                                 # Проверка соответствия подписи
-        if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs)
-                + str(self.outns), self.author):
-            return False
+        if not self.author[0:2] == 'sc':
+            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs)
+                    + str(self.outns), self.author):
+                return False
+        else:
+            try:
+                scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[0])]
+                sc = bch.blocks[scind[0]].contracts[scind[1]]
+                tnx_needed, tnx_created, froms, outs, outns = sc.exec()[1:]
+                if tnx_needed:
+                    selfind = froms.index(self.froms)
+                    if not (tnx_created and outs[selfind] == self.outs and outns[selfind]==self.outns):
+                        return False
+                else:
+                    return False
+            except:
+                return False
         inp = 0
         for t in self.froms:    # Проверка наличия требуемых денег в транзакциях-донорах
             try:
@@ -211,7 +224,7 @@ class Transaction:
         return True
 
 class Smart_contract:
-    # todo: дописать Smart_contract: добавить виды контрактов, ограничения
+    # todo: дописать Smart_contract: добавить ограничения
     def __init__(self, text, author, index, needsinf=False, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
         self.text = text
         self.author = author
@@ -244,23 +257,25 @@ class Smart_contract:
         # Смарт-контракт изменяет переменные froms, outs и outns на параметры совершаемой
         # им транзакции. Если ему не надо совершать транзакцию, он их не изменяет. Также он может возвращать result.
         # класс result - str
-        if tnx_needed:
-            for i in range(len(froms)):
-                if not tnx_created[i]:
-                    try:
-                        bch.new_transaction('sc' + self.index[0] + ';' + self.index[1], froms[i], outs[i], outns[i],
-                                            'sc' + self.index[0] + ';' + self.index[1],
-                                            'sc' + self.index[0] + ';' + self.index[1])
-                    except:
-                        pass
-        if sc_needed:
-            for i in range(len(sc_created)):
-                if not sc_created[i]:
-                    try:
-                        bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i], sc_payment_opts[i])
-                    except:
-                        pass
+        if not self.needsinf:   # контракты, которые принимают входную информацию не могут создавать другие контракты и транзакции
+            if tnx_needed:
+                for i in range(len(froms)):
+                    if not tnx_created[i]:
+                        try:
+                            bch.new_transaction('sc' + str(self.index[0]) + ';' + str(self.index[1]), froms[i], outs[i], outns[i],
+                                                'sc' + str(self.index[0]) + ';' + str(self.index[1]),
+                                                'sc' + str(self.index[0]) + ';' + str(self.index[1]))
+                        except:
+                            pass
+            if sc_needed:
+                for i in range(len(sc_created)):
+                    if not sc_created[i]:
+                        try:
+                            bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i], sc_payment_opts[i])
+                        except:
+                            pass
         self.result = result
+        return result, tnx_needed, tnx_created, froms, outs, outns
 
     def tostr(self):
         return str(self.text) + 'е' + str(self.author) + 'е' + str(self.index[0]) + ';' + str(self.index[1]) + 'e' + \
