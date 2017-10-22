@@ -9,7 +9,7 @@ global f
 f = ['priv.key', 'pub.key']
 
 def h(s):    # Хэш, МЕНЯТЬ НИНАДА
-    return MD5.new(bytes(str(s), 'utf-8')).digest()
+    return str(MD5.new(bytes(str(s), 'utf-8')).digest())
 
 
 def keys():    # возвращает ключи, примерно правильно

@@ -59,29 +59,31 @@ class Blockchain:    # класс для цепочки блоков
 
 
 class Block:     # класс для блоков
-    def __init__(self, n = 0, creator = '', bch = Blockchain(), txs=[], contracts=[]):
+    def __init__(self, n=0, creator='', bch=Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
             self.prevhash = bch.blocks[-1].h
         except:
-            self.prevhash = 0
+            self.prevhash = '0'
         self.timestamp = time.time()
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch.blocks), 0], 'mining', 'mining')
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creator = creator
-        self.update(bch)
+        self.update()
 
     def tostr(self):
         s = ''
         for t in self.txs:
             s += t.tostr() + 'б'
+        s = s[:-1]
         s += 'г' + str(self.n) + 'б' + str(self.timestamp) + 'б' + str(self.prevhash) + 'б' + str(self.creator)
         s += 'г'
         for c in self.contracts:
             s += c.tostr + 'б'
         return s
+
     def fromstr(self, s):
         s = s.split('г')
         txs = s[0].split('б')
@@ -92,19 +94,20 @@ class Block:     # класс для блоков
             self.txs.append(tnx)
         scs = s[2].split('б')
         self.contracts = []
-        for sc in scs:
+        for sc in scs[:-1]:
             contract = Smart_contract()
             contract.fromstr(sc)
             self.contracts.append(contract)
         pars = s[1].split('б')
-        self.n, self.timestamp, self.prevhash, self.creator = pars[0], pars[1], pars[2], pars[3]
+        self.n, self.timestamp, self.prevhash, self.creator = int(pars[0]), float(pars[1]), str(pars[2]), str(pars[3])
+        self.update()
 
     def append(self, txn, bch):    # функция для добавления транзакции в блок
         self.txs.append(txn)    # добавляем транзакцию в список транзакций
         self.update(bch)    # обновляем хэш
 
-    def update(self, bch):    # обновляет хэш
-        h = str(len(bch.blocks)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
+    def update(self):    # обновляет хэш
+        h = str(self.prevhash) + str(self.timestamp) + str(self.n)
         for t in self.txs:
             h = h + str(t.hash)
         self.h = cg.h(str(h))
@@ -131,13 +134,14 @@ class Transaction:
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def tostr(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
         return self.author + 'а'+str(self.froms) + 'а' + str(self.outs) + 'а' + str(self.outns) + 'а' \
+                + str(self.index) \
                 + 'а' + str(self.sign)
 
     def fromstr(self, s):   # Обратная функция tostr
         l = s.split('а')
-        self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), l[5])
+        self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), eval(l[4]), l[5])
 
-    def gen(self, author, froms, outs, outns, index, sign = 'signing', privkey = 'me'):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='me'):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
                                # номер нужной транзакции в блоке),
                                # из которых эта берет деньги
