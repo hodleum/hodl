@@ -6,7 +6,7 @@ minerfee = 1
 txs_in_block = 50
 maxblocksize = 40000
 # todo: ТЕСТЫ! ОЧЕНЬ НАДО ПОТЕСТИТЬ! (для этого надо НАКОНЕЦ ДОПИСАТЬ cryptogr.py) Файл практически не тестился.
-
+# todo: Сделать наследование Blockchain от list
 class Blockchain:    # класс для цепочки блоков
     def __init__(self):
         self.blocks = []
@@ -33,9 +33,9 @@ class Blockchain:    # класс для цепочки блоков
 
     def new_transaction(self, author, froms, outs, outns, sign = 'signing', privkey = 'me'):
         tnx = Transaction()
-        for block in self.blocks:
+        for i, block in enumerate(self.blocks):
             if not block.is_full():
-                tnx.gen(author, froms, outs, outns, (self.blocks.index(block), len(block.txs)), sign, privkey)
+                tnx.gen(author, froms, outs, outns, (i, len(block.txs)), sign, privkey)
                 block.append(tnx, self)
                 break
 
@@ -53,9 +53,10 @@ class Blockchain:    # класс для цепочки блоков
             self.append(block)
 
     def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
-        for i in range(len(self.blocks)):
-            if not self.blocks[i].is_full():
-                self.blocks[i].contracts.append(text, author, (i,len(self.blocks[i].contracts)), needsinf, payment_method, payment_opts)
+        for i, block in enumerate(self.blocks):
+            if not block.is_full():
+                block.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
+                break
 
 
 class Block:     # класс для блоков
@@ -107,9 +108,7 @@ class Block:     # класс для блоков
         self.update()    # обновляем хэш
 
     def update(self):    # обновляет хэш
-        h = str(self.prevhash) + str(self.timestamp) + str(self.n)
-        for t in self.txs:
-            h = h + str(t.hash)
+        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)]+[str(t.hash) for t in self.txs])
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):    # проверка валидности каждой транзакции блока и соответствия хэша
@@ -136,7 +135,7 @@ class Transaction:
         return self.author + 'а'+str(self.froms) + 'а' + str(self.outs) + 'а' + str(self.outns) + 'а' \
                 + str(self.index) \
                 + 'а' + str(self.sign)
-
+    # todo: заменить fromstr на from_json, tostr на to_json
     def fromstr(self, s):   # Обратная функция tostr
         l = s.split('а')
         self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), eval(l[4]), l[5])
@@ -159,6 +158,7 @@ class Transaction:
                                        privkey)
         else:    # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
+        # todo: заменить на .join()
         x = ''    # считаем хэш
         x = x + str(self.sign)
         x = x + str(self.author)
@@ -180,7 +180,7 @@ class Transaction:
                 return False
         else:
             try:
-                scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[0])]
+                scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
                 sc = bch.blocks[scind[0]].contracts[scind[1]]
                 tnx_needed, tnx_created, froms, outs, outns = sc.exec()[1:]
                 if tnx_needed:
@@ -207,6 +207,7 @@ class Transaction:
             o = o + n
         if not o == inp:
             return False
+        # todo: заменить на .join()
         x = ''  # проверка соответствия хэша
         x = x + str(self.sign)
         x = x + str(self.author)
@@ -280,16 +281,21 @@ class Smart_contract:
         self.result = result
         return result, tnx_needed, tnx_created, froms, outs, outns
 
+    # __str__
     def tostr(self):
         return str(self.text) + 'е' + str(self.author) + 'е' + str(self.index[0]) + ';' + str(self.index[1]) + 'e' + \
              str(self.needsinf) + 'е' + str(self.payment_method) + 'е' + str(self.payment_opts)
 
-
-    def fromstr(self, s):
+    # from_json
+    @classmethod
+    def fromstr(cls, s):
+        # получить данные из строки
         s = s.split('е')
-        self.text = s[0]
-        self.author = s[1]
-        self.index = [int(s[2].split(';')[0]), int(s[2].split(';')[1])]
-        self.needsinf = eval(s[3])
-        self.payment_method = s[4]
-        self.payment_opts = eval(s[5])
+        text = s[0]
+        author = s[1]
+        index = [int(s[2].split(';')[0]), int(s[2].split(';')[1])]
+        needsinf = eval(s[3])
+        payment_method = s[4]
+        payment_opts = eval(s[5])
+        # собрать новый объект
+        return cls(text, author, index, needsinf, payment_method, payment_opts)
