@@ -95,7 +95,7 @@ class Block:     # класс для блоков
         scs = s[2].split('б')
         self.contracts = []
         for sc in scs[:-1]:
-            contract = Smart_contract()
+            contract = Smart_contract('', '', [0,0])
             contract.fromstr(sc)
             self.contracts.append(contract)
         pars = s[1].split('б')
@@ -104,7 +104,7 @@ class Block:     # класс для блоков
 
     def append(self, txn, bch):    # функция для добавления транзакции в блок
         self.txs.append(txn)    # добавляем транзакцию в список транзакций
-        self.update(bch)    # обновляем хэш
+        self.update()    # обновляем хэш
 
     def update(self):    # обновляет хэш
         h = str(self.prevhash) + str(self.timestamp) + str(self.n)
@@ -120,7 +120,7 @@ class Block:     # класс для блоков
             return False
         for t in self.txs[1:]:
             h = h + str(t.hash)
-            if not t.is_valid():
+            if not t.is_valid(bch):
                 return False
         v = cg.h(str(h)) == self.h and self.prevhash == bch.blocks[bch.blocks.index(self)-1].h
         return v
@@ -238,9 +238,8 @@ class Smart_contract:
         self.needsinf = needsinf
         self.payment_opts = payment_opts
 
-    def execute(self, addr, bch, inf=''):
+    def execute(self, bch, inf=''):
         loc = {}
-        import kcvm
         if self.needsinf:
             exec(self.text, {'inf': str(inf)}, loc)
         else:
