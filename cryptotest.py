@@ -3,14 +3,9 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA
 
-
 # key generation
 privatekey = RSA.generate(2048)
 publickey = privatekey.publickey()
-
-
-def h(s): 
-    return str(MD5.new(bytes(str(s), 'utf-8')).digest())
 
 def get_keys():
     return privatekey, publickey
