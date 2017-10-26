@@ -1,39 +1,36 @@
 import cryptogr as cg
 import time
+from itertools import chain
 
 
 minerfee = 1
 txs_in_block = 50
 maxblocksize = 40000
 # todo: ТЕСТЫ! ОЧЕНЬ НАДО ПОТЕСТИТЬ! (для этого надо НАКОНЕЦ ДОПИСАТЬ cryptogr.py) Файл практически не тестился.
-# todo: Сделать наследование Blockchain от list
-class Blockchain:    # класс для цепочки блоков
-    def __init__(self):
-        self.blocks = []
-
-    def append(self, block):    # добавить новый блок
-        self.blocks.append(block)
-
+class Blockchain(list):
+    """класс для цепочки блоков"""
     def money(self, wallet):    # проверяет, сколько денег у wallet
         money = 0
-        for block in self.blocks:   # перебираем все транзакции в каждом блоке
+        for block in self:   # перебираем все транзакции в каждом блоке
             for txs in block.txs:
                 if wallet in txs.outs and txs.is_open(self):
                     money += txs.outns[txs.outs.index(wallet)]
         return money
 
-    def new_block(self, n, creator, txs=[]):   # создает новый блок и сразу же добавляет его в цепочку.
+    def new_block(self, n, creator, txs=[]):
+        """создает новый блок и сразу же добавляет его в цепочку."""
         self.append(Block(n, creator, self, txs))
 
     def is_valid(self):
-        for b in self.blocks:
+        """проверяет валидность всей цепочки"""
+        for b in self:
             if not b.is_valid(self):
                 return False
         return True
 
     def new_transaction(self, author, froms, outs, outns, sign = 'signing', privkey = 'me'):
         tnx = Transaction()
-        for i, block in enumerate(self.blocks):
+        for i, block in enumerate(self):
             if not block.is_full():
                 tnx.gen(author, froms, outs, outns, (i, len(block.txs)), sign, privkey)
                 block.append(tnx, self)
@@ -41,11 +38,11 @@ class Blockchain:    # класс для цепочки блоков
 
     def tostr(self):
         s = ''
-        for block in self.blocks:
+        for block in self:
             s += 'д' + block.tostr()
 
     def fromstr(self, s):
-        self.blocks = []
+        self = []
         s = s.split('д')
         for b in s:
             block = Block()
@@ -53,7 +50,7 @@ class Blockchain:    # класс для цепочки блоков
             self.append(block)
 
     def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
-        for i, block in enumerate(self.blocks):
+        for i, block in enumerate(self):
             if not block.is_full():
                 block.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
                 break
@@ -63,12 +60,12 @@ class Block:     # класс для блоков
     def __init__(self, n=0, creator='', bch=Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
-            self.prevhash = bch.blocks[-1].h
+            self.prevhash = bch[-1].h
         except:
             self.prevhash = '0'
         self.timestamp = time.time()
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch.blocks), 0], 'mining', 'mining')
+        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch), 0], 'mining', 'mining')
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creator = creator
@@ -112,7 +109,7 @@ class Block:     # класс для блоков
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):    # проверка валидности каждой транзакции блока и соответствия хэша
-        h = str(bch.blocks.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
+        h = str(bch.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
                 or self.txs[0].outs != [self.creator]\
                 or self.txs[0].outns != minerfee:
@@ -121,7 +118,7 @@ class Block:     # класс для блоков
             h = h + str(t.hash)
             if not t.is_valid(bch):
                 return False
-        v = cg.h(str(h)) == self.h and self.prevhash == bch.blocks[bch.blocks.index(self)-1].h
+        v = cg.h(str(h)) == self.h and self.prevhash == bch[bch.index(self)-1].h
         return v
 
     def is_full(self):
@@ -158,30 +155,21 @@ class Transaction:
                                        privkey)
         else:    # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
-        # todo: заменить на .join()
-        x = ''    # считаем хэш
-        x = x + str(self.sign)
-        x = x + str(self.author)
-        for f in self.froms:
-            x = x + str(f)
-        for f in self.outs:
-            x = x + str(f)
-        for f in self.outns:
-            x = x + str(f)
-        x += str(index)
+        x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
+                          [str(f) for f in self.outs], [str(f) for f in self.outns]))
         self.hash = cg.h(str(x))
 
     def is_valid(self, bch):    # Проверка наличия требуемых денег
                                 # в транзакциях, из которых берутся деньги и соответствия подписи и хэша
                                 # Проверка соответствия подписи
         if not self.author[0:2] == 'sc':
-            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs)
-                    + str(self.outns), self.author):
+            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) +
+                    str(self.outns), self.author):
                 return False
         else:
             try:
                 scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
-                sc = bch.blocks[scind[0]].contracts[scind[1]]
+                sc = bch[scind[0]].contracts[scind[1]]
                 tnx_needed, tnx_created, froms, outs, outns = sc.exec()[1:]
                 if tnx_needed:
                     selfind = froms.index(self.froms)
@@ -194,7 +182,7 @@ class Transaction:
         inp = 0
         for t in self.froms:    # Проверка наличия требуемых денег в транзакциях-донорах
             try:
-                txs = bch.blocks[t[0]].txs[t[1]]
+                txs = bch[t[0]].txs[t[1]]
                 if not txs.is_valid:
                     return False
                 if not txs.is_open():
@@ -207,22 +195,14 @@ class Transaction:
             o = o + n
         if not o == inp:
             return False
-        # todo: заменить на .join()
-        x = ''  # проверка соответствия хэша
-        x = x + str(self.sign)
-        x = x + str(self.author)
-        for f in self.froms:
-            x = x + str(f)
-        for f in self.outs:
-            x = x + str(f)
-        for f in self.outns:
-            x = x + str(f)
+        x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
+                        [str(f) for f in self.outs], [str(f) for f in self.outns]))
         if not self.hash == cg.h(str(x)):
             return False
         return True
 
     def is_open(self, bch):  # Проверяет, не является ли эта транзакция чьим-то донором
-        for block in bch.blocks:   # перебираем все транзакции в каждом блоке
+        for block in bch:   # перебираем все транзакции в каждом блоке
             for txs in block.txs:
                 if self.index in txs.froms:
                     return False
