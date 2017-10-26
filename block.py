@@ -36,7 +36,7 @@ class Blockchain(list):
                 block.append(tnx, self)
                 break
 
-    def tostr(self):
+    def __str__(self):
         s = ''
         for block in self:
             s += 'д' + block.tostr()
@@ -71,7 +71,7 @@ class Block:     # класс для блоков
         self.creator = creator
         self.update()
 
-    def tostr(self):
+    def __str__(self):
         s = ''
         for t in self.txs:
             s += t.tostr() + 'б'
@@ -128,11 +128,11 @@ class Block:     # класс для блоков
 class Transaction:
     # форма для передачи транзакций строкой(разделитель - русское а):
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
-    def tostr(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
+    def __str__(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
         return self.author + 'а'+str(self.froms) + 'а' + str(self.outs) + 'а' + str(self.outns) + 'а' \
                 + str(self.index) \
                 + 'а' + str(self.sign)
-    # todo: заменить fromstr на from_json, tostr на to_json
+    # todo: заменить fromstr на from_json
     def fromstr(self, s):   # Обратная функция tostr
         l = s.split('а')
         self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), eval(l[4]), l[5])
@@ -261,8 +261,7 @@ class Smart_contract:
         self.result = result
         return result, tnx_needed, tnx_created, froms, outs, outns
 
-    # __str__
-    def tostr(self):
+    def __str__(self):
         return str(self.text) + 'е' + str(self.author) + 'е' + str(self.index[0]) + ';' + str(self.index[1]) + 'e' + \
              str(self.needsinf) + 'е' + str(self.payment_method) + 'е' + str(self.payment_opts)
 
