@@ -24,10 +24,9 @@ def sign(plaintext, priv_key):
     signature = signature.sign(myhash)
     return signature
 
-def verify_sign(sign, pub_key, plaintext) :
+def verify_sign(sign, plaintext, pub_key) :
     plaintext = bytes(plaintext,'utf8')
     # decryption signature
-    publickey = pub_key
     myhash = SHA.new(plaintext)
     signature = PKCS1_v1_5.new(pub_key)
     test = signature.verify(myhash, sign)
