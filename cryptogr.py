@@ -1,6 +1,7 @@
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
+import Crypto.Hash.MD5 as MD5
 from Crypto.Hash import SHA
 
 
@@ -24,6 +25,7 @@ def sign(plaintext, priv_key):
     return signature
 
 def verify_sign(sign, pub_key, plaintext) :
+    plaintext = bytes(plaintext,'utf8')
     # decryption signature
     publickey = pub_key
     myhash = SHA.new(plaintext)
