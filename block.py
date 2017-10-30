@@ -1,4 +1,4 @@
-import cryptogr as cg
+import fcrypt as cg
 import time
 from itertools import chain
 
@@ -30,7 +30,7 @@ class Blockchain(list):
 
     def new_transaction(self, author, froms, outs, outns, sign = 'signing', privkey = 'me'):
         tnx = Transaction()
-        for i, block in enumerate(self):
+        for i, block in enumerate(self[1:]):
             if not block.is_full():
                 tnx.gen(author, froms, outs, outns, (i, len(block.txs)), sign, privkey)
                 block.append(tnx, self)
@@ -39,7 +39,7 @@ class Blockchain(list):
     def __str__(self):
         s = ''
         for block in self:
-            s += 'д' + block.tostr()
+            s += 'д' + str(block)
 
     def fromstr(self, s):
         self = []
@@ -65,7 +65,7 @@ class Block:     # класс для блоков
             self.prevhash = '0'
         self.timestamp = time.time()
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], [creator], [minerfee], [len(bch), 0], 'mining', 'mining')
+        tnx0.gen('mining', [['nothing']], [creator], [minerfee], (len(bch), 0), 'mining', 'mining')
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creator = creator
@@ -74,12 +74,12 @@ class Block:     # класс для блоков
     def __str__(self):
         s = ''
         for t in self.txs:
-            s += t.tostr() + 'б'
+            s += str(t) + 'б'
         s = s[:-1]
         s += 'г' + str(self.n) + 'б' + str(self.timestamp) + 'б' + str(self.prevhash) + 'б' + str(self.creator)
         s += 'г'
         for c in self.contracts:
-            s += c.tostr + 'б'
+            s += str(c) + 'б'
         return s
 
     def fromstr(self, s):
@@ -122,7 +122,7 @@ class Block:     # класс для блоков
         return v
 
     def is_full(self):
-        return self.tostr >= maxblocksize
+        return len(str(self)) >= maxblocksize
 
 
 class Transaction:
@@ -165,6 +165,7 @@ class Transaction:
         if not self.author[0:2] == 'sc':
             if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) +
                     str(self.outns), self.author):
+                print(self.index, 'is not valid: sign is wrong')
                 return False
         else:
             try:
@@ -176,28 +177,40 @@ class Transaction:
                     if not (tnx_created and outs[selfind] == self.outs and outns[selfind]==self.outns):
                         return False
                 else:
+                    print(self.index, 'is not valid: sc')
                     return False
             except:
+                print(self.index, 'is not valid: exception183')
                 return False
         inp = 0
         for t in self.froms:    # Проверка наличия требуемых денег в транзакциях-донорах
             try:
-                txs = bch[t[0]].txs[t[1]]
-                if not txs.is_valid:
-                    return False
-                if not txs.is_open():
-                    return False
-                inp = inp + txs.outns[txs.outs.index(self.author)]
+                if t == ['nothing']:
+                    if not (self.index[1] == 0 and self.outs[0] == bch[self.index[0]].creator):
+                        return False
+                    inp = minerfee
+                else:
+                    txs = bch[int(t[0])].txs[int(t[1])]
+                    if not txs.is_valid:
+                        print(self.index, 'is not valid: from is not valid')
+                        return False
+                    if not txs.is_open():
+                        print(self.index, 'is not valid: from is not valid')
+                        return False
+                    inp = inp + txs.outns[txs.outs.index(self.author)]
             except:
+                print(self.index, 'is not valid: exception197')
                 return False    # Если возникает какая-нибудь ошибка, то транзакция точно невалидная
         o = 0
         for n in self.outns:  # должны быть израсходованы все взятые деньги
             o = o + n
         if not o == inp:
+            print(self.index, 'is not valid: not all money')
             return False
         x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
                         [str(f) for f in self.outs], [str(f) for f in self.outns]))
         if not self.hash == cg.h(str(x)):
+            print(self.index, 'is not valid: hash is not valid')
             return False
         return True
 
