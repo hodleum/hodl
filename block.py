@@ -1,4 +1,4 @@
-import fcrypt as cg
+import cryptogr as cg
 import time
 from itertools import chain
 
