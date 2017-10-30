@@ -28,7 +28,7 @@ class Blockchain(list):
                 return False
         return True
 
-    def new_transaction(self, author, froms, outs, outns, sign = 'signing', privkey = 'me'):
+    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):
         tnx = Transaction()
         for i, block in enumerate(self[1:]):
             if not block.is_full():
@@ -40,6 +40,7 @@ class Blockchain(list):
         s = ''
         for block in self:
             s += 'д' + str(block)
+        return s
 
     def fromstr(self, s):
         self = []
@@ -137,7 +138,7 @@ class Transaction:
         l = s.split('а')
         self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), eval(l[4]), l[5])
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='me'):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
                                # номер нужной транзакции в блоке),
                                # из которых эта берет деньги
@@ -148,11 +149,7 @@ class Transaction:
         if sign == 'signing':    # транзакция может быть уже подписана,
                                # или может создаваться новая транзакция с помощью Transaction().
                                # Соответственно может быть нужна новая подпись.
-            if privkey == 'me':     # Подписываем транзакцию тем ключом, который сохранен на этом компьютере как основной
-                self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns))
-            else:    # Или кастомным
-                self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns),
-                                       privkey)
+            self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns), privkey)
         else:    # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
         x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
@@ -163,8 +160,7 @@ class Transaction:
                                 # в транзакциях, из которых берутся деньги и соответствия подписи и хэша
                                 # Проверка соответствия подписи
         if not self.author[0:2] == 'sc':
-            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) +
-                    str(self.outns), self.author):
+            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) + str(self.outns), self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
         else:
