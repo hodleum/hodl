@@ -1,6 +1,7 @@
 import cryptogr as cg
 import time
 from itertools import chain
+import json
 
 
 minerfee = 1
@@ -37,17 +38,13 @@ class Blockchain(list):
                 break
 
     def __str__(self):
-        s = ''
-        for block in self:
-            s += 'д' + str(block)
-        return s
+        return json.dumps([str(e) for e in self])
 
-    def fromstr(self, s):
-        self = []
-        s = s.split('д')
-        for b in s:
+    def from_json(self, s):
+        bs = json.loads(s)
+        for b in bs:
             block = Block()
-            block.fromstr(b)
+            block.from_json(b)
             self.append(block)
 
     def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
@@ -55,6 +52,9 @@ class Blockchain(list):
             if not block.is_full():
                 block.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
                 break
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class Block:     # класс для блоков
@@ -73,32 +73,20 @@ class Block:     # класс для блоков
         self.update()
 
     def __str__(self):
-        s = ''
-        for t in self.txs:
-            s += str(t) + 'б'
-        s = s[:-1]
-        s += 'г' + str(self.n) + 'б' + str(self.timestamp) + 'б' + str(self.prevhash) + 'б' + str(self.creator)
-        s += 'г'
-        for c in self.contracts:
-            s += str(c) + 'б'
-        return s
+        return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creator,
+                           [str(c) for c in self.contracts]))
 
-    def fromstr(self, s):
-        s = s.split('г')
-        txs = s[0].split('б')
-        self.txs = []
-        for t in txs:
+    def from_json(self, s):
+        s = json.loads(s)
+        for t in s[0]:
             tnx = Transaction()
-            tnx.fromstr(t)
+            tnx.from_json(t)
             self.txs.append(tnx)
-        scs = s[2].split('б')
-        self.contracts = []
-        for sc in scs[:-1]:
-            contract = Smart_contract('', '', [0,0])
-            contract.fromstr(sc)
-            self.contracts.append(contract)
-        pars = s[1].split('б')
-        self.n, self.timestamp, self.prevhash, self.creator = int(pars[0]), float(pars[1]), str(pars[2]), str(pars[3])
+        for c in s[5]:
+            sc = Smart_contract()
+            sc.from_json(c)
+            self.contracts.append(sc)
+        self.n, self.timestamp, self.prevhash, self.creator = s[1], s[2], s[3], s[4]
         self.update()
 
     def append(self, txn, bch):    # функция для добавления транзакции в блок
@@ -122,6 +110,9 @@ class Block:     # класс для блоков
         v = cg.h(str(h)) == self.h and self.prevhash == bch[bch.index(self)-1].h
         return v
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     def is_full(self):
         return len(str(self)) >= maxblocksize
 
@@ -129,14 +120,11 @@ class Block:     # класс для блоков
 class Transaction:
     # форма для передачи транзакций строкой(разделитель - русское а):
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
-    def __str__(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
-        return self.author + 'а'+str(self.froms) + 'а' + str(self.outs) + 'а' + str(self.outns) + 'а' \
-                + str(self.index) \
-                + 'а' + str(self.sign)
-    # todo: заменить fromstr на from_json
-    def fromstr(self, s):   # Обратная функция tostr
-        l = s.split('а')
-        self.gen(l[0], eval(l[1]), eval(l[2]), eval(l[3]), eval(l[4]), l[5])
+    def __str__(self):    # преобразование в строку, которая может быть расшифрована функцией from_json
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, self.sign))
+    
+    def from_json(self, s):   # Обратная функция __str__
+        self.gen(*json.loads(s))
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
@@ -217,6 +205,9 @@ class Transaction:
                     return False
         return True
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 class Smart_contract:
     # todo: дописать Smart_contract: добавить ограничения
     def __init__(self, text, author, index, needsinf=False, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
@@ -271,19 +262,10 @@ class Smart_contract:
         return result, tnx_needed, tnx_created, froms, outs, outns
 
     def __str__(self):
-        return str(self.text) + 'е' + str(self.author) + 'е' + str(self.index[0]) + ';' + str(self.index[1]) + 'e' + \
-             str(self.needsinf) + 'е' + str(self.payment_method) + 'е' + str(self.payment_opts)
+        return json.dumps((self.text, self.author, self.index, self.needsinf, self.payment_method, self.payment_opts))
+    
+    def from_json(self, s):
+        self.__init__(*json.loads(s))
 
-    # from_json
-    @classmethod
-    def fromstr(cls, s):
-        # получить данные из строки
-        s = s.split('е')
-        text = s[0]
-        author = s[1]
-        index = [int(s[2].split(';')[0]), int(s[2].split(';')[1])]
-        needsinf = eval(s[3])
-        payment_method = s[4]
-        payment_opts = eval(s[5])
-        # собрать новый объект
-        return cls(text, author, index, needsinf, payment_method, payment_opts)
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
