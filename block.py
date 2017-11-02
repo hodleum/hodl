@@ -8,7 +8,7 @@ txs_in_block = 50
 maxblocksize = 40000
 # todo: ТЕСТЫ! ОЧЕНЬ НАДО ПОТЕСТИТЬ! (для этого надо НАКОНЕЦ ДОПИСАТЬ cryptogr.py) Файл практически не тестился.
 class Blockchain(list):
-    """класс для цепочки блоков"""
+    """Class for blockchain"""
     def money(self, wallet):    # проверяет, сколько денег у wallet
         money = 0
         for block in self:   # перебираем все транзакции в каждом блоке
@@ -61,7 +61,8 @@ class Blockchain(list):
         return cmp(dict1, dict2)
 
 
-class Block:     # класс для блоков
+class Block:
+    """Class for blocks"""
     def __init__(self, n=0, creator='', bch=Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
@@ -129,8 +130,8 @@ class Block:     # класс для блоков
     def is_full(self):
         return len(str(self)) >= maxblocksize
 
-
 class Transaction:
+    """Class for transactions"""
     # форма для передачи транзакций строкой(разделитель - русское а):
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):    # преобразование в строку, которая может быть расшифрована функцией fromstr
@@ -231,6 +232,7 @@ class Transaction:
         return cmp(dict1, dict2)
 
 class Smart_contract:
+    """Class for smart contracts"""
     # todo: дописать Smart_contract: добавить ограничения
     def __init__(self, text, author, index, needsinf=False, payment_method = 'for execution', payment_opts={'for 1 execution' : 1}):
         self.text = text
