@@ -7,10 +7,11 @@ minerfee = 1
 txs_in_block = 50
 maxblocksize = 40000
 
-
-# todo: ТЕСТЫ! ОЧЕНЬ НАДО ПОТЕСТИТЬ! (для этого надо НАКОНЕЦ ДОПИСАТЬ cryptogr.py) Файл практически не тестился.
 class Blockchain(list):
     """Class for blockchain"""
+    def __add__(self, other):    # todo: дописать
+        """Merges blockchains (consensus)"""
+        pass
 
     def money(self, wallet):
         """Counts money on wallet"""
@@ -252,12 +253,12 @@ class Smart_contract:
         else:
             exec(self.text, {}, loc)
         result = loc['result']
-        tnx_needed = loc['tnx_needed']  # смарт-контракт может проводить транзакции от своего имени
+        tnx_needed = loc['tnx_needed']  # Smart contract can create transactions
         tnx_created = loc['tnx_created']
         froms = loc['froms']
         outs = loc['outs']
         outns = loc['outns']
-        sc_needed = loc['sc_needed']  # смарт-контракт может создавать смарт-контракты
+        sc_needed = loc['sc_needed']  # Smart contract can create smart contracts
         sc_created = loc['sc_created']
         sc_text = loc['sc_text']
         sc_author = loc['sc_author']
@@ -265,28 +266,27 @@ class Smart_contract:
         sc_needsinf = loc['sc_needsinf']
         sc_payment_opts = loc['sc_payment_opts']
         self.info = str(loc['info'])
-        # Смарт-контракт изменяет переменные froms, outs и outns на параметры совершаемой
-        # им транзакции. Если ему не надо совершать транзакцию, он их не изменяет. Также он может возвращать result.
-        # класс result - str
-        if not self.needsinf:  # контракты, которые принимают входную информацию не могут создавать другие контракты и транзакции
-            if tnx_needed:
-                for i in range(len(froms)):
-                    if not tnx_created[i]:
-                        try:
-                            bch.new_transaction('sc' + str(self.index[0]) + ';' + str(self.index[1]), froms[i], outs[i],
-                                                outns[i],
-                                                'sc' + str(self.index[0]) + ';' + str(self.index[1]),
-                                                'sc' + str(self.index[0]) + ';' + str(self.index[1]))
-                        except:
-                            pass
-            if sc_needed:
-                for i in range(len(sc_created)):
-                    if not sc_created[i]:
-                        try:
-                            bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i],
-                                       sc_payment_opts[i])
-                        except:
-                            pass
+        # froms, outs, outns = params of transactions SC needs
+        # If SC doesn't need a tnx, froms, outs, outns =[], [], []
+        # SC can return result. It's needed for applications that use SCs
+        if tnx_needed:
+            for i in range(len(froms)):
+                if not tnx_created[i]:
+                    try:
+                        bch.new_transaction('sc' + str(self.index[0]) + ';' + str(self.index[1]), froms[i], outs[i],
+                                            outns[i],
+                                            'sc' + str(self.index[0]) + ';' + str(self.index[1]),
+                                            'sc' + str(self.index[0]) + ';' + str(self.index[1]))
+                    except:
+                        pass
+        if sc_needed:
+            for i in range(len(sc_created)):
+                if not sc_created[i]:
+                    try:
+                        bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i],
+                                   sc_payment_opts[i])
+                    except:
+                        pass
         self.result = result
         return result, tnx_needed, tnx_created, froms, outs, outns
 
