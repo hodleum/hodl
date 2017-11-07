@@ -11,11 +11,13 @@ def h(s):
 
 def gen_keys():
     """Generates keys"""
-    # todo: написать генерацию ключей (privatekey, publickey - str)
-    return privatekey, publickey
+    privatekey = RSA.generate(2048)
+    publickey = privatekey.publickey()
+    return privatekey.exportKey().decode(), publickey.exportKey().decode()
 
-def sign(plaintext, priv_key):
+def sign(plaintext, private_key):
     """Creates signature"""
+    priv_key = RSA.importKey(private_key)
     plaintext = bytes(plaintext,'utf8')
     # creation of signature
     myhash = SHA.new(plaintext)
@@ -23,8 +25,9 @@ def sign(plaintext, priv_key):
     signature = signature.sign(myhash)
     return signature
 
-def verify_sign(sign, plaintext, pub_key):
+def verify_sign(sign, plaintext, public_key):
     """Verifies signature"""
+    pub_key = RSA.importKey(public_key) 
     plaintext = bytes(plaintext,'utf8')
     # decryption signature
     myhash = SHA.new(plaintext)
