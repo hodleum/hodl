@@ -11,7 +11,9 @@ class Blockchain(list):
     """Class for blockchain"""
     def __add__(self, other):    # todo: дописать
         """Merges blockchains (consensus)"""
-        pass
+        if other.is_valid():
+            if len(other) > len(self):
+                self = other
 
     def money(self, wallet):
         """Counts money on wallet"""
