@@ -2,6 +2,7 @@ import cryptogr as cg
 import time
 from itertools import chain
 import json
+import mining
 
 minerfee = 1
 txs_in_block = 50
@@ -24,9 +25,11 @@ class Blockchain(list):
                     money += txs.outns[txs.outs.index(wallet)]
         return money
 
-    def new_block(self, n, creator, txs=[]):
+    def new_block(self, creator, txs=[]):
         """Creates the new block and adds it to chain"""
-        self.append(Block(n, creator, self, txs))
+        b = Block(0, creator, self, txs)
+        b = mining.mine(b)
+        self.append(b)
 
     def is_valid(self):
         """Returns validness of the whole chain"""
@@ -124,6 +127,8 @@ class Block:
             h = h + str(t.hash)
             if not t.is_valid(bch):
                 return False
+        if not mining.validate(self):
+            return False
         v = cg.h(str(h)) == self.h and self.prevhash == bch[bch.index(self) - 1].h
         return v
 
@@ -145,12 +150,15 @@ class Transaction:
 
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
-        self.gen(*json.loads(s))
+        s = json.loads(s)
+        print(149, s[2])
+        self.gen(s[0], s[1], s[2], s[3], s[4], s[5])
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
         # номер нужной транзакции в блоке),
         # из которых эта берет деньги
+        print(156, outs)
         self.outs = outs  # номера кошельков-адресатов
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
