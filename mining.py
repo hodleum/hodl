@@ -1,3 +1,6 @@
+import block
+
+
 proofs_of_work_coef = 1
 proofs_of_stake_coef = 1
 proofs_of_capacity_coef = 1
@@ -9,9 +12,13 @@ def mine(block):
     return b
 
 
-def validate(block):
+def validate(b):
     """Checks is block mined"""
     # todo: write mining.validate()
-    v = True
-
-    return v
+    p = 0
+    for prop in b.proportions:
+        p += prop
+    if p != block.minerfee:
+        return False
+    # осталось чуть-чуть
+    return True

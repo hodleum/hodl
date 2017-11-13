@@ -25,9 +25,9 @@ class Blockchain(list):
                     money += txs.outns[txs.outs.index(wallet)]
         return money
 
-    def new_block(self, creator, txs=[]):
+    def new_block(self, creators, proportions, txs=[]):
         """Creates the new block and adds it to chain"""
-        b = Block(0, creator, self, txs)
+        b = Block(0, creators, proportions, self, txs)
         b = mining.mine(b)
         self.append(b)
 
@@ -73,7 +73,7 @@ class Blockchain(list):
 
 class Block:
     """Class for blocks"""
-    def __init__(self, n=0, creator='', bch=Blockchain(), txs=[], contracts=[]):
+    def __init__(self, n=0, creators=[], proportions=[], bch=Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
             self.prevhash = bch[-1].h
@@ -81,15 +81,16 @@ class Block:
             self.prevhash = '0'
         self.timestamp = time.time()
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], [creator], [minerfee], (len(bch), 0), 'mining', 'mining')
+        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), 'mining', 'mining')
         self.txs = [tnx0] + txs
         self.contracts = contracts
-        self.creator = creator
+        self.creators = creators
+        self.proportions = proportions
         self.update()
 
     def __str__(self):
         """Encodes block to str using JSON"""
-        return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creator,
+        return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
                            [str(c) for c in self.contracts]))
 
     def from_json(self, s):
@@ -103,7 +104,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creator = s[1], s[2], s[3], s[4]
+        self.n, self.timestamp, self.prevhash, self.creators = s[1], s[2], s[3], s[4]
         self.update()
 
     def append(self, txn):
@@ -120,7 +121,7 @@ class Block:
         """Returns validness of block"""
         h = str(bch.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
-                or self.txs[0].outs != [self.creator] \
+                or self.txs[0].outs != [self.creators] \
                 or self.txs[0].outns != minerfee:
             return False
         for t in self.txs[1:]:
@@ -201,7 +202,8 @@ class Transaction:
         for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
             try:
                 if t == ['nothing']:
-                    if not (self.index[1] == 0 and self.outs[0] == bch[self.index[0]].creator):
+                    if not (self.index[1] == 0 and self.outs[0] == bch[self.index[0]].creators and
+                                    self.outns == bch[self.index[0]].proportions):
                         return False
                     inp = minerfee
                 else:
