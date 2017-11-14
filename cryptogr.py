@@ -7,7 +7,7 @@ from Crypto.Hash import SHA
 # todo: all keys must be str
 def h(s):
     """Hash"""
-    return str(MD5.new(bytes(str(s), 'utf-8')).digest())
+    return ''.join([str(e) for e in list(MD5.new(bytes(str(s), 'utf-8')).digest())])
 
 def gen_keys():
     """Generates keys"""
