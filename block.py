@@ -20,9 +20,9 @@ class Blockchain(list):
         """Counts money on wallet"""
         money = 0
         for block in self:  # перебираем все транзакции в каждом блоке
-            for txs in block.txs:
-                if wallet in txs.outs and txs.is_open(self):
-                    money += txs.outns[txs.outs.index(wallet)]
+            for tnx in block.txs:
+                if wallet in tnx.outs and tnx.is_open(self):
+                    money += tnx.outns[tnx.outs.index(wallet)]
         return money
 
     def new_block(self, creators, proportions, txs=[]):
@@ -159,7 +159,6 @@ class Transaction:
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
         # номер нужной транзакции в блоке),
         # из которых эта берет деньги
-        print(156, outs)
         self.outs = outs  # номера кошельков-адресатов
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
