@@ -14,35 +14,33 @@ def pow_mine(b, n, t):
         b.timestamp = time.time()
         b.n = i
         b.update()
-        if b.h < n:
-            return block
+        if int(b.h) < n:
+            return b
     return b
 
 
-def pos_mine(block, bch):
+def pos_mine(b, bch):
     """Proofs-of-stake mining"""
     miners = []
-    for b in bch:
-        for tnx in b.txs:
-            if 'mining' in tnx.outs:
-                miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
+    for tnx in bch[-1].txs:
+        if 'mining' in tnx.outs:
+            miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
     miners.sort()
-    i = int(cg.h(bch[-1].txs[-1])) % len(miners)    # todo: добавить функцию, через которую будет проходить эта инфа
-    block.creators.append(miners[i])
+    i = (int(bch[-1].txs[-1].hash) % len(miners)) ** 0.5
+    b.creators.append(miners[i])
 
-
-def poc_mine(block):
+def poc_mine(b, bch):
     """Proofs-of-capacity mining"""
     pass
 
 
-def mine(block):
+def mine(b, bch):
     # todo: write mining.mine()
-    b = block
+    pos_mine(b, bch)
     return b
 
 
-def validate(b):
+def validate(b, bch):
     """Checks is block mined"""
     # todo: write mining.validate()
     p = 0
@@ -50,5 +48,21 @@ def validate(b):
         p += prop
     if p != block.minerfee:
         return False
-    # осталось чуть-чуть
+    index = bch.index(b)
+    posminers = []
+    for tnx in bch[index-1].txs:
+        if 'mining' in tnx.outs:
+            posminers.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
+    bminers = set()
+    bminers.append(posminers[(int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5])
+
+    if int(b.h) >= b.n:
+        return False
+    ns = [b.n]
+    # PoC, proportions checking, ns finding
+    # warning: thing about what to do when some ns are equal
+    if not b.n == max(ns):
+        return False
+    if not bminers == set(b.miners):
+        return False
     return True
