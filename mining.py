@@ -16,6 +16,7 @@ def pow_mine(b, n, t):
         b.update()
         if int(b.h) < n:
             return b
+    b.update()
     return b
 
 
@@ -28,10 +29,19 @@ def pos_mine(b, bch):
     miners.sort()
     i = (int(bch[-1].txs[-1].hash) % len(miners)) ** 0.5
     b.creators.append(miners[i])
+    b.update()
+    return b
 
 def poc_mine(b, bch):
     """Proofs-of-capacity mining"""
-    pass
+    bindex = bch.index(b)
+    miners = bch[bindex-1].pocminers
+    miners.sort()
+    i = (int(bch[-1].txs[-1].hash) % len(miners)) ** 0.5
+    miner = miners[i]
+    b.creators.append(miner[1])
+    b.update()
+    return b
 
 
 def mine(b, bch):

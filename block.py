@@ -6,7 +6,7 @@ import mining
 
 minerfee = 1
 txs_in_block = 50
-maxblocksize = 40000
+maxblocksize = 4000000
 
 class Blockchain(list):
     """Class for blockchain"""
@@ -21,14 +21,13 @@ class Blockchain(list):
         money = 0
         for block in self:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs:
-                if wallet in tnx.outs and tnx.is_open(self):
+                if wallet in tnx.outs and not tnx.spent(self)[tnx.outs.index(wallet)]:
                     money += tnx.outns[tnx.outs.index(wallet)]
         return money
 
     def new_block(self, creators, proportions, txs=[]):
         """Creates the new block and adds it to chain"""
         b = Block(0, creators, proportions, self, txs)
-        b = mining.mine(b)
         self.append(b)
 
     def is_valid(self):
@@ -86,12 +85,13 @@ class Block:
         self.contracts = contracts
         self.creators = creators
         self.proportions = proportions
+        self.pocminers = []
         self.update()
 
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts]))
+                           [str(c) for c in self.contracts], self.pocminers))
 
     def from_json(self, s):
         """Decodes block from str using JSON"""
@@ -104,7 +104,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators = s[1], s[2], s[3], s[4]
+        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers = s[1], s[2], s[3], s[4], s[5]
         self.update()
 
     def append(self, txn):
@@ -206,14 +206,14 @@ class Transaction:
                         return False
                     inp = minerfee
                 else:
-                    txs = bch[int(t[0])].txs[int(t[1])]
-                    if not txs.is_valid:
+                    tnx = bch[int(t[0])].txs[int(t[1])]
+                    if not tnx.is_valid:
                         print(self.index, 'is not valid: from is not valid')
                         return False
-                    if not txs.is_open():
+                    if tnx.spent(bch)[tnx.outs.index(self.author)]:
                         print(self.index, 'is not valid: from is not valid')
                         return False
-                    inp = inp + txs.outns[txs.outs.index(self.author)]
+                    inp = inp + tnx.outns[tnx.outs.index(self.author)]
             except:
                 print(self.index, 'is not valid: exception197')
                 return False  # Если возникает какая-нибудь ошибка, то транзакция точно невалидная
@@ -230,16 +230,18 @@ class Transaction:
             return False
         return True
 
-    def is_open(self, bch):
-        """Is transaction don't used by other transaction"""
-        for block in bch:  # перебираем все транзакции в каждом блоке
-            for txs in block.txs:
-                if self.index in txs.froms:
-                    return False
-        return True
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
+    def spent(self, bch):
+        """Is transaction used by other transaction"""
+        spent = [False] * len(self.outs)
+        for block in bch:  # перебираем все транзакции в каждом блоке
+            for tnx in block.txs:
+                if self.index in tnx.froms:
+                    spent[self.outs.index(tnx.author)] = True
+        return spent
 
 
 class Smart_contract:
