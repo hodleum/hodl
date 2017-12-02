@@ -80,7 +80,7 @@ class Block:
             self.prevhash = '0'
         self.timestamp = time.time()
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), 'mining', 'mining')
+        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), b'mining')
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
@@ -147,13 +147,12 @@ class Transaction:
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
         """Encodes transaction to str using JSON"""
-        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, self.sign))
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, self.sign.decode('utf-8')))
 
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
-        print(149, s[2])
-        self.gen(s[0], s[1], s[2], s[3], s[4], s[5])
+        self.gen(s[0], s[1], s[2], s[3], s[4], s[5].encode('utf-8'))
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
@@ -186,7 +185,7 @@ class Transaction:
             try:
                 scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
                 sc = bch[scind[0]].contracts[scind[1]]
-                tnx_needed, tnx_created, froms, outs, outns = sc.exec()[1:]
+                tnx_needed, tnx_created, froms, outs, outns = sc.execute()[1:]
                 if tnx_needed:
                     selfind = froms.index(self.froms)
                     if not (tnx_created and outs[selfind] == self.outs and outns[selfind] == self.outns):
