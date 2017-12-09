@@ -72,6 +72,7 @@ class Blockchain(list):
 
 class Block:
     """Class for blocks"""
+    # todo: add time to block and transaction
     def __init__(self, n=0, creators=[], proportions=[], bch=Blockchain(), txs=[], contracts=[]):
         self.n = n
         try:
@@ -91,11 +92,12 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.pocminers))
+                           [str(c) for c in self.contracts], self.pocminers, self.proportions))
 
     def from_json(self, s):
         """Decodes block from str using JSON"""
         s = json.loads(s)
+        self.txs = []
         for t in s[0]:
             tnx = Transaction()
             tnx.from_json(t)
@@ -104,7 +106,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers = s[1], s[2], s[3], s[4], s[5]
+        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.proportions = s[1], s[2], s[3], s[4], s[6], s[7]
         self.update()
 
     def append(self, txn):
@@ -147,12 +149,13 @@ class Transaction:
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
         """Encodes transaction to str using JSON"""
-        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, self.sign.decode('utf-8')))
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, str(list(self.sign))))
 
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
-        self.gen(s[0], s[1], s[2], s[3], s[4], s[5].encode('utf-8'))
+        self.gen(s[0], s[1], s[2], s[3], tuple(s[4]), bytearray(eval(s[5])))
+        self.update()
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
@@ -168,9 +171,7 @@ class Transaction:
             self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns), privkey)
         else:  # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
-        x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
-                          [str(f) for f in self.outs], [str(f) for f in self.outns]))
-        self.hash = cg.h(str(x))
+        self.update()
 
     def is_valid(self, bch):
         """Returns validness of transaction.
@@ -241,6 +242,12 @@ class Transaction:
                 if self.index in tnx.froms:
                     spent[self.outs.index(tnx.author)] = True
         return spent
+
+    def update(self):
+        x = ''.join(chain(str(list(self.sign)), str(self.author), str(self.index), [str(f) for f in self.froms],
+                          [str(f) for f in self.outs], [str(f) for f in self.outns]))
+        self.hash = cg.h(str(x))
+        return self.hash
 
 
 class Smart_contract:
