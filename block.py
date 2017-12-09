@@ -73,20 +73,27 @@ class Blockchain(list):
 class Block:
     """Class for blocks"""
     # todo: add time to block and transaction
-    def __init__(self, n=0, creators=[], proportions=[], bch=Blockchain(), txs=[], contracts=[]):
+    def __init__(self, n=0, creators=[], proportions=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
         try:
             self.prevhash = bch[-1].h
         except:
             self.prevhash = '0'
-        self.timestamp = time.time()
+        if t == 'now':
+            self.timestamp = time.time()
+        else:
+            self.timestamp = t
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), b'mining')
+        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), b'mining', self.timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
         self.proportions = proportions
         self.pocminers = []
+        self.powminers = []
+        self.posminers = []
+        self.powhash = 0
+        self.powhash = self.calc_pow_hash()
         self.update()
 
     def __str__(self):
@@ -107,6 +114,7 @@ class Block:
             sc.from_json(c)
             self.contracts.append(sc)
         self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.proportions = s[1], s[2], s[3], s[4], s[6], s[7]
+        self.powhash = self.calc_pow_hash()
         self.update()
 
     def append(self, txn):
@@ -116,23 +124,30 @@ class Block:
 
     def update(self):
         """Updates hash"""
-        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(t.hash) for t in self.txs])
+        h = ''.join([str(self.powhash)] + [str(t.hash) for t in self.txs] +
+                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
+                    [str(e) for e in self.pocminers] + [str(e) for e in self.posminers])
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
         """Returns validness of block"""
-        h = str(bch.index(self)) + str(self.prevhash) + str(self.timestamp) + str(self.n)
         if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
-                or self.txs[0].outs != [self.creators] \
-                or self.txs[0].outns != minerfee:
+                or self.txs[0].outs != self.creators:
+            print('invalid first tnx')
+            return False
+        n = 0
+        for o in self.txs[0].outns:
+            n += o
+        if n != minerfee:
+            print('not all money in first tnx')
             return False
         for t in self.txs[1:]:
-            h = h + str(t.hash)
             if not t.is_valid(bch):
+                print('tnx isnt valid')
                 return False
-        if not mining.validate(self):
+        if not mining.validate(self, bch):
             return False
-        v = cg.h(str(h)) == self.h and self.prevhash == bch[bch.index(self) - 1].h
+        v = self.prevhash == bch[bch.index(self) - 1].h
         return v
 
     def __eq__(self, other):
@@ -142,6 +157,10 @@ class Block:
         """is block full"""
         return len(str(self)) >= maxblocksize
 
+    def calc_pow_hash(self):
+        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(e) for e in self.creators])
+        return cg.h(str(h))
+
 
 class Transaction:
     """Class for transaction"""
@@ -149,15 +168,15 @@ class Transaction:
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
         """Encodes transaction to str using JSON"""
-        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, str(list(self.sign))))
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, str(list(self.sign)), self.timestamp))
 
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
-        self.gen(s[0], s[1], s[2], s[3], tuple(s[4]), bytearray(eval(s[5])))
+        self.gen(s[0], s[1], s[2], s[3], tuple(s[4]), bytearray(eval(s[5])), '', s[6])
         self.update()
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey=''):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
         # номер нужной транзакции в блоке),
         # из которых эта берет деньги
@@ -169,8 +188,10 @@ class Transaction:
             # или может создаваться новая транзакция с помощью Transaction().
             # Соответственно может быть нужна новая подпись.
             self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns), privkey)
+            self.timestamp = time.time()
         else:  # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
+            self.timestamp = t
         self.update()
 
     def is_valid(self, bch):
@@ -195,7 +216,7 @@ class Transaction:
                     print(self.index, 'is not valid: sc')
                     return False
             except:
-                print(self.index, 'is not valid: exception183')
+                print(self.index, 'is not valid: exception')
                 return False
         inp = 0
         for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
@@ -215,19 +236,16 @@ class Transaction:
                         return False
                     inp = inp + tnx.outns[tnx.outs.index(self.author)]
             except:
-                print(self.index, 'is not valid: exception197')
-                return False  # Если возникает какая-нибудь ошибка, то транзакция точно невалидная
+                print(self.index, 'is not valid: exception')
+                return False
         o = 0
-        for n in self.outns:  # должны быть израсходованы все взятые деньги
+        for n in self.outns:  # all money must be spent
             o = o + n
         if not o == inp:
             print(self.index, 'is not valid: not all money')
             return False
         x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
                           [str(f) for f in self.outs], [str(f) for f in self.outns]))
-        if not self.hash == cg.h(str(x)):
-            print(self.index, 'is not valid: hash is not valid')
-            return False
         return True
 
 
@@ -245,7 +263,7 @@ class Transaction:
 
     def update(self):
         x = ''.join(chain(str(list(self.sign)), str(self.author), str(self.index), [str(f) for f in self.froms],
-                          [str(f) for f in self.outs], [str(f) for f in self.outns]))
+                          [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
         self.hash = cg.h(str(x))
         return self.hash
 

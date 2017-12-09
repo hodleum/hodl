@@ -64,7 +64,11 @@ def validate(b, bch):
         if 'mining' in tnx.outs:
             posminers.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
     bminers = set()
-    bminers.append(posminers[(int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5])
+    try:
+        bminers.add(posminers[(int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5])
+    except ZeroDivisionError:
+        pass
+    return True
 
     if int(b.h) >= b.n:
         return False
