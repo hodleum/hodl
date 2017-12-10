@@ -3,19 +3,23 @@ import time
 import cryptogr as cg
 
 
-proofs_of_work_coef = 1
-proofs_of_stake_coef = 1
-proofs_of_capacity_coef = 1
 #todo: write mining
 
-def pow_mine(b, n, t):
+def pow_mine(bch, b):
     """proofs-of-work mining"""
-    for i in range(t):
-        b.timestamp = time.time()
-        b.n = i
-        b.update()
-        if int(b.h) < n:
-            return b
+    miners = bch[-1].powminers
+    miners.sort()
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-2].hash))) ** 2 % len(miners)
+    while True:
+        bl = block.Block(miners[i][1], [miners[i][2]], [0.4, 0.3, 0.3], bch, [], [], miners[i][3])
+        if bl.powhash < miners[i][0]:
+            break
+        else:
+            i += 1
+            if i == len(miners):
+                 i = 0
+    b.creators.append(miners[i])
+    b.proportions.append(0.4)
     b.update()
     return b
 
@@ -27,8 +31,9 @@ def pos_mine(b, bch):
         if 'mining' in tnx.outs:
             miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
     miners.sort()
-    i = (int(bch[-1].txs[-1].hash) % len(miners)) ** 0.5
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash))) ** 2 % len(miners)
     b.creators.append(miners[i])
+    b.proportions.append(0.3)
     b.update()
     return b
 
@@ -37,9 +42,10 @@ def poc_mine(b, bch):
     bindex = bch.index(b)
     miners = bch[bindex-1].pocminers
     miners.sort()
-    i = (int(bch[-1].txs[-1].hash) % len(miners)) ** 0.5
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-4].hash))) ** 2 % len(miners)
     miner = miners[i]
     b.creators.append(miner[1])
+    b.proportions.append(0.3)
     b.update()
     return b
 

@@ -39,7 +39,7 @@ class BlockUnittest(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key], [0.75, 0.25])
         bch.new_block([my_keys[1], your_pub_key], [0.85, 0.15])
         bch.new_transaction(my_keys[1], [[0, 0]], [your_pub_key, my_keys[1]], [0.5, 0.25], 'signing', my_keys[0])
-        self.assertTrue(bch[1].is_valid(bch))
+        self.assertTrue(bch.is_valid())
 
 
 

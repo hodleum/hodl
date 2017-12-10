@@ -91,7 +91,6 @@ class Block:
         self.proportions = proportions
         self.pocminers = []
         self.powminers = []
-        self.posminers = []
         self.powhash = 0
         self.powhash = self.calc_pow_hash()
         self.update()
@@ -99,7 +98,7 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.pocminers, self.proportions))
+                           [str(c) for c in self.contracts], self.pocminers, self.powminers,  self.proportions))
 
     def from_json(self, s):
         """Decodes block from str using JSON"""
@@ -113,7 +112,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.proportions = s[1], s[2], s[3], s[4], s[6], s[7]
+        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers, self.proportions = s[1], s[2], s[3], s[4], s[6], s[7], s[8]
         self.powhash = self.calc_pow_hash()
         self.update()
 
@@ -126,7 +125,7 @@ class Block:
         """Updates hash"""
         h = ''.join([str(self.powhash)] + [str(t.hash) for t in self.txs] +
                     [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
-                    [str(e) for e in self.pocminers] + [str(e) for e in self.posminers])
+                    [str(e) for e in self.pocminers])
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
@@ -147,7 +146,11 @@ class Block:
                 return False
         if not mining.validate(self, bch):
             return False
-        v = self.prevhash == bch[bch.index(self) - 1].h
+        i = bch.index(self)
+        if i != 0:
+            v = self.prevhash == bch[i - 1].h
+        else:
+            v = True
         return v
 
     def __eq__(self, other):
@@ -158,7 +161,7 @@ class Block:
         return len(str(self)) >= maxblocksize
 
     def calc_pow_hash(self):
-        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(e) for e in self.creators])
+        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(e) for e in self.creators[:1]])
         return cg.h(str(h))
 
 
