@@ -1,11 +1,9 @@
 import cryptogr as cg
-from net import *
+import net
+import block
 
 
-def listen_loop():
-    """Listens, answers, listens, etc."""
-    while True:
-        new_listen_thread()
+bch = block.Blockchain()
 
 class Wallet:
     def __init__(self):
@@ -21,3 +19,11 @@ class Wallet:
         froms = []
         # todo: write froms generation algorythm
         bch.new_transaction(self.pubkey, froms, outs, outns, privkey=self.privkey)
+
+    def my_money(self):
+        return bch.money(self.pubkey)
+
+    def listen_in_thread(self):
+        while True:
+            mess = net.listen(bch)
+            net.handle_mess(bch, mess[0], mess[1])

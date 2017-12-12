@@ -9,7 +9,7 @@ def pow_mine(bch, b):
     """proofs-of-work mining"""
     miners = bch[-1].powminers
     miners.sort()
-    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-2].hash))) ** 2 % len(miners)
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-2].hash)) ** 2) % len(miners)
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], [0.4, 0.3, 0.3], bch, [], [], miners[i][3])
         if bl.powhash < miners[i][0]:
@@ -31,7 +31,7 @@ def pos_mine(b, bch):
         if 'mining' in tnx.outs:
             miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
     miners.sort()
-    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash))) ** 2 % len(miners)
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash)) ** 2) % len(miners)
     b.creators.append(miners[i])
     b.proportions.append(0.3)
     b.update()
@@ -42,7 +42,7 @@ def poc_mine(b, bch):
     bindex = bch.index(b)
     miners = bch[bindex-1].pocminers
     miners.sort()
-    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-4].hash))) ** 2 % len(miners)
+    i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-4].hash)) ** 2) % len(miners)
     miner = miners[i]
     b.creators.append(miner[1])
     b.proportions.append(0.3)

@@ -10,10 +10,6 @@ global white_peers
 white_peers = set()
 port = 6666
 
-def new_listen_thread():    # todo: дописать
-    """listens in thread, handles mess, returns mess"""
-    pass
-
 def listen():
     """Listens for message, returns tuple (ip, mess)"""
     sock_listen = socket()
@@ -24,7 +20,7 @@ def listen():
     summary_tuple = (ip, mess)
     return summary_tuple
 
-def handle_mess(mess, ip):    # todo: дописать
+def handle_mess(bch, mess, ip):    # todo: дописать
     """Handles mess: gets new peers, merges blockchains, answers"""
     mess = json.loads(mess)
     white_peers = valid_peers(set(mess['white_peers'])) | set(white_peers)
