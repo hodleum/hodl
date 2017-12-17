@@ -1,6 +1,8 @@
 import cryptogr as cg
 import net
 import block
+import mining
+import time
 
 
 bch = block.Blockchain()
@@ -27,3 +29,7 @@ class Wallet:
         while True:
             mess = net.listen(bch)
             net.handle_mess(bch, mess[0], mess[1])
+
+    def act(self):
+        if mining.mining_needed(bch, time.time()):
+            bch.append(mining.mine(bch))

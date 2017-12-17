@@ -3,7 +3,13 @@ import time
 import cryptogr as cg
 
 
-#todo: write mining
+def mine(bch):
+    b = block.Block()
+    b = pow_mining(bch, b)
+    b = pos_mining(b, bch)
+    b = poc_mining(b, bch)
+    return b
+
 
 def pow_mining(bch, b):
     """proofs-of-work mining"""
@@ -18,6 +24,7 @@ def pow_mining(bch, b):
             i += 1
             if i == len(miners):
                  i = 0
+    b.timestamp = miners[i][3]
     b.creators.append(miners[i])
     b.proportions.append(0.4)
     b.update()
@@ -40,8 +47,7 @@ def pos_mining(b, bch):
 def poc_mining(b, bch):
     """Proofs-of-capacity mining"""
     # miner[0] - n, miner[1] - miner's public key, miner[2] - xs miner has calculated
-    bindex = bch.index(b)
-    miners = bch[bindex-1].pocminers
+    miners = bch[-1].pocminers
     for i in range(miners):
         miners[i] = [miners[i][2] * 20 + miners[i][0]] + miners[i]
     miners.sort()
@@ -55,7 +61,7 @@ def poc_mining(b, bch):
                 v = False
                 break
         if v:
-            i += 1
+            i -= 1
             miner = miners[i]
             y = [((int(bch[-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(10)]
     b.creators.append(miner[1])
@@ -75,7 +81,6 @@ def poc_mine(n, bch, myaddr):
         f.append(str((int(cg.h(str(i+len(bch)))) + int(cg.h(str(myaddr)))) % n)+'\n')
     file.writelines(f)
     file.close()
-    print(76, time.time()-t)
     with open('poc_mining.txt', 'r') as file:
         f = [int(i) for i in file.readlines()]
     t = time.time()
@@ -86,7 +91,6 @@ def poc_mine(n, bch, myaddr):
         except:
             pass
         t = time.time()
-    print(t - time.time())
     return xs
 
 
@@ -132,3 +136,7 @@ def validate(b, bch):
     if not bminers == set(b.miners):
         return False
     return True
+
+
+def mining_delta_t(bchlen):
+    return int(((0.001*x)**1.15)/100+5)
