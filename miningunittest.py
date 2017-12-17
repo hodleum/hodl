@@ -15,8 +15,8 @@ class MiningUnittest(unittest.TestCase):
         print(n, t)
 
     def test_poc(self):
-        xs = mining.poc_mine(10, bch, my_keys[1])
-        print(xs)
+        xs = mining.poc_mine(1000, bch, my_keys[1])
+        print(len(xs), xs)
 
 
 if __name__ == '__main__':
