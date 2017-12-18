@@ -130,27 +130,30 @@ class Block:
 
     def is_valid(self, bch):
         """Returns validness of block"""
-        if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
-                or self.txs[0].outs != self.creators:
-            print('invalid first tnx')
-            return False
-        n = 0
-        for o in self.txs[0].outns:
-            n += o
-        if n != minerfee:
-            print('not all money in first tnx')
-            return False
-        for t in self.txs[1:]:
-            if not t.is_valid(bch):
-                print('tnx isnt valid')
-                return False
-        if not mining.validate(self, bch):
-            return False
         i = bch.index(self)
+        v = True
         if i != 0:
-            v = self.prevhash == bch[i - 1].h
-        else:
-            v = True
+            if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
+                    or self.txs[0].outs != self.creators:
+                print('invalid first tnx')
+                return False
+            n = 0
+            for o in self.txs[0].outns:
+                n += o
+            if n != minerfee:
+                print('not all money in first tnx')
+                return False
+            for t in self.txs[1:]:
+                if not t.is_valid(bch):
+                    print('tnx isnt valid')
+                    return False
+            if not mining.validate(self, bch):
+                return False
+            if i != 0:
+                v = self.prevhash == bch[i - 1].h
+            else:
+                pass
+        # todo: write first block processing
         return v
 
     def __eq__(self, other):

@@ -3,6 +3,9 @@ import time
 import cryptogr as cg
 
 
+pow_max = 1000000000000000000000000000000000000
+
+
 def mine(bch):
     b = block.Block()
     b = pow_mining(bch, b)
@@ -18,7 +21,7 @@ def pow_mining(bch, b):
     i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash)) % (len(miners) ** 0.5)) ** 2
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], [0.4, 0.3, 0.3], bch, [], [], miners[i][3])
-        if int(bl.powhash) < miners[i][0]:
+        if int(bl.powhash) < miners[i][0] < pow_max:
             break
         else:
             i += 1
@@ -99,11 +102,11 @@ def pow_mine(bch, nmax, myaddr):
     while True:
         t = time.time()
         bl = block.Block(n, [myaddr], [0.4, 0.3, 0.3], bch, [], [], t)
-        if int(bl.powhash) < nmax:
+        if int(bl.calc_pow_hash()) < nmax:
             break
         else:
             n += 1
-    return n, t
+    return n, t, bl.calc_pow_hash()
 
 
 def validate(b, bch):
@@ -121,16 +124,13 @@ def validate(b, bch):
             posminers.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
     bminers = set()
     try:
-        bminers.add(posminers[(int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5])
+        bminers.add(posminers[int((int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5)])
     except ZeroDivisionError:
         pass
-    return True
-
     if int(b.h) >= b.n:
         return False
     ns = [b.n]
     # PoC, proportions checking, ns finding
-    # warning: thing about what to do when some ns are equal
     if not b.n == max(ns):
         return False
     if not bminers == set(b.miners):
@@ -138,5 +138,5 @@ def validate(b, bch):
     return True
 
 
-def mining_delta_t(bchlen):
-    return int(((0.001*x)**1.15)/100+5)
+def mining_delta_t(bch_len):
+    return int(((0.001*bch_len)**1.15)/100+5)
