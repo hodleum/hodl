@@ -263,7 +263,7 @@ class Transaction:
         spent = [False] * len(self.outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs:
-                if self.index in tnx.froms:
+                if self.index in tnx.froms and not 'mining' in tnx.outs:
                     spent[self.outs.index(tnx.author)] = True
         return spent
 
