@@ -31,5 +31,5 @@ class Wallet:
             net.handle_mess(bch, mess[0], mess[1])
 
     def act(self):
-        if mining.mining_delta_t(len(bch)) <= time.time() - bch[-1].timestamp and len(bch[-1].txs) > 3:
+        if bch[-1].is_full:
             bch.append(mining.mine(bch))

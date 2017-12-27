@@ -31,8 +31,8 @@ def pow_mining(bch, b):
         raise TooLessTxsError
     while True:
         print(i)
-        bl = block.Block(miners[i][1], [miners[i][2]], [0.4, 0.3, 0.3], bch, [], [], miners[i][3])
-        if int(bl.calc_pow_hash()) <= miners[i][0] < pow_max:
+        bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
+        if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
             break
         else:
             i -= 1
@@ -41,8 +41,7 @@ def pow_mining(bch, b):
             if i < 0:
                  i = len(miners) - 1
     b.timestamp = miners[i][3]
-    b.creators.append(miners[i])
-    b.proportions.append(0.4)
+    b.creators = [miners[i][2]]
     b.update()
     return b
 
@@ -61,7 +60,6 @@ def pos_mining(b, bch):
     except IndexError:
         raise TooLessTxsError
     b.creators.append(miners[i])
-    b.proportions.append(0.3)
     b.update()
     return b
 
@@ -97,7 +95,6 @@ def poc_mining(b, bch):
             miner = miners[i]
             y = [((int(bch[-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
     b.creators.append(miner[1])
-    b.proportions.append(0.3)
     b.update()
     return b
 
@@ -126,7 +123,7 @@ def pow_mine(bch, nmax, myaddr):
     n = 0
     while True:
         t = time.time()
-        bl = block.Block(n, [myaddr], [0.4, 0.3, 0.3], bch, [], [], t)
+        bl = block.Block(n, [myaddr], bch, [], [], t)
         if int(bl.calc_pow_hash()) < nmax:
             break
         else:
@@ -134,32 +131,33 @@ def pow_mine(bch, nmax, myaddr):
     return n, t, bl.calc_pow_hash()
 
 
-def validate(b, bch):
+def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
-    p = 0
-    for prop in b.proportions:
-        p += prop
-    if p != block.minerfee:
+    return validate_pow(bch, i) and validate_pos(bch, i) and validate_poc(bch, i)
+
+def validate_pow(bch, i):
+    miners = bch[i].powminers
+    miners.sort(reverse=True)
+    i = ((int(bch[i-1].txs[i - 1].hash) + int(bch[i - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+    while True:
+        bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
+        if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
+            break
+        else:
+            i -= 1
+            if i < 0:
+                 i = len(miners) - 1
+    if not miners[i][2] == bch[i].creators[0] or not bch[i].timestamp == miners[i][3] or not bch[i].n == miners[i][1]:
         return False
-    index = bch.index(b)
-    posminers = []
-    for tnx in bch[index-1].txs:
-        if 'mining' in tnx.outs:
-            posminers.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
-    bminers = set()
-    try:
-        bminers.add(posminers[int((int(bch[index-1].txs[-1].hash) % len(posminers)) ** 0.5)])
-    except ZeroDivisionError:
-        pass
-    if int(b.h) >= b.n:
-        return False
-    ns = [b.n]
-    # PoC, proportions checking, ns finding
-    if not b.n == max(ns):
-        return False
-    if not bminers == set(b.miners):
-        return False
+    return True
+
+def validate_poc(bch, i):
+    b = bch[i]
+    return True
+
+def validate_pos(bch, i):
+    b = bch[i]
     return True
 
 

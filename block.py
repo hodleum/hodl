@@ -21,13 +21,14 @@ class Blockchain(list):
         money = 0
         for block in self:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs:
-                if wallet in tnx.outs and not tnx.spent(self)[tnx.outs.index(wallet)]:
-                    money += tnx.outns[tnx.outs.index(wallet)]
+                for w, n, i in zip(tnx.outs, tnx.outns, range(len(tnx.outns))):
+                    if w == wallet and not tnx.spent(self)[i]:
+                        money += n
         return money
 
-    def new_block(self, creators, proportions, txs=[]):
+    def new_block(self, creators, txs=[]):
         """Creates the new block and adds it to chain"""
-        b = Block(0, creators, proportions, self, txs)
+        b = Block(0, creators, self, txs)
         self.append(b)
 
     def is_valid(self):
@@ -40,11 +41,8 @@ class Blockchain(list):
     def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):
         """Creates new transaction and adds it to the chain"""
         tnx = Transaction()
-        for i, block in enumerate(self[1:]):
-            if not block.is_full():
-                tnx.gen(author, froms, outs, outns, (i, len(block.txs)), sign, privkey)
-                block.append(tnx)
-                break
+        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey)
+        self[-1].append(tnx)
 
     def __str__(self):
         """Encodes blockchain to str"""
@@ -72,8 +70,7 @@ class Blockchain(list):
 
 class Block:
     """Class for blocks"""
-    # todo: add time to block and transaction
-    def __init__(self, n=0, creators=[], proportions=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
+    def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
         try:
             self.prevhash = bch[-1].h
@@ -84,11 +81,10 @@ class Block:
         else:
             self.timestamp = t
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, proportions, (len(bch), 0), b'mining', self.timestamp)
+        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', self.timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
-        self.proportions = proportions
         self.pocminers = []
         self.powminers = []
         self.powhash = 0
@@ -98,7 +94,7 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.pocminers, self.powminers,  self.proportions))
+                           [str(c) for c in self.contracts], self.pocminers, self.powminers))
 
     def from_json(self, s):
         """Decodes block from str using JSON"""
@@ -112,7 +108,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers, self.proportions = s[1], s[2], s[3], s[4], s[6], s[7], s[8]
+        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers = s[1], s[2], s[3], s[4], s[6], s[7]
         self.powhash = self.calc_pow_hash()
         self.update()
 
@@ -147,8 +143,9 @@ class Block:
                 if not t.is_valid(bch):
                     print('tnx isnt valid')
                     return False
-            if not mining.validate(self, bch):
-                return False
+            if not i == 0:
+                if not mining.validate(bch, i):
+                    return False
             if i != 0:
                 v = self.prevhash == bch[i - 1].h
             else:
@@ -179,7 +176,7 @@ class Transaction:
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
-        self.gen(s[0], s[1], s[2], s[3], tuple(s[4]), bytearray(eval(s[5])), '', s[6])
+        self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
         self.update()
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
@@ -189,7 +186,7 @@ class Transaction:
         self.outs = outs  # номера кошельков-адресатов
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
-        self.index = index
+        self.index = list(index)
         if sign == 'signing':  # транзакция может быть уже подписана,
             # или может создаваться новая транзакция с помощью Transaction().
             # Соответственно может быть нужна новая подпись.
@@ -205,6 +202,12 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
+        if self.index[1] == 0:
+            if self.froms != [['nothing']] or self.author != 'mining' \
+                    or self.outs != bch[self.index[0]].creators:
+                return False
+            else:
+                return True
         if not self.author[0:2] == 'sc':
             if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) + str(self.outns), self.author):
                 print(self.index, 'is not valid: sign is wrong')
@@ -229,7 +232,7 @@ class Transaction:
             try:
                 if t == ['nothing']:
                     if not (self.index[1] == 0 and self.outs[0] == bch[self.index[0]].creators and
-                                    self.outns == bch[self.index[0]].proportions):
+                                    self.outns == [0.4, 0.3, 0.3]):
                         return False
                     inp = minerfee
                 else:
@@ -237,7 +240,7 @@ class Transaction:
                     if not tnx.is_valid:
                         print(self.index, 'is not valid: from is not valid')
                         return False
-                    if tnx.spent(bch)[tnx.outs.index(self.author)]:
+                    if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
                         print(self.index, 'is not valid: from is not valid')
                         return False
                     inp = inp + tnx.outns[tnx.outs.index(self.author)]
@@ -258,12 +261,12 @@ class Transaction:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def spent(self, bch):
+    def spent(self, bch, exc=[]):
         """Is transaction used by other transaction"""
         spent = [False] * len(self.outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs:
-                if self.index in tnx.froms and not 'mining' in tnx.outs:
+                if list(self.index) in tnx.froms and not 'mining' in tnx.outs and not tnx.index in exc:
                     spent[self.outs.index(tnx.author)] = True
         return spent
 
