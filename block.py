@@ -77,9 +77,9 @@ class Block:
         except:
             self.prevhash = '0'
         if t == 'now':
-            self.timestamp = time.time()
+            self.timestamp = int(time.time())
         else:
-            self.timestamp = t
+            self.timestamp = int(t)
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', self.timestamp)
         self.txs = [tnx0] + txs

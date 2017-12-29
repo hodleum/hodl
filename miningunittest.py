@@ -50,6 +50,8 @@ class MiningUnittest(unittest.TestCase):
         bch[-1].powminers.append([int(h), n, my_keys[1], t])
         b = mining.mine(bch)
         bch.append(b)
+        print('n', bch[-1].n)
+        self.assertTrue(mining.validate(bch, -1))
 
 
 if __name__ == '__main__':

@@ -24,22 +24,22 @@ def pow_mining(bch, b):
     """proofs-of-work mining"""
     miners = bch[-1].powminers
     miners.sort(reverse=True)
-    print(len(miners), 'miners', miners)
     try:
         i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     except IndexError:
         raise TooLessTxsError
+    i1 = i
     while True:
-        print(i)
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
-        if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
+        if int(bl.calc_pow_hash()) == miners[i][0] <= pow_max:
             break
         else:
             i -= 1
-            if len(miners) == 1:
+            if i == i1:
                 raise NoValidMinersError
             if i < 0:
                  i = len(miners) - 1
+    b.n = miners[i][1]
     b.timestamp = miners[i][3]
     b.creators = [miners[i][2]]
     b.update()
@@ -122,7 +122,7 @@ def poc_mine(n, bch, myaddr):
 def pow_mine(bch, nmax, myaddr):
     n = 0
     while True:
-        t = time.time()
+        t = int(time.time())
         bl = block.Block(n, [myaddr], bch, [], [], t)
         if int(bl.calc_pow_hash()) < nmax:
             break
@@ -137,11 +137,13 @@ def validate(bch, i=-1):
     return validate_pow(bch, i) and validate_pos(bch, i) and validate_poc(bch, i)
 
 def validate_pow(bch, i):
-    miners = bch[i].powminers
+    miners = bch[i - 1].powminers
     miners.sort(reverse=True)
-    i = ((int(bch[i-1].txs[i - 1].hash) + int(bch[i - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+    i = ((int(bch[i - 1].txs[i - 1].hash) + int(bch[i - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+    bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
+        bl.prevhash = bch[i-1].h
         if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
             break
         else:
@@ -154,6 +156,7 @@ def validate_pow(bch, i):
 
 def validate_poc(bch, i):
     b = bch[i]
+
     return True
 
 def validate_pos(bch, i):
