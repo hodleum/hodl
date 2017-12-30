@@ -81,7 +81,7 @@ class Block:
         else:
             self.timestamp = int(t)
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', self.timestamp)
+        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
@@ -119,6 +119,7 @@ class Block:
 
     def update(self):
         """Updates hash"""
+        self.sort()
         h = ''.join([str(self.powhash)] + [str(t.hash) for t in self.txs] +
                     [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
                     [str(e) for e in self.pocminers])
@@ -164,6 +165,13 @@ class Block:
         h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(e) for e in self.creators[:1]])
         return cg.h(str(h))
 
+    def sort(self):
+        ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs]
+        ts.sort()
+        self.txs = [t[2] for t in ts]
+        for i in range(len(self.txs)):
+            self.txs[i].index[1] = i
+
 
 class Transaction:
     """Class for transaction"""
@@ -187,11 +195,15 @@ class Transaction:
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
         self.index = list(index)
+        if t == 'now':
+            self.timestamp = time.time()
+        else:
+            self.timestamp = t
         if sign == 'signing':  # транзакция может быть уже подписана,
             # или может создаваться новая транзакция с помощью Transaction().
             # Соответственно может быть нужна новая подпись.
-            self.sign = cg.sign(str(self.froms) + str(self.outs) + str(self.outns), privkey)
-            self.timestamp = time.time()
+            self.update()
+            self.sign = cg.sign(self.hash, privkey)
         else:  # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
             self.sign = sign
             self.timestamp = t
@@ -209,7 +221,7 @@ class Transaction:
             else:
                 return True
         if not self.author[0:2] == 'sc':
-            if not cg.verify_sign(self.sign, str(self.froms) + str(self.outs) + str(self.outns), self.author):
+            if not cg.verify_sign(self.sign, self.hash, self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
         else:
@@ -271,7 +283,7 @@ class Transaction:
         return spent
 
     def update(self):
-        x = ''.join(chain(str(list(self.sign)), str(self.author), str(self.index), [str(f) for f in self.froms],
+        x = ''.join(chain(str(self.author), str(self.index), [str(f) for f in self.froms],
                           [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
         self.hash = cg.h(str(x))
         return self.hash
