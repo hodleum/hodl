@@ -4,6 +4,7 @@ import cryptogr as cg
 
 
 pow_max = 1000000000000000000000000000000000000
+pos_min = 0.005
 
 
 class TooLessTxsError(Exception):
@@ -23,7 +24,7 @@ def mine(bch):
 def pow_mining(bch, b):
     """proofs-of-work mining"""
     miners = bch[-1].powminers
-    miners.sort(reverse=True)
+    miners.sort()
     try:
         i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     except IndexError:
@@ -52,14 +53,20 @@ def pos_mining(b, bch):
     for tnx in bch[-1].txs:
         if 'mining' in tnx.outs:
             miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
-    miners.sort()
+    miners.sort(reverse=True)
     if len(miners) == 0:
         raise NoValidMinersError
     try:
         i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-4].hash)) % int(len(miners) ** 0.5)) ** 2
     except IndexError:
         raise TooLessTxsError
-    b.creators.append(miners[i])
+    if miners[i][0] >= pos_min:
+        b.creators.append(miners[i][1])
+    else:
+        if miners[0][0] >= pos_min:
+            b.creators.append(miners[i][1])
+        else:
+            raise NoValidMinersError
     b.update()
     return b
 
@@ -82,6 +89,7 @@ def poc_mining(b, bch):
     v = True
     while v:
         for x, k in miner[3]:
+            print(86, k, x, (int(cg.h(str(x + len(bch)))) + int(cg.h(str(miner[2])))) % miner[1], y[k], len(bch), miner[1])
             if (int(cg.h(str(x+len(bch)))) + int(cg.h(str(miner[2])))) % miner[1] != y[k]:
                 break
         else:
@@ -94,7 +102,7 @@ def poc_mining(b, bch):
                 raise NoValidMinersError
             miner = miners[i]
             y = [((int(bch[-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
-    b.creators.append(miner[1])
+    b.creators.append(miner[2])
     b.update()
     return b
 
@@ -154,14 +162,61 @@ def validate_pow(bch, i):
         return False
     return True
 
-def validate_poc(bch, i):
-    b = bch[i]
-
+def validate_poc(bch, n):
+    bl = bch[n]
+    miners = bch[n-1].pocminers
+    if n < 0:
+        n = len(bch) + n
+    for i in range(len(miners)):
+        miners[i] = [len(miners[i][2]) * 20 + miners[i][0]] + miners[i]
+    miners.sort()
+    print(bch[n-1].txs)
+    i = ((int(bch[n-1].txs[-1].hash) + int(bch[n-1].txs[-2].hash)) % int(len(miners) ** 0.5)) ** 2
+    i1 = i
+    miner = miners[i]
+    y = [((int(bch[n-1].txs[-1].hash) * k + k) ** k) % miner[2] for k in range(100)]
+    v = True
+    while v:
+        for p in miners[i][4]:
+            x = p[0]
+            k = p[1]
+            if (int(cg.h(str(x + n))) + int(cg.h(str(miner[3])))) % miner[2] != y[k]:
+                print(i, k, x, (int(cg.h(str(x + n))) + int(cg.h(str(miner[3])))) % miner[2], y[k], n, miner[2])
+                break
+        else:
+            v = False
+        if v:
+            i -= 1
+            if i == -1:
+                i = len(miners) - 1
+            miner = miners[i]
+            y = [((int(bch[n-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
+    if not miners[i][3] == bl.creators[2]:
+        return False
     return True
 
 def validate_pos(bch, i):
     b = bch[i]
-    return True
+    miners = []
+    for tnx in bch[i-1].txs:
+        if 'mining' in tnx.outs:
+            miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
+    miners.sort()
+    if len(miners) == 0:
+        raise NoValidMinersError
+    try:
+        i = ((int(bch[i-1].txs[-1].hash) + int(bch[i-1].txs[-4].hash)) % int(len(miners) ** 0.5)) ** 2
+    except IndexError:
+        raise TooLessTxsError
+    if miners[i][0] >= pos_min:
+        if miners[i][1] == b.creators[1]:
+            return True
+    else:
+        if miners[0][0] >= pos_min:
+            if miners[0][1] == b.creators[1]:
+                return True
+        else:
+            raise NoValidMinersError
 
 
 def mining_delta_t(bch_len):
