@@ -40,18 +40,42 @@ def handle_mess(bch, mess, ip):
     """Handles mess: gets new peers, merges blockchains, answers"""
     mess = json.loads(mess)
     white_peers = valid_peers(set(mess['white_peers'])) | set(white_peers)
-    b1 = block.Blockchain()
-    b1.from_json(mess['bch'])
-    if len(b1) > len(bch):
-        bch += b1
-    elif len(b1) < len(bch):
-        send(ip)
+    l1.from_json(mess['bch'])
+    last.from_json(mess['last'])
+    sit.from_json(mess['situation'])
+    if sit == 0:
+        ind.from_json(mess['my_missing'])
+        send(ip, 1, ind)
+    elif sit == 1:
+        miss.from_json(mess['missing'])
+        for b in miss:
+            bch.append(b)
+    elif sit == 2:
+        send(ip, 3)
+    elif sit == 3:
+        bch[-1] = last
 
-def send(ip):
+    if l1 > len(bch):
+        send(ip, 0)
+    elif l1 < len(bch):
+        send(ip, 1, last)
+    else:
+        if len(bch[-1].txs) < last.txs :
+            send(ip, 2)
+        elif len(bch[-1].txs) > last.txs :
+           send(ip, 3)       
+
+def send(ip, situation = -1, last = 0):
     """Sends message to ip"""
-    mess = json.dumps("")
+    mess.dumps("")
     mess['white_peers'] = white_peers
-    mess['bch'] = str(bch)
+    mess['bch'] = len(bch)
+    mess['last'] = bch[-1]
+    if situation == 0:
+        mess['my_missing'] = len(bch) - 1
+    elif situation = 1:
+        mess['missing'] = [str(b) for b in bch[last]]
+    mess['situation'] = situation
     sock_send = socket()
     sock_send.connect((ip, port))
     sock_send.send(mess)
