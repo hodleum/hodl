@@ -166,9 +166,10 @@ class Block:
         return cg.h(str(h))
 
     def sort(self):
-        ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs]
+        t0 = self.txs[0]
+        ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs[1:]]
         ts.sort()
-        self.txs = [t[2] for t in ts]
+        self.txs = [t0] + [t[2] for t in ts]
         for i in range(len(self.txs)):
             self.txs[i].index[1] = i
 
