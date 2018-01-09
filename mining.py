@@ -23,16 +23,18 @@ def mine(bch):
 
 def pow_mining(bch, b):
     """proofs-of-work mining"""
-    miners = bch[-1].powminers
+    lb = bch[-1]
+    miners = lb.powminers
     miners.sort()
     try:
-        i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+        i = ((int(lb.txs[-1].hash) + int(lb.txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     except IndexError:
         raise TooLessTxsError
     i1 = i
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
         if int(bl.calc_pow_hash()) == miners[i][0] <= pow_max:
+            print('i37', i)
             break
         else:
             i -= 1
@@ -136,29 +138,40 @@ def pow_mine(bch, nmax, myaddr):
             break
         else:
             n += 1
-    return n, t, bl.calc_pow_hash()
+    return n, t, int(bl.calc_pow_hash())
 
 
 def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
-    return validate_pow(bch, i) and validate_pos(bch, i) and validate_poc(bch, i)
+    vw = validate_pow(bch, i)
+    if not vw:
+        return False
+    vs = validate_pos(bch, i)
+    if not vs:
+        return False
+    vc = validate_poc(bch, i)
+    if not vc:
+        return False
+    return True
 
-def validate_pow(bch, i):
-    miners = bch[i - 1].powminers
+def validate_pow(bch, num):
+    miners = bch[num - 1].powminers
     miners.sort(reverse=True)
-    i = ((int(bch[i - 1].txs[i - 1].hash) + int(bch[i - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+    i = ((int(bch[num - 1].txs[num - 1].hash) + int(bch[num - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
         bl.prevhash = bch[i-1].h
         if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
+            print('i167', i)
             break
         else:
             i -= 1
             if i < 0:
                  i = len(miners) - 1
-    if not miners[i][2] == bch[i].creators[0] or not bch[i].timestamp == miners[i][3] or not bch[i].n == miners[i][1]:
+    if not miners[i][2] == bch[num].creators[0] or not bch[num].timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
+        print(hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
     return True
 
@@ -174,14 +187,14 @@ def validate_poc(bch, n):
     i = ((int(bch[n-1].txs[-1].hash) + int(bch[n-1].txs[-2].hash)) % int(len(miners) ** 0.5)) ** 2
     i1 = i
     miner = miners[i]
-    y = [((int(bch[n-1].txs[-1].hash) * k + k) ** k) % miner[2] for k in range(100)]
+    y = [((int(bch[n-1].txs[-1].hash) * k + k) ** k) % miner[1] for k in range(100)]
     v = True
     while v:
-        for p in miners[i][4]:
+        for p in miners[i][3]:
             x = p[0]
             k = p[1]
-            if (int(cg.h(str(x + n))) + int(cg.h(str(miner[3])))) % miner[2] != y[k]:
-                print(i, k, x, (int(cg.h(str(x + n))) + int(cg.h(str(miner[3])))) % miner[2], y[k], n, miner[2])
+            if (int(cg.h(str(x + n))) + int(cg.h(str(miner[2])))) % miner[1] != y[k]:
+                print(i, k, x, (int(cg.h(str(x + n))) + int(cg.h(str(miner[2])))) % miner[1], y[k], n, miner[1])
                 break
         else:
             v = False
@@ -191,7 +204,7 @@ def validate_poc(bch, n):
                 i = len(miners) - 1
             miner = miners[i]
             y = [((int(bch[n-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
-    if not miners[i][3] == bl.creators[2]:
+    if not miners[i][2] == bl.creators[1]:
         return False
     return True
 

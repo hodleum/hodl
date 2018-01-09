@@ -15,9 +15,9 @@ class BlockUnittest(unittest.TestCase):
         print(bch.money(my_keys[1]), bch[1].txs[0].timestamp, time.time())
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
         print(bch.money(my_keys[1]))
-        print(bch[0].txs[0].spent(bch), bch[1].txs[0].spent(bch), bch[1].txs[1].spent(bch))
         self.assertAlmostEqual(bch.money(my_keys[1]), 0.3)
         self.assertAlmostEqual(bch.money(your_pub_key), 1.7)
+        bch.conn.close()
 
     def test_block_str_encoding(self):
         bch = block.Blockchain()
@@ -33,6 +33,7 @@ class BlockUnittest(unittest.TestCase):
                 print(k, d[k], d1[k])
         print(bch[1].txs, b2.txs)
         self.assertEqual(b2, bch[1])
+        bch.conn.close()
 
     def test_tnx_str_encoding(self):
         bch = block.Blockchain()
@@ -40,8 +41,9 @@ class BlockUnittest(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
         b2 = block.Transaction()
-        b2.from_json(str(bch[1].txs[1]))
-        self.assertEqual(b2, bch[1].txs[1])
+        b2.from_json(str(bch[1].txs[0]))
+        self.assertEqual(b2, bch[1].txs[0])
+        bch.conn.close()
 
 
 

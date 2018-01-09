@@ -3,13 +3,42 @@ import time
 from itertools import chain
 import json
 import mining
+import sqlite3
 
 minerfee = 1
 txs_in_block = 50
 maxblocksize = 4000000
 
-class Blockchain(list):
+
+
+class Blockchain:
     """Class for blockchain"""
+    def __init__(self):
+        self.conn = sqlite3.connect('bch.db')
+        self.c = self.conn.cursor()
+        try:
+            self.c.execute('''CREATE TABLE blocks
+                         (ind integer, block text)''')
+            self.conn.commit()
+        except:
+            pass
+
+    def __getitem__(self, item):
+        if item < 0:
+            item += len(self)
+        self.c.execute("SELECT * FROM blocks WHERE ind=" + str(item))
+        s = self.c.fetchone()[1]
+        return block_from_json(s)
+
+    def append(self, block):
+        self.c.execute("INSERT INTO blocks VALUES ({}, {})".format(str(len(self)), "'" + str(block) + "'"))
+        self.conn.commit()
+
+    def index(self, block):
+        for i in range(len(self)):
+            if self[i].h == block.h:
+                return i
+
     def __add__(self, other):    # todo: дописать
         """Merges blockchains (consensus)"""
         if other.is_valid():
@@ -42,7 +71,9 @@ class Blockchain(list):
         """Creates new transaction and adds it to the chain"""
         tnx = Transaction()
         tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey)
-        self[-1].append(tnx)
+        b = self[-1]
+        b.append(tnx)
+        self[-1] = b
 
     def __str__(self):
         """Encodes blockchain to str"""
@@ -58,14 +89,43 @@ class Blockchain(list):
 
     def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
         """creates new smart contract and adds it to the chain"""
-        for i, block in enumerate(self):
-            if not block.is_full():
-                block.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
-                break
+        b = self[-1]
+        b.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
+        self[-1] = b
 
     def __eq__(self, other):
         """equal function"""
         return self.__dict__ == other.__dict__
+
+    def __len__(self):
+        self.c.execute("SELECT ind FROM blocks")
+        return len(self.c.fetchall())
+
+    def __iter__(self):
+        self.current = -1
+        return self
+
+    def __next__(self):
+        self.current += 1
+        try:
+            return self[self.current]
+        except:
+            raise StopIteration
+
+    def __setitem__(self, key, value):
+        if key < 0:
+            key += len(self)
+        self.c.execute("UPDATE blocks SET block = '{}' WHERE ind = {}".format(str(value), str(key)))
+
+    def add_miner(self, miner, type='pow'):
+        if type == 'pow':
+            b = self[-1]
+            b.powminers.append(miner)
+            self[-1] = b
+        elif type == 'poc':
+            b = self[-1]
+            b.pocminers.append(miner)
+            self[-1] = b
 
 
 class Block:
@@ -73,7 +133,10 @@ class Block:
     def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
         try:
-            self.prevhash = bch[-1].h
+            if not creators==[]:
+                self.prevhash = bch[-1].h
+            else:
+                self.prevhash = '0'
         except:
             self.prevhash = '0'
         if t == 'now':
@@ -120,7 +183,7 @@ class Block:
     def update(self):
         """Updates hash"""
         self.sort()
-        h = ''.join([str(self.powhash)] + [str(t.hash) for t in self.txs] +
+        h = ''.join([str(self.prevhash)] + [str(self.powhash)] + [str(t.hash) for t in self.txs] +
                     [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
                     [str(e) for e in self.pocminers])
         self.h = cg.h(str(h))
@@ -155,14 +218,17 @@ class Block:
         return v
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return self.h == other.h
 
     def is_full(self):
         """is block full"""
         return len(str(self)) >= maxblocksize
 
     def calc_pow_hash(self):
-        h = ''.join([str(self.prevhash), str(self.timestamp), str(self.n)] + [str(e) for e in self.creators[:1]])
+        try:
+            h = ''.join([str(self.timestamp), str(self.n), self.creators[0]])
+        except IndexError:
+            h = ''.join([str(self.timestamp), str(self.n)])
         return cg.h(str(h))
 
     def sort(self):
@@ -272,7 +338,7 @@ class Transaction:
 
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return self.hash == other.hash
 
     def spent(self, bch, exc=[]):
         """Is transaction used by other transaction"""
@@ -359,3 +425,8 @@ class Smart_contract:
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
+def block_from_json(s):
+    b = Block()
+    b.from_json(s)
+    return b
