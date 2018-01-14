@@ -50,7 +50,8 @@ class Blockchain:
         money = 0
         for block in self:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs:
-                for w, n, i in zip(tnx.outs, tnx.outns, range(len(tnx.outns))):
+                l = zip(tnx.outs, tnx.outns, range(len(tnx.outns)))
+                for w, n, i in l:
                     if w == wallet and not tnx.spent(self)[i]:
                         money += n
         return money
@@ -126,6 +127,10 @@ class Blockchain:
             b = self[-1]
             b.pocminers.append(miner)
             self[-1] = b
+
+    def clean(self):
+        self.c.execute('''DELETE FROM blocks''')
+        self.conn.commit()
 
 
 class Block:
@@ -283,7 +288,7 @@ class Transaction:
         are all money spent"""
         if self.index[1] == 0:
             if self.froms != [['nothing']] or self.author != 'mining' \
-                    or self.outs != bch[self.index[0]].creators:
+                    or self.outs != bch[self.index[0]].creators or self.outns != mining.miningprice:
                 return False
             else:
                 return True
@@ -309,25 +314,21 @@ class Transaction:
         inp = 0
         for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
             try:
-                if t == ['nothing']:
-                    if not (self.index[1] == 0 and self.outs[0] == bch[self.index[0]].creators and
-                                    self.outns == [0.4, 0.3, 0.3]):
-                        return False
-                    inp = minerfee
-                else:
-                    tnx = bch[int(t[0])].txs[int(t[1])]
-                    if not tnx.is_valid:
-                        print(self.index, 'is not valid: from is not valid')
-                        return False
-                    if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
-                        print(self.index, 'is not valid: from is not valid')
-                        return False
-                    inp = inp + tnx.outns[tnx.outs.index(self.author)]
+                tnx = bch[int(t[0])].txs[int(t[1])]
+                if not tnx.is_valid:
+                    print(self.index, 'is not valid: from is not valid')
+                    return False
+                if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
+                    print(self.index, 'is not valid: from is not valid')
+                    return False
+                inp = inp + tnx.outns[tnx.outs.index(self.author)]
             except:
                 print(self.index, 'is not valid: exception')
                 return False
         o = 0
         for n in self.outns:  # all money must be spent
+            if n < 0:
+                return False
             o = o + n
         if not o == inp:
             print(self.index, 'is not valid: not all money')
