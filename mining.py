@@ -39,11 +39,11 @@ def pow_mining(bch, b):
             print('i37', i)
             break
         else:
-            i -= 1
+            miners.remove(miners[i])
             if i == i1:
                 raise NoValidMinersError
-            if i < 0:
-                 i = len(miners) - 1
+            if i == len(bch):
+                 i = i - len(bch) + 1
     b.n = miners[i][1]
     b.timestamp = miners[i][3]
     b.creators = [miners[i][2]]
@@ -99,11 +99,11 @@ def poc_mining(b, bch):
         else:
             v = False
         if v:
-            i -= 1
-            if i == -1:
-                i = len(miners) - 1
+            miners.remove(miner)
             if i == i1:
                 raise NoValidMinersError
+            if i == len(bch):
+                i = i - len(bch) + 1
             miner = miners[i]
             y = [((int(bch[-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
     b.creators.append(miner[2])
@@ -161,6 +161,7 @@ def validate_pow(bch, num):
     miners = bch[num - 1].powminers
     miners.sort(reverse=True)
     i = ((int(bch[num - 1].txs[num - 1].hash) + int(bch[num - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
+    i1 = i
     bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
@@ -169,9 +170,11 @@ def validate_pow(bch, num):
             print('i167', i)
             break
         else:
-            i -= 1
-            if i < 0:
-                 i = len(miners) - 1
+            miners.remove(miners[i])
+            if i == i1:
+                raise NoValidMinersError
+            if i == len(bch):
+                i = i - len(bch) + 1
     if not miners[i][2] == bch[num].creators[0] or not bch[num].timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
         print(hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
@@ -201,9 +204,11 @@ def validate_poc(bch, n):
         else:
             v = False
         if v:
-            i -= 1
-            if i == -1:
-                i = len(miners) - 1
+            miners.remove(miner)
+            if i == i1:
+                raise NoValidMinersError
+            if i == len(bch):
+                i = i - len(bch) + 1
             miner = miners[i]
             y = [((int(bch[n-1].txs[-1].hash) * i + i) ** i) % miner[1] for i in range(100)]
     if not miners[i][2] == bl.creators[1]:

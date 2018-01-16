@@ -1,95 +1,121 @@
 import block
-from socket import socket
+import socket
 import multiprocessing
 import json
-import threading
+
+
+class Peers(set):
+    def clear_not_valid_peers(self):
+        for peer in self:
+            if not True:
+                self.remove(peer)
+
+    def save(self, file):
+        f = open(file, 'w')
+        f.write(json.dumps([json.dumps(peer) for peer in list(self)]))
+        f.close()
+
+    def open(self, file):
+        f = open(file, 'r')
+        s = f.read()
+        for peer in json.loads(s):
+            self.add(json.loads(peer))
+        f.close()
+
+
+class Connection:
+    def __init__(self, ip):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((ip, port))
+        data = {'len(bch)':len(bch), 'lb':str(bch[-1])}
+        self.sock.send(json.dumps(data).encode('utf-8'))
+        self.sock.bind((ip, port))[0]
+        self.sock.listen(1)
+        self.conn = self.sock.accept()[0]
+        data = b''
+        while True:
+            data += self.conn.recv(1024)
+            if not data:
+                break
+        data = json.loads(data.decode('utf-8'))
+        if data['delta'] < 0:
+            if data['delta'] >= -1000:
+                bch[len(bch)-data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                for b in data['blocks'][1:]:
+                    bch.append(b)
+        lb = data['lb']
+        if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
+            b.txs = lb.txs
+        b.powminers = set(b.powminers) | set(lb.powminers)
+        b.pocminers = set(b.pocminers) | set(lb.pocminers)
+        if len(lb.contracts) > len(b.contracts) and lb.is_valid(bch):
+            b.contracts = lb.contracts
+        bch[-1] = b
+        mymess = {}
+        if mymess['delta']>0:
+            if mymess['delta']<1000:
+                mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
+            else:
+                mymess['blocks'] = [str(b) for b in bch[-1000:]]
+        self.conn.send(json.dumps(mymess).encode('utf-8'))
+
+
+
+class InputConnection:
+    def __init__(self, conn):
+        self.conn = conn
+        self.proc = multiprocessing.Process(target=self.connect)
+        self.proc.start()
+        self.proc.join()
+
+    def connect(self):
+        data = b''
+        while True:
+            data += self.conn.recv(1024)
+            if not data:
+                break
+        data = json.loads(data.decode('utf-8'))
+        mymess = {'delta':data['len(bch)']-len(bch)}
+        if mymess['delta']<0:
+            if mymess['delta']>-1000:
+                mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
+            else:
+                mymess['blocks'] = [str(b) for b in bch[-1000:]]
+        lb = block.block_from_json(data['lb'])
+        mymess['lb'] = bch[-1]
+        b = bch[-1]
+        if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
+            b.txs = lb.txs
+        b.powminers = set(b.powminers) | set(lb.powminers)
+        b.pocminers = set(b.pocminers) | set(lb.pocminers)
+        if len(lb.contracts) > len(b.contracts) and lb.is_valid(bch):
+            b.contracts = lb.contracts
+        bch[-1] = b
+        mymess['lb'] = bch[-1]
+        self.conn.send(json.dumps(mymess).encode('utf-8'))
+        if mymess['delta']>0:
+            self.conn = self.sock.accept()[0]
+            data = b''
+            while True:
+                data += self.conn.recv(1024)
+                if not data:
+                    break
+            data = json.loads(data.decode('utf-8'))
+            if data['delta'] < 0:
+                if data['delta'] >= -1000:
+                    bch[len(bch) - data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    for b in data['blocks'][1:]:
+                        bch.append(b)
 
 
 global bch
 bch = block.Blockchain()
-global white_peers
-white_peers = set()
+global peers
+peers = Peers()
 port = 6666
 
-def handle(connection, address):
-    """Waits for message and works with it"""
-    try:
-        while True:
-            data = connection.recv(1024)
-            if data.decode() != '' :
-                connection.close()
-                handle_mess(bch, data, address)
-    except:
-        pass
-    finally:
-        connection.close()
-    
-def listen():
-    """Starts subprocess that listening"""
-    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket.bind(('PaScAl Is ThE bEsT lAnGuAgE aFtEr QuMiR, bRaInFuCk, WhItE sPaCe AnD bAsIc. I\'m LoVin\'T iT.' , port))
-    socket.listen(1)
-
-    while True:
-        conn, address = self.socket.accept()
-        process = multiprocessing.Process(target=handle, args=(conn, address))
-        process.daemon = True
-        process.start()
-
-def handle_mess(bch, mess, ip):    
-    """Handles mess: gets new peers, merges blockchains, answers"""
-    mess = json.loads(mess)
-    white_peers = valid_peers(set(mess['white_peers'])) | set(white_peers)
-    l1.from_json(mess['bch'])
-    last.from_json(mess['last'])
-    sit.from_json(mess['situation'])
-    if sit == 0:
-        ind.from_json(mess['my_missing'])
-        send(ip, 1, ind)
-    elif sit == 1:
-        miss.from_json(mess['missing'])
-        for b in miss:
-            bch.append(b)
-    elif sit == 2:
-        send(ip, 3)
-    elif sit == 3:
-        bch[-1] = last
-
-    if l1 > len(bch):
-        send(ip, 0)
-    elif l1 < len(bch):
-        send(ip, 1, last)
-    else:
-        if len(bch[-1].txs) < last.txs :
-            send(ip, 2)
-        elif len(bch[-1].txs) > last.txs :
-           send(ip, 3)       
-
-def send(ip, situation = -1, last = 0):
-    """Sends message to ip"""
-    mess.dumps("")
-    mess['white_peers'] = white_peers
-    mess['bch'] = len(bch)
-    mess['last'] = bch[-1]
-    if situation == 0:
-        mess['my_missing'] = len(bch) - 1
-    elif situation = 1:
-        mess['missing'] = [str(b) for b in bch[last]]
-    mess['situation'] = situation
-    sock_send = socket()
-    sock_send.connect((ip, port))
-    sock_send.send(mess)
-
-
-def is_my_ip_white():    # todo: дописать
-    """Checks if this computer's IP is white"""
+def get_many_blocks(min, max):
     pass
 
-
-def is_ip_white(ip):    # todo: дописать
-    """Checks if ip is white"""
-    pass
-
-def valid_peers(peers = set()):    # todo: дописать
-    """Returns valid peers of peers"""
+def handle_request(req):
     pass
