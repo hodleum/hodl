@@ -240,4 +240,4 @@ def validate_pos(bch, i):
 
 
 def mining_delta_t(bch_len):
-    return int(((0.001*bch_len)**1.15)/100+5)
+    return int(((0.005*bch_len)**0.95)/30+5)

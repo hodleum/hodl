@@ -4,6 +4,7 @@ from itertools import chain
 import json
 import mining
 import sqlite3
+import sctools
 
 minerfee = 1
 txs_in_block = 50
