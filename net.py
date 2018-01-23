@@ -11,16 +11,13 @@ class Peers(set):
                 self.remove(peer)
 
     def save(self, file):
-        f = open(file, 'w')
-        f.write(json.dumps([json.dumps(peer) for peer in list(self)]))
-        f.close()
+        with open(file, 'w') as f:
+            f.write(json.dumps([json.dumps(peer) for peer in list(self)]))
 
     def open(self, file):
-        f = open(file, 'r')
-        s = f.read()
-        for peer in json.loads(s):
-            self.add(json.loads(peer))
-        f.close()
+        with open(file, 'r') as f:
+            for peer in json.loads(f.read()):
+                self.add(json.loads(peer))
 
 
 class Connection:
@@ -92,6 +89,7 @@ class InputConnection:
             b.contracts = lb.contracts
         bch[-1] = b
         mymess['lb'] = bch[-1]
+        mymess['answer'] = handle_request(data['request'])
         self.conn.send(json.dumps(mymess).encode('utf-8'))
         if mymess['delta']>0:
             self.conn = self.sock.accept()[0]
@@ -114,7 +112,7 @@ global peers
 peers = Peers()
 port = 6666
 
-def get_many_blocks(min, max):
+def get_many_blocks(minb, maxb):
     pass
 
 def handle_request(req):
