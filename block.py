@@ -4,7 +4,7 @@ from itertools import chain
 import json
 import mining
 import sqlite3
-import sctools
+import os
 
 minerfee = 1
 txs_in_block = 50
@@ -29,7 +29,7 @@ class Blockchain:
             item += len(self)
         self.c.execute("SELECT * FROM blocks WHERE ind=" + str(item))
         s = self.c.fetchone()[1]
-        return block_from_json(s)
+        return Block.from_json(s)
 
     def append(self, block):
         self.c.execute("INSERT INTO blocks VALUES ({}, {})".format(str(len(self)), "'" + str(block) + "'"))
@@ -89,10 +89,10 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author, needsinf=False, payment_method='for execution', payment_opts={'for 1 execution': 1}):
+    def new_sc(self, text, author, needsinf=False):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        b.contracts.append(text, author, (i, len(block.contracts)), needsinf, payment_method, payment_opts)
+        b.contracts.append(text, author, (len(b), len(self) - 1), needsinf)
         self[-1] = b
 
     def __eq__(self, other):
@@ -165,8 +165,10 @@ class Block:
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
                            [str(c) for c in self.contracts], self.pocminers, self.powminers))
 
-    def from_json(self, s):
+    @classmethod
+    def from_json(cls, s):
         """Decodes block from str using JSON"""
+        self = cls()
         s = json.loads(s)
         self.txs = []
         for t in s[0]:
@@ -180,6 +182,7 @@ class Block:
         self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers = s[1], s[2], s[3], s[4], s[6], s[7]
         self.powhash = self.calc_pow_hash()
         self.update()
+        return self
 
     def append(self, txn):
         """Adds txn to block"""
@@ -360,75 +363,36 @@ class Transaction:
 
 class Smart_contract:
     # todo: дописать Smart_contract: добавить ограничения
-    def __init__(self, text, author, index, needsinf=False, payment_method='for execution',
-                 payment_opts={'for 1 execution': 1}):
-        self.text = text
+    def __init__(self, code, author, index, needsinf=False):
+        self.code = code
         self.author = author
-        self.payment_method = payment_method
         self.index = index
-        self.result = ''
-        self.needsinf = needsinf
-        self.payment_opts = payment_opts
-        self.info = ''
+        self.memory = []
+        self.msgs = []
 
     def execute(self, bch, inf=''):
         """smart contract's execution"""
-        loc = {}
-        loc['info'] = self.info
-        if self.needsinf:
-            exec(self.text, {'inf': str(inf)}, loc)
-        else:
-            exec(self.text, {}, loc)
-        result = loc['result']
-        tnx_needed = loc['tnx_needed']  # Smart contract can create transactions
-        tnx_created = loc['tnx_created']
-        froms = loc['froms']
-        outs = loc['outs']
-        outns = loc['outns']
-        sc_needed = loc['sc_needed']  # Smart contract can create smart contracts
-        sc_created = loc['sc_created']
-        sc_text = loc['sc_text']
-        sc_author = loc['sc_author']
-        sc_payment_method = loc['sc_payment_method']
-        sc_needsinf = loc['sc_needsinf']
-        sc_payment_opts = loc['sc_payment_opts']
-        self.info = str(loc['info'])
-        # froms, outs, outns = params of transactions SC needs
-        # If SC doesn't need a tnx, froms, outs, outns =[], [], []
-        # SC can return result. It's needed for applications that use SCs
-        if tnx_needed:
-            for i in range(len(froms)):
-                if not tnx_created[i]:
-                    try:
-                        bch.new_transaction('sc' + str(self.index[0]) + ';' + str(self.index[1]), froms[i], outs[i],
-                                            outns[i],
-                                            'sc' + str(self.index[0]) + ';' + str(self.index[1]),
-                                            'sc' + str(self.index[0]) + ';' + str(self.index[1]))
-                    except:
-                        pass
-        if sc_needed:
-            for i in range(len(sc_created)):
-                if not sc_created[i]:
-                    try:
-                        bch.new_sc(sc_text[i], sc_author[i], sc_needsinf[i], sc_payment_method[i],
-                                   sc_payment_opts[i])
-                    except:
-                        pass
-        self.result = result
-        return result, tnx_needed, tnx_created, froms, outs, outns
+        file = open('tmp/{}.py'.format(str(self.index)), 'w')
+        file.writelines(self.code)
+        file.close()
+        file = open('tmp/{}.mem'.format(str(self.index)), 'w')
+        file.writelines([str(mem) for mem in list(self.memory)])
+        file.close()
+        file = open('tmp/{}.msgs'.format(str(self.index)), 'w')
+        file.writelines([str(mem) for mem in list(self.msgs)])
+        file.close()
+        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/{}.py'.format(str(self.index)))
 
     def __str__(self):
         """Encodes contract to str"""
-        return json.dumps((self.text, self.author, self.index, self.needsinf, self.payment_method, self.payment_opts))
+        return json.dumps((self.code, self.author, self.index, self.memory, self.msgs))
 
-    def from_json(self, s):
+    @classmethod
+    def from_json(cls, s):
         """Decodes contract from str"""
-        self.__init__(*json.loads(s))
+        self = cls(*json.loads(s))
+        return self
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-def block_from_json(s):
-    b = Block()
-    b.from_json(s)
-    return b
