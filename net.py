@@ -5,11 +5,6 @@ import json
 
 
 class Peers(set):
-    def clear_not_valid_peers(self):
-        for peer in self:
-            if not True:
-                self.remove(peer)
-
     def save(self, file):
         with open(file, 'w') as f:
             f.write(json.dumps([json.dumps(peer) for peer in list(self)]))
@@ -20,41 +15,58 @@ class Peers(set):
                 self.add(json.loads(peer))
 
 
+class ConnectionError(Exception):
+    pass
+
+
 class Connection:
-    def __init__(self, ip):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((ip, port))
-        data = {'len(bch)':len(bch), 'lb':str(bch[-1])}
-        self.sock.send(json.dumps(data).encode('utf-8'))
-        self.sock.bind((ip, port))[0]
-        self.sock.listen(1)
-        self.conn = self.sock.accept()[0]
-        data = b''
-        while True:
-            data += self.conn.recv(1024)
-            if not data:
-                break
-        data = json.loads(data.decode('utf-8'))
-        if data['delta'] < 0:
-            if data['delta'] >= -1000:
-                bch[len(bch)-data['delta'] - 1] = block.block_from_json(data['blocks'][1])
-                for b in data['blocks'][1:]:
-                    bch.append(b)
-        lb = data['lb']
-        if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
-            b.txs = lb.txs
-        b.powminers = set(b.powminers) | set(lb.powminers)
-        b.pocminers = set(b.pocminers) | set(lb.pocminers)
-        if len(lb.contracts) > len(b.contracts) and lb.is_valid(bch):
-            b.contracts = lb.contracts
-        bch[-1] = b
-        mymess = {}
-        if mymess['delta']>0:
-            if mymess['delta']<1000:
-                mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
-            else:
-                mymess['blocks'] = [str(b) for b in bch[-1000:]]
-        self.conn.send(json.dumps(mymess).encode('utf-8'))
+    def __init__(self, ip, port):
+        self.proc = multiprocessing.Process(target=self.connect, args=(ip, port))
+        self.proc.start()
+        self.proc.join()
+
+    def connect(self, ip, port):
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((ip, port))
+            data = {'len(bch)': len(bch), 'lb': str(bch[-1])}
+            self.sock.send(json.dumps(data).encode('utf-8'))
+            self.sock.listen(1)
+            self.conn = self.sock.accept()[0]
+            data = b''
+            while True:
+                data += self.conn.recv(1024)
+                if not data:
+                    break
+            data = json.loads(data.decode('utf-8'))
+            if data['delta'] < 0:
+                if data['delta'] >= -1000:
+                    bch[len(bch)-data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    for b in data['blocks'][1:]:
+                        bch.append(b)
+                else:
+                    bch[len(bch) - data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    for b in data['blocks'][1:]:
+                        bch.append(b)
+                    get_many_blocks(data['delta'], -1000)
+            lb = data['lb']
+            if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
+                b.txs = lb.txs
+            b.powminers = set(b.powminers) | set(lb.powminers)
+            b.pocminers = set(b.pocminers) | set(lb.pocminers)
+            if len(lb.contracts) > len(b.contracts) and lb.is_valid(bch):
+                b.contracts = lb.contracts
+            b.update()
+            bch[-1] = b
+            mymess = {}
+            if mymess['delta'] > 0:
+                if mymess['delta'] < 1000:
+                    mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
+                else:
+                    mymess['blocks'] = [str(b) for b in bch[-1000:]]
+            self.conn.send(json.dumps(mymess).encode('utf-8'))
+        except:
+            return ConnectionError()
 
 
 
@@ -91,7 +103,7 @@ class InputConnection:
         mymess['lb'] = bch[-1]
         mymess['answer'] = handle_request(data['request'])
         self.conn.send(json.dumps(mymess).encode('utf-8'))
-        if mymess['delta']>0:
+        if mymess['delta'] > 0:
             self.conn = self.sock.accept()[0]
             data = b''
             while True:
@@ -110,10 +122,24 @@ global bch
 bch = block.Blockchain()
 global peers
 peers = Peers()
-port = 6666
+default_port = 6666
+global conns
+conns = []
+
 
 def get_many_blocks(minb, maxb):
     pass
 
+
 def handle_request(req):
-    pass
+    ans = []
+    return ans
+
+
+def loop():
+    while True:
+        for peer in peers:
+            try:
+                conns.append(Connection(peer[0], peer[1]))
+            except:
+                peers.remove(peer)
