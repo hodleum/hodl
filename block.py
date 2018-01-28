@@ -49,12 +49,18 @@ class Blockchain:
     def money(self, wallet):
         """Counts money on wallet"""
         money = 0
-        for block in self:  # перебираем все транзакции в каждом блоке
-            for tnx in block.txs:
+        for bl in self:  # перебираем все транзакции в каждом блоке
+            print(self.index(bl))
+        print([self.index(bl) for bl in self])
+        for bl in self:  # перебираем все транзакции в каждом блоке
+            print(self.index(bl), len(self))
+            for tnx in bl.txs:
                 l = zip(tnx.outs, tnx.outns, range(len(tnx.outns)))
+                print(tnx.index)
                 for w, n, i in l:
                     if w == wallet and not tnx.spent(self)[i]:
                         money += n
+            print(len(self))
         return money
 
     def new_block(self, creators, txs=[]):
@@ -349,7 +355,7 @@ class Transaction:
         """Is transaction used by other transaction"""
         spent = [False] * len(self.outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
-            for tnx in block.txs:
+            for tnx in block.txs[1:]:
                 if list(self.index) in tnx.froms and not 'mining' in tnx.outs and not tnx.index in exc:
                     spent[self.outs.index(tnx.author)] = True
         return spent

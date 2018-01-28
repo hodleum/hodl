@@ -30,8 +30,7 @@ class BlockUnittest(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
-        b2 = block.Block()
-        b2.from_json(str(bch[1]))
+        b2 = block.Block.from_json(str(bch[1]))
         d = bch[1].__dict__
         d1 = b2.__dict__
         for k in d.keys():
