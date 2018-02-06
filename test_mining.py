@@ -55,6 +55,26 @@ class MiningUnittest(unittest.TestCase):
         print('n', bch[-1].n)
         self.assertTrue(mining.validate(bch, -1))
 
+class TestMiningDeltaT(unittest.TestCase):
+    def test_zero(self):
+        self.assertEqual(5, mining_delta_t(0))
+    # tests: 2, 3.5
+
+@patch('mining.validate_pow')
+@patch('mining.validate_pos')
+@patch('mining.validate_poc')
+class TestValidate(unittest.TestCase):
+    def test_everything_ok(self, m_poc, m_pos, m_pow):
+        m_poc.return_value = m_pos.return_value = m_pow.return_value = True
+        self.assertTrue(validate(sentinel.bch, sentinel.i))
+        m_poc.assert_called_with(sentinel.bch, sentinel.i)
+        
+    def test_everything_fails(self, m_poc, m_pos, m_pow):
+        m_poc.return_value = m_pos.return_value = m_pow.return_value = False
+        self.assertFalse(validate(sentinel.bch, sentinel.i))
+        m_pow.assert_called_with(sentinel.bch, sentinel.i)
+
+
 
 if __name__ == '__main__':
     unittest.main()

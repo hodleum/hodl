@@ -51,7 +51,45 @@ class BlockUnittest(unittest.TestCase):
         self.assertEqual(b2, bch[1].txs[0])
         bch.conn.close()
 
+class TestPrevhash(unittest.TestCase):
+    def test_empty_empty(self):
+        self.assertEqual('0', get_prevhash([], []))
 
+    def test_empty_something(self):
+        self.assertEqual('0', get_prevhash([], ['1', '2', '3']))
+
+    def test_something_something(self):
+        blockchain = [MagicMock(), MagicMock(h=sentinel.hash)]
+        self.assertEqual(sentinel.hash, get_prevhash(blockchain, ['1', '2', '3']))
+
+class TestBlock(unittest.TestCase):
+    @patch('block.Block.update')
+    def test_init_of_blocks(self, m_update):
+        b = Block()
+        self.assertTrue(hasattr(b, 'n'));
+        self.assertTrue(hasattr(b, 'prevhash'));
+        self.assertTrue(hasattr(b, 'timestamp'));
+        self.assertTrue(hasattr(b, 'txs'));
+        self.assertTrue(hasattr(b, 'contracts'));
+        self.assertTrue(hasattr(b, 'creators'));
+        self.assertTrue(hasattr(b, 'pocminers'));
+        self.assertTrue(hasattr(b, 'powminers'));
+        self.assertTrue(hasattr(b, 'powhash'));
+        m_update.assert_called_with();
+        
+
+class TestTimestamp(unittest.TestCase):
+    @patch('block.time.time', return_value=5051)
+    def test_now(self, m_time):
+        self.assertEqual(5051, get_timestamp('now'))
+
+    def test_fixed(self):
+        self.assertEqual(15, get_timestamp('15'))
+
+"""class TestPowHash(unittest.TestCase):
+    def test_calculating_pow_hashing(self):
+        self.assertEqual('2122914021714301784233128915223624866126', calc_pow_hash(sentinel.any))
+"""
 
 if __name__ == '__main__':
     unittest.main()

@@ -139,22 +139,25 @@ class Blockchain:
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
+def get_timestamp(t):
+    return int(time.time()) if t=='now' else int(t)
+
+def get_prevhash(bch, creators):
+    try:
+        if creators:
+            return bch[-1].h
+        else:
+            return '0'
+    except:
+        return '0'
+
 
 class Block:
     """Class for blocks"""
     def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
-        try:
-            if not creators==[]:
-                self.prevhash = bch[-1].h
-            else:
-                self.prevhash = '0'
-        except:
-            self.prevhash = '0'
-        if t == 'now':
-            self.timestamp = int(time.time())
-        else:
-            self.timestamp = int(t)
+        self.prevhash = get_prevhash(bch, creators)
+        self.timestamp = get_timestamp(t);
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.timestamp)
         self.txs = [tnx0] + txs

@@ -13,7 +13,6 @@ class TestInputConnection(unittest.TestCase):
         self.assertEqual(m_Process.call_count, 1)
         self.assertEqual(obj.proc.start.call_count, 1)
         self.assertEqual(obj.proc.join.call_count, 1)
-                        
-
+        
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

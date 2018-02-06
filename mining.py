@@ -146,6 +146,8 @@ def pow_mine(bch, nmax, myaddr):
 def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
+    return all([validate_pow(bch, i), validate_pos(bch, i), validate_poc(bch, i)])
+    """
     vw = validate_pow(bch, i)
     if not vw:
         return False
@@ -156,6 +158,7 @@ def validate(bch, i=-1):
     if not vc:
         return False
     return True
+    """
 
 def validate_pow(bch, num):
     miners = bch[num - 1].powminers
