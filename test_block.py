@@ -3,6 +3,7 @@ import block
 import cryptogr as cg
 import time
 from itertools import chain
+from unittest.mock import sentinel, MagicMock, patch
 
 
 my_keys = cg.gen_keys()
@@ -11,12 +12,11 @@ class BlockUnittest(unittest.TestCase):
     def test_creations_and_money_counter(self):
         bch = block.Blockchain()
         bch.clean()
-        print(len(bch), bch.money(my_keys[1]))
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
-        print(bch.money(my_keys[1]), len(bch))
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
-        print(bch.money(my_keys[1]), bch[1].txs[0].timestamp, time.time())
-        print(len(bch))
+        self.assertEqual(len(bch), 2)
+        print(len([b for b in bch]), 'len([b for b in bch])')
+        self.assertEqual(len([b for b in bch]), 2)
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
         print(bch.money(my_keys[1]))
         print(len(bch))
@@ -53,19 +53,19 @@ class BlockUnittest(unittest.TestCase):
 
 class TestPrevhash(unittest.TestCase):
     def test_empty_empty(self):
-        self.assertEqual('0', get_prevhash([], []))
+        self.assertEqual('0', block.get_prevhash([], []))
 
     def test_empty_something(self):
-        self.assertEqual('0', get_prevhash([], ['1', '2', '3']))
+        self.assertEqual('0', block.get_prevhash([], ['1', '2', '3']))
 
     def test_something_something(self):
         blockchain = [MagicMock(), MagicMock(h=sentinel.hash)]
-        self.assertEqual(sentinel.hash, get_prevhash(blockchain, ['1', '2', '3']))
+        self.assertEqual(sentinel.hash, block.get_prevhash(blockchain, ['1', '2', '3']))
 
 class TestBlock(unittest.TestCase):
     @patch('block.Block.update')
     def test_init_of_blocks(self, m_update):
-        b = Block()
+        b = block.Block()
         self.assertTrue(hasattr(b, 'n'));
         self.assertTrue(hasattr(b, 'prevhash'));
         self.assertTrue(hasattr(b, 'timestamp'));
@@ -81,10 +81,10 @@ class TestBlock(unittest.TestCase):
 class TestTimestamp(unittest.TestCase):
     @patch('block.time.time', return_value=5051)
     def test_now(self, m_time):
-        self.assertEqual(5051, get_timestamp('now'))
+        self.assertEqual(5051, block.get_timestamp('now'))
 
     def test_fixed(self):
-        self.assertEqual(15, get_timestamp('15'))
+        self.assertEqual(15, block.get_timestamp('15'))
 
 """class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):

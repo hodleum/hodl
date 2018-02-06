@@ -14,7 +14,7 @@ sc_base_code_size = 5000000
 sc_memprice = 10**(1/10)
 sc_max_code_size = 1000000000
 sc_code_price = 10**(1/6)
-sc_price = 10**()
+sc_price = 0.01
 
 
 class Blockchain:
@@ -108,9 +108,9 @@ class Blockchain:
 
     def __next__(self):
         self.current += 1
-        try:
+        if not self.current <= len(self):
             return self[self.current]
-        except:
+        else:
             raise StopIteration
 
     def __setitem__(self, key, value):
@@ -285,13 +285,10 @@ def is_tnx_money_valid(self, bch):
 
 def sign_tnx(self, sign, privkey, t):
     if sign == 'signing':
-        self.update()
         self.sign = cg.sign(self.hash, privkey)
-        self.timestamp = time.time()
     else:
         self.sign = sign
-        self.timestamp = t
-    return self
+    return self.sign
 
 
 class Transaction:
@@ -316,6 +313,9 @@ class Transaction:
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
         self.index = list(index)
+        self.timestamp = time.time() if sign == 'signing' else t
+        self.update()
+        self.sign = sign_tnx(self, sign, privkey, t)
         self.update()
 
     def is_valid(self, bch):
