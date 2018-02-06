@@ -76,6 +76,11 @@ class TestBlock(unittest.TestCase):
         self.assertTrue(hasattr(b, 'powminers'));
         self.assertTrue(hasattr(b, 'powhash'));
         m_update.assert_called_with();
+
+class TestHash(unittest.TestCase):
+    def test_hash(self):
+        self.assertEqual('2122914021714301784233128915223624866126', cg.h(''))
+        self.assertEqual('20720532132149213101239102231223249249135100218', cg.h('0'))
         
 
 class TestTimestamp(unittest.TestCase):
@@ -86,10 +91,9 @@ class TestTimestamp(unittest.TestCase):
     def test_fixed(self):
         self.assertEqual(15, block.get_timestamp('15'))
 
-"""class TestPowHash(unittest.TestCase):
+class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('2122914021714301784233128915223624866126', calc_pow_hash(sentinel.any))
-"""
+        self.assertEqual('2346710210121041381712114472238187412078', block.Block.calc_pow_hash(block.Block()))
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
