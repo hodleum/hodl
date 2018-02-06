@@ -41,11 +41,11 @@ class Connection:
             data = json.loads(data.decode('utf-8'))
             if data['delta'] < 0:
                 if data['delta'] >= -1000:
-                    bch[len(bch)-data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    bch[len(bch)-data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                     for b in data['blocks'][1:]:
                         bch.append(b)
                 else:
-                    bch[len(bch) - data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    bch[len(bch) - data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                     for b in data['blocks'][1:]:
                         bch.append(b)
                     get_many_blocks(data['delta'], -1000)
@@ -90,7 +90,7 @@ class InputConnection:
                 mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
             else:
                 mymess['blocks'] = [str(b) for b in bch[-1000:]]
-        lb = block.block_from_json(data['lb'])
+        lb = block.Block.Block.from_json(data['lb'])
         mymess['lb'] = bch[-1]
         b = bch[-1]
         if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
@@ -104,7 +104,6 @@ class InputConnection:
         mymess['answer'] = handle_request(data['request'])
         self.conn.send(json.dumps(mymess).encode('utf-8'))
         if mymess['delta'] > 0:
-            self.conn = self.sock.accept()[0]
             data = b''
             while True:
                 data += self.conn.recv(1024)
@@ -113,7 +112,7 @@ class InputConnection:
             data = json.loads(data.decode('utf-8'))
             if data['delta'] < 0:
                 if data['delta'] >= -1000:
-                    bch[len(bch) - data['delta'] - 1] = block.block_from_json(data['blocks'][1])
+                    bch[len(bch) - data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                     for b in data['blocks'][1:]:
                         bch.append(b)
 

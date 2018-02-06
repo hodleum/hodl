@@ -9,7 +9,12 @@ import os
 minerfee = 1
 txs_in_block = 50
 maxblocksize = 4000000
-
+sc_base_mem = 10000000
+sc_base_code_size = 5000000
+sc_memprice = 10**(1/10)
+sc_max_code_size = 1000000000
+sc_code_price = 10**(1/6)
+sc_price = 10**()
 
 
 class Blockchain:
@@ -40,27 +45,15 @@ class Blockchain:
             if self[i].h == block.h:
                 return i
 
-    def __add__(self, other):    # todo: дописать
-        """Merges blockchains (consensus)"""
-        if other.is_valid():
-            if len(other) > len(self):
-                self = other
-
     def money(self, wallet):
         """Counts money on wallet"""
         money = 0
         for bl in self:  # перебираем все транзакции в каждом блоке
-            print(self.index(bl))
-        print([self.index(bl) for bl in self])
-        for bl in self:  # перебираем все транзакции в каждом блоке
-            print(self.index(bl), len(self))
             for tnx in bl.txs:
                 l = zip(tnx.outs, tnx.outns, range(len(tnx.outns)))
-                print(tnx.index)
                 for w, n, i in l:
                     if w == wallet and not tnx.spent(self)[i]:
                         money += n
-            print(len(self))
         return money
 
     def new_block(self, creators, txs=[]):
@@ -95,10 +88,10 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author, needsinf=False):
+    def new_sc(self, text, author):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        b.contracts.append(text, author, (len(b), len(self) - 1), needsinf)
+        b.contracts.append(Smart_contract(text, author, [len(b), len(self) - 1]))
         self[-1] = b
 
     def __eq__(self, other):
@@ -258,6 +251,49 @@ class Block:
             self.txs[i].index[1] = i
 
 
+def is_first_tnx_valid(tnx, bch):
+    if tnx.froms != [['nothing']] or tnx.author != 'mining' \
+            or tnx.outs != bch[tnx.index[0]].creators or tnx.outns != mining.miningprice:
+        return False
+    else:
+        return True
+
+def is_tnx_money_valid(self, bch):
+    inp = 0
+    for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
+        try:
+            tnx = bch[int(t[0])].txs[int(t[1])]
+            if not tnx.is_valid:
+                print(self.index, 'is not valid: from is not valid')
+                return False
+            if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
+                print(self.index, 'is not valid: from is not valid')
+                return False
+            inp = inp + tnx.outns[tnx.outs.index(self.author)]
+        except:
+            print(self.index, 'is not valid: exception')
+            return False
+    o = 0
+    for n in self.outns:  # all money must be spent
+        if n < 0:
+            return False
+        o = o + n
+    if not o == inp:
+        print(self.index, 'is not valid: not all money')
+        return False
+    return True
+
+def sign_tnx(self, sign, privkey, t):
+    if sign == 'signing':
+        self.update()
+        self.sign = cg.sign(self.hash, privkey)
+        self.timestamp = time.time()
+    else:
+        self.sign = sign
+        self.timestamp = t
+    return self
+
+
 class Transaction:
     """Class for transaction"""
     # форма для передачи транзакций строкой(разделитель - русское а):
@@ -280,18 +316,6 @@ class Transaction:
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
         self.index = list(index)
-        if t == 'now':
-            self.timestamp = time.time()
-        else:
-            self.timestamp = t
-        if sign == 'signing':  # транзакция может быть уже подписана,
-            # или может создаваться новая транзакция с помощью Transaction().
-            # Соответственно может быть нужна новая подпись.
-            self.update()
-            self.sign = cg.sign(self.hash, privkey)
-        else:  # Если транзакция не проводится, а создается заново после передачи, то подпись уже известна
-            self.sign = sign
-            self.timestamp = t
         self.update()
 
     def is_valid(self, bch):
@@ -299,55 +323,22 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
-        if self.index[1] == 0:
-            if self.froms != [['nothing']] or self.author != 'mining' \
-                    or self.outs != bch[self.index[0]].creators or self.outns != mining.miningprice:
-                return False
-            else:
-                return True
+        if self.index[1]==0:
+            is_first_tnx_valid(self, bch)
         if not self.author[0:2] == 'sc':
             if not cg.verify_sign(self.sign, self.hash, self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
         else:
-            try:
-                scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
-                sc = bch[scind[0]].contracts[scind[1]]
-                tnx_needed, tnx_created, froms, outs, outns = sc.execute()[1:]
-                if tnx_needed:
-                    selfind = froms.index(self.froms)
-                    if not (tnx_created and outs[selfind] == self.outs and outns[selfind] == self.outns):
-                        return False
-                else:
-                    print(self.index, 'is not valid: sc')
-                    return False
-            except:
-                print(self.index, 'is not valid: exception')
+            scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
+            sc = bch[scind[0]].contracts[scind[1]]
+            for tnx in sc.txs:
+                if self.index == tnx.index:
+                    break
+            else:
                 return False
-        inp = 0
-        for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
-            try:
-                tnx = bch[int(t[0])].txs[int(t[1])]
-                if not tnx.is_valid:
-                    print(self.index, 'is not valid: from is not valid')
-                    return False
-                if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
-                    print(self.index, 'is not valid: from is not valid')
-                    return False
-                inp = inp + tnx.outns[tnx.outs.index(self.author)]
-            except:
-                print(self.index, 'is not valid: exception')
-                return False
-        o = 0
-        for n in self.outns:  # all money must be spent
-            if n < 0:
-                return False
-            o = o + n
-        if not o == inp:
-            print(self.index, 'is not valid: not all money')
-            return False
-        x = ''.join(chain([str(self.sign), str(self.author), str(self.index)], [str(f) for f in self.froms],
-                          [str(f) for f in self.outs], [str(f) for f in self.outns]))
+        is_tnx_money_valid(self, bch)
+        self.update()
         return True
 
 
@@ -371,15 +362,25 @@ class Transaction:
 
 
 class Smart_contract:
-    # todo: дописать Smart_contract: добавить ограничения
-    def __init__(self, code, author, index, needsinf=False):
+    def __init__(self, code, author, index, prolongable=False, computing=False, tasks=[], mem_copies=3, calc_repeats=3):
         self.code = code
         self.author = author
         self.index = index
         self.memory = []
         self.msgs = []
+        self.prolongable = prolongable
+        self.timestamp = time.time()
+        self.computing = True
+        self.tasks = tasks
+        self.membs = []
+        self.memsize = sc_base_mem
+        self.codesize = sc_base_code_size
+        self.txs = []
+        self.mem_copies = mem_copies
+        self.calc_repeats = calc_repeats
 
-    def execute(self, bch, inf=''):
+
+    def execute(self):
         """smart contract's execution"""
         file = open('tmp/{}.py'.format(str(self.index)), 'w')
         file.writelines(self.code)
@@ -391,17 +392,39 @@ class Smart_contract:
         file.writelines([str(mem) for mem in list(self.msgs)])
         file.close()
         os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/{}.py'.format(str(self.index)))
+        file = open('tmp/{}.mem'.format(str(self.index)), 'r')
+        self.memory = [str(mem) for mem in file.readlines()]
+        file.close()
+        file = open('tmp/{}.txs'.format(str(self.index)), 'r')
+        self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
+        file.close()
 
     def __str__(self):
         """Encodes contract to str"""
-        return json.dumps((self.code, self.author, self.index, self.memory, self.msgs))
+        return json.dumps((self.code, self.author, self.index, self.prolongable, self.computing, self.tasks,
+                           self.mem_copies, self.calc_repeats, self.msgs, self.membs, self.memsize,
+                           self.codesize, self.timestamp))
 
     @classmethod
     def from_json(cls, s):
         """Decodes contract from str"""
-        self = cls(*json.loads(s))
+        self = cls(*json.loads(s)[0:8])
+        self.msgs, self.membs, self.memsize, self.codesize, self.timestamp = json.loads[7:]
         return self
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def is_valid(self, bch):
+        if self.codesize > sc_max_code_size:
+            return False
+        pr = sc_price
+        if self.memsize > sc_base_mem or self.codesize > sc_base_code_size:
+            pr += ((self.memsize - sc_base_mem) * sc_memprice * (time.time()//2592000)) + (self.codesize - sc_base_code_size) * sc_code_price
+        payed = 0
+        for b in bch:
+             for tnx in b.txs:
+                 if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
+                     payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
+        if not payed >= pr:
+            return False
