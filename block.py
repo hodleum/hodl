@@ -41,6 +41,7 @@ class Blockchain:
         self.conn.commit()
 
     def index(self, block):
+        """Finds block in chain by hash"""
         for i in range(len(self)):
             if self[i].h == block.h:
                 return i
@@ -108,9 +109,9 @@ class Blockchain:
 
     def __next__(self):
         self.current += 1
-        if not self.current <= len(self):
+        try:
             return self[self.current]
-        else:
+        except TypeError:
             raise StopIteration
 
     def __setitem__(self, key, value):
@@ -118,22 +119,20 @@ class Blockchain:
             key += len(self)
         self.c.execute("UPDATE blocks SET block = '{}' WHERE ind = {}".format(str(value), str(key)))
 
-    def add_miner(self, miner, type='pow'):
-        if type == 'pow':
-            b = self[-1]
-            b.powminers.append(miner)
-            self[-1] = b
-        elif type == 'poc':
-            b = self[-1]
-            b.pocminers.append(miner)
-            self[-1] = b
+    def add_miner(self, miner):
+        """adds proof-of-work miner"""
+        b = self[-1]
+        b.powminers.append(miner)
+        self[-1] = b
 
     def clean(self):
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
+
 def get_timestamp(t):
-    return int(time.time()) if t=='now' else int(t)
+    return int(time.time()) if t == 'now' else int(t)
+
 
 def get_prevhash(bch, creators):
     try:
@@ -156,7 +155,6 @@ class Block:
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
-        self.pocminers = []
         self.powminers = []
         self.powhash = 0
         self.powhash = self.calc_pow_hash()
@@ -165,7 +163,7 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.pocminers, self.powminers))
+                           [str(c) for c in self.contracts], self.powminers))
 
     @classmethod
     def from_json(cls, s):
@@ -181,7 +179,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers = s[1], s[2], s[3], s[4], s[6], s[7]
+        self.n, self.timestamp, self.prevhash, self.creators, self.powminers = s[1], s[2], s[3], s[4], s[6]
         self.powhash = self.calc_pow_hash()
         self.update()
         return self
@@ -260,7 +258,7 @@ def is_first_tnx_valid(tnx, bch):
 
 def is_tnx_money_valid(self, bch):
     inp = 0
-    for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
+    for t in self.froms:  # how much money are available
         try:
             tnx = bch[int(t[0])].txs[int(t[1])]
             if not tnx.is_valid:
@@ -350,7 +348,7 @@ class Transaction:
         spent = [False] * len(self.outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs[1:]:
-                if list(self.index) in tnx.froms and not 'mining' in tnx.outs and not tnx.index in exc:
+                if list(self.index) in tnx.froms and 'mining' not in tnx.outs and not tnx.index in exc:
                     spent[self.outs.index(tnx.author)] = True
         return spent
 
@@ -372,7 +370,7 @@ class Smart_contract:
         self.timestamp = time.time()
         self.computing = True
         self.tasks = tasks
-        self.membs = []
+        self.mempeers = []
         self.memsize = sc_base_mem
         self.codesize = sc_base_code_size
         self.txs = []
@@ -402,7 +400,7 @@ class Smart_contract:
     def __str__(self):
         """Encodes contract to str"""
         return json.dumps((self.code, self.author, self.index, self.prolongable, self.computing, self.tasks,
-                           self.mem_copies, self.calc_repeats, self.msgs, self.membs, self.memsize,
+                           self.mem_copies, self.calc_repeats, self.msgs, self.mempeers, self.memsize,
                            self.codesize, self.timestamp))
 
     @classmethod

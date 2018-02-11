@@ -9,6 +9,14 @@ from unittest.mock import sentinel, MagicMock, patch
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
 class BlockUnittest(unittest.TestCase):
+    def test_block_iter(self):
+        bch = block.Blockchain()
+        bch.clean()
+        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
+        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
+        self.assertEqual(len([b for b in bch]), len(bch))
+        self.assertEqual(len(bch), 2)
+
     def test_creations_and_money_counter(self):
         bch = block.Blockchain()
         bch.clean()
