@@ -59,6 +59,7 @@ class BlockUnittest(unittest.TestCase):
         self.assertEqual(b2, bch[1].txs[0])
         bch.conn.close()
 
+
 class TestPrevhash(unittest.TestCase):
     def test_empty_empty(self):
         self.assertEqual('0', block.get_prevhash([], []))
@@ -69,6 +70,7 @@ class TestPrevhash(unittest.TestCase):
     def test_something_something(self):
         blockchain = [MagicMock(), MagicMock(h=sentinel.hash)]
         self.assertEqual(sentinel.hash, block.get_prevhash(blockchain, ['1', '2', '3']))
+
 
 class TestBlock(unittest.TestCase):
     @patch('block.Block.update')
@@ -84,6 +86,7 @@ class TestBlock(unittest.TestCase):
         self.assertTrue(hasattr(b, 'powhash'))
         m_update.assert_called_with()
 
+
 class TestHash(unittest.TestCase):
     def test_hash(self):
         self.assertEqual('2122914021714301784233128915223624866126', cg.h(''))
@@ -98,9 +101,11 @@ class TestTimestamp(unittest.TestCase):
     def test_fixed(self):
         self.assertEqual(15, block.get_timestamp('15'))
 
+
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
         self.assertEqual('234608510025022041154841191921831393920460', block.Block.calc_pow_hash(block.Block()))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

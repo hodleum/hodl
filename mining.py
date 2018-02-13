@@ -25,7 +25,9 @@ def mining_delta_t(bch_len):
 
 
 def pow_mining(bch, b):
-    """Proof-of-work new block processing"""
+    """Proof-of-work new block processing
+    miner:
+    [hash, n, miner's address, timestamp]"""
     lb = bch[-1]
     miners = lb.powminers
     miners.sort()
@@ -46,8 +48,10 @@ def pow_mining(bch, b):
             if i == len(bch):
                  i = i - len(bch) + 1
     b.n = miners[i][1]
-    b.timestamp = miners[i][3]
+    b.pow_timestamp = miners[i][3]
+    b.timestamp = int(time.time())
     b.creators = [miners[i][2]]
+    b.txs[0].outs.append(miners[i][2])
     b.update()
     return b
 
@@ -62,7 +66,6 @@ def pow_validate(bch, num):
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
         bl.prevhash = bch[i-1].h
         if int(bl.calc_pow_hash()) <= miners[i][0] <= pow_max:
-            print('i167', i)
             break
         else:
             miners.remove(miners[i])
@@ -96,6 +99,7 @@ def pos_mining(b, bch):
             b.creators.append(miners[i][1])
         else:
             raise NoValidMinersError
+    b.txs[0].outns.append(miners[i][1])
     b.update()
     return b
 
@@ -142,11 +146,45 @@ def pok_mining(b, bch):
 
 
 def pok_validate(bch, n):
+    outs = []
+    outns = []
+    for bl in bch:
+        for sc in bl.contracts:
+            sc.calc_awards()
+            for w in sc.awards.keys():
+                if bch[n].timestamp > sc.awards[w][1] > bch[n - 1].timestamp:
+                    outs.append(w)
+                    outns.append(sc.awards[w][0])
+    if not (outs == bch[n].txs[1].outs and outns == bch[n].txs[1].outns):
+        return False
     return True
 
 
 def poc_mining(b, bch):
     """Proof-of-calcing new block processing"""
+    return b
+
+
+def poc_validate(bch, n):
+    return True
+
+
+def validate(bch, i=-1):
+    """Checks is block mined"""
+    # todo: write mining.validate()
+    return all([pow_validate(bch, i), pos_validate(bch, i), pok_validate(bch, i), poc_validate(bch, i)])
+
+
+def mine(bch):
+    """Creates new block"""
+    b = block.Block()
+    tnx = block.Transaction()
+    tnx.gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
+    b.txs.append()
+    b = pow_mining(bch, b)
+    b = pos_mining(b, bch)
+    b = pok_mining(b, bch)
+    b = poc_mining(b, bch)
     return b
 
 
@@ -160,19 +198,3 @@ def pow_mine(bch, nmax, myaddr):
         else:
             n += 1
     return n, t, int(bl.calc_pow_hash())
-
-
-def validate(bch, i=-1):
-    """Checks is block mined"""
-    # todo: write mining.validate()
-    return all([pow_validate(bch, i), pos_validate(bch, i), pok_validate(bch, i), poc_validate(bch, i)])
-
-
-def mine(bch):
-    b = block.Block()
-    b = pow_mining(bch, b)
-    b = pos_mining(b, bch)
-    b = pok_mining(b, bch)
-    b = poc_mining(b, bch)
-    b.txs[0].outns = miningprice
-    return b

@@ -18,7 +18,6 @@ class MiningUnittest(unittest.TestCase):
         bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         n, t, h = mining.pow_mine(bch, 900000000000000000000000000000000000, my_keys[1])
-        print(n, t, h)
 
 
     def test_mining(self):

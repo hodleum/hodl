@@ -234,9 +234,9 @@ class Block:
 
     def calc_pow_hash(self):
         try:
-            h = ''.join([str(self.timestamp), str(self.n), self.creators[0]])
+            h = ''.join([str(self.pow_timestamp), str(self.n), self.creators[0]])
         except IndexError:
-            h = ''.join([str(self.timestamp), str(self.n)])
+            h = ''.join([str(self.pow_timestamp), str(self.n)])
         return cg.h(str(h))
 
     def sort(self):
