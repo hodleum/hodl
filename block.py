@@ -193,8 +193,7 @@ class Block:
         """Updates hash"""
         self.sort()
         h = ''.join([str(self.prevhash)] + [str(self.powhash)] + [str(t.hash) for t in self.txs] +
-                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
-                    [str(e) for e in self.pocminers])
+                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers])
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
@@ -365,17 +364,18 @@ class Smart_contract:
         self.author = author
         self.index = index
         self.memory = []
-        self.msgs = []
+        self.msgs = []  # [[message text, message sender, sender's sign]]
         self.prolongable = prolongable
         self.timestamp = time.time()
         self.computing = True
-        self.tasks = tasks
+        self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]}, repeats, award, done]]
         self.mempeers = []
         self.memsize = sc_base_mem
         self.codesize = sc_base_code_size
         self.txs = []
         self.mem_copies = mem_copies
         self.calc_repeats = calc_repeats
+        self.awards = {}
 
 
     def execute(self):
@@ -421,8 +421,22 @@ class Smart_contract:
             pr += ((self.memsize - sc_base_mem) * sc_memprice * (time.time()//2592000)) + (self.codesize - sc_base_code_size) * sc_code_price
         payed = 0
         for b in bch:
-             for tnx in b.txs:
-                 if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
-                     payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
+            for tnx in b.txs:
+                if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
+                    payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
         if not payed >= pr:
             return False
+
+    def calc_awards(self):
+        self.awards = {}
+        for task in self.tasks:
+            for w in task[1].keys():
+                accepts = 0
+                for a in task[1][w][0]:
+                    if a[0] == 'a':
+                        accepts += 1
+                if accepts < (0.7 * task[2]):
+                    if w in self.awards.keys():
+                        self.awards[w].append([task[3], task[1][w][1]])
+                    else:
+                        self.awards[w] = [task[3]]

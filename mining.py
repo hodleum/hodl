@@ -126,11 +126,23 @@ def pos_validate(bch, i):
 
 def pok_mining(b, bch):
     """Proof-of-keeping new block processing"""
+    tnx = block.Transaction()
+    outs = []
+    outns = []
+    for bl in bch:
+        for sc in bl.contracts:
+            sc.calc_awards()
+            for w in sc.awards.keys():
+                if sc.awards[w][1] > bch[-1].timestamp:
+                    outs.append(w)
+                    outns.append(sc.awards[w][0])
+    tnx.gen('mining', outs, outns, (len(bch), len(b)), 'mining', 'mining')
+    b.txs.append(tnx)
     return b
 
 
 def pok_validate(bch, n):
-        return True
+    return True
 
 
 def poc_mining(b, bch):

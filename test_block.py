@@ -74,16 +74,15 @@ class TestBlock(unittest.TestCase):
     @patch('block.Block.update')
     def test_init_of_blocks(self, m_update):
         b = block.Block()
-        self.assertTrue(hasattr(b, 'n'));
-        self.assertTrue(hasattr(b, 'prevhash'));
-        self.assertTrue(hasattr(b, 'timestamp'));
-        self.assertTrue(hasattr(b, 'txs'));
-        self.assertTrue(hasattr(b, 'contracts'));
-        self.assertTrue(hasattr(b, 'creators'));
-        self.assertTrue(hasattr(b, 'pocminers'));
-        self.assertTrue(hasattr(b, 'powminers'));
-        self.assertTrue(hasattr(b, 'powhash'));
-        m_update.assert_called_with();
+        self.assertTrue(hasattr(b, 'n'))
+        self.assertTrue(hasattr(b, 'prevhash'))
+        self.assertTrue(hasattr(b, 'timestamp'))
+        self.assertTrue(hasattr(b, 'txs'))
+        self.assertTrue(hasattr(b, 'contracts'))
+        self.assertTrue(hasattr(b, 'creators'))
+        self.assertTrue(hasattr(b, 'powminers'))
+        self.assertTrue(hasattr(b, 'powhash'))
+        m_update.assert_called_with()
 
 class TestHash(unittest.TestCase):
     def test_hash(self):
@@ -101,7 +100,7 @@ class TestTimestamp(unittest.TestCase):
 
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('2346710210121041381712114472238187412078', block.Block.calc_pow_hash(block.Block()))
+        self.assertEqual('234608510025022041154841191921831393920460', block.Block.calc_pow_hash(block.Block()))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

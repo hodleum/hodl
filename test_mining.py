@@ -49,15 +49,14 @@ class TestMiningDeltaT(unittest.TestCase):
 
 @patch('mining.validate_pow')
 @patch('mining.validate_pos')
-@patch('mining.validate_poc')
 class TestValidate(unittest.TestCase):
-    def test_everything_ok(self, m_poc, m_pos, m_pow):
-        m_poc.return_value = m_pos.return_value = m_pow.return_value = True
+    def test_everything_ok(self, m_pos, m_pow):
+        m_pos.return_value = m_pow.return_value = True
         self.assertTrue(mining.validate(sentinel.bch, sentinel.i))
-        m_poc.assert_called_with(sentinel.bch, sentinel.i)
+        m_pow.assert_called_with(sentinel.bch, sentinel.i)
         
-    def test_everything_fails(self, m_poc, m_pos, m_pow):
-        m_poc.return_value = m_pos.return_value = m_pow.return_value = False
+    def test_everything_fails(self, m_pos, m_pow):
+        m_pos.return_value = m_pow.return_value = False
         self.assertFalse(mining.validate(sentinel.bch, sentinel.i))
         m_pow.assert_called_with(sentinel.bch, sentinel.i)
 
