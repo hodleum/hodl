@@ -19,8 +19,8 @@ sc_price = 0.01
 
 class Blockchain:
     """Class for blockchain"""
-    def __init__(self):
-        self.conn = sqlite3.connect('bch.db')
+    def __init__(self, filename='bch.db'):
+        self.conn = sqlite3.connect(filename)
         self.c = self.conn.cursor()
         try:
             self.c.execute('''CREATE TABLE blocks
@@ -129,6 +129,11 @@ class Blockchain:
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
+    def add_sc(self, sc):
+        b = self[-1]
+        b.contracts.append(sc)
+        self[-1] = b
+
 
 def get_timestamp(t):
     return int(time.time()) if t == 'now' else int(t)
@@ -149,7 +154,7 @@ class Block:
     def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
         self.prevhash = get_prevhash(bch, creators)
-        self.timestamp = get_timestamp(t);
+        self.timestamp = get_timestamp(t)
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.timestamp)
         self.txs = [tnx0] + txs
@@ -359,19 +364,18 @@ class Transaction:
 
 
 class Smart_contract:
-    def __init__(self, code, author, index, prolongable=False, computing=False, tasks=[], mem_copies=3, calc_repeats=3):
+    def __init__(self, code, author, index, computing=False, tasks=[], mem_copies=3, calc_repeats=3, memsize=sc_base_mem, codesize=sc_base_code_size):
         self.code = code
         self.author = author
         self.index = index
         self.memory = []
         self.msgs = []  # [[message text, message sender, sender's sign]]
-        self.prolongable = prolongable
         self.timestamp = time.time()
-        self.computing = True
+        self.computing = computing
         self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]}, repeats, award, done]]
         self.mempeers = []
-        self.memsize = sc_base_mem
-        self.codesize = sc_base_code_size
+        self.memsize = memsize
+        self.codesize = codesize
         self.txs = []
         self.mem_copies = mem_copies
         self.calc_repeats = calc_repeats
@@ -389,24 +393,33 @@ class Smart_contract:
         file = open('tmp/{}.msgs'.format(str(self.index)), 'w')
         file.writelines([str(mem) for mem in list(self.msgs)])
         file.close()
+        file = open('tmp/{}.tasks'.format(str(self.index)), 'w')
+        file.writelines([json.dumps(task) for task in list(self.tasks)])
+        file.close()
         os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/{}.py'.format(str(self.index)))
         file = open('tmp/{}.mem'.format(str(self.index)), 'r')
         self.memory = [str(mem) for mem in file.readlines()]
         file.close()
+        file = open('tmp/{}.tasks'.format(str(self.index)), 'r')
+        self.tasks = [json.loads(task) for task in file.readlines()]
+        file.close()
         file = open('tmp/{}.txs'.format(str(self.index)), 'r')
         self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
         file.close()
+        os.remove('tmp')
+
+        # todo: sc tnx
 
     def __str__(self):
         """Encodes contract to str"""
-        return json.dumps((self.code, self.author, self.index, self.prolongable, self.computing, self.tasks,
+        return json.dumps((self.code, self.author, self.index, self.computing, self.tasks,
                            self.mem_copies, self.calc_repeats, self.msgs, self.mempeers, self.memsize,
                            self.codesize, self.timestamp))
 
     @classmethod
     def from_json(cls, s):
         """Decodes contract from str"""
-        self = cls(*json.loads(s)[0:8])
+        self = cls(*json.loads(s)[0:7])
         self.msgs, self.membs, self.memsize, self.codesize, self.timestamp = json.loads[7:]
         return self
 
@@ -418,7 +431,7 @@ class Smart_contract:
             return False
         pr = sc_price
         if self.memsize > sc_base_mem or self.codesize > sc_base_code_size:
-            pr += ((self.memsize - sc_base_mem) * sc_memprice * (time.time()//2592000)) + (self.codesize - sc_base_code_size) * sc_code_price
+            pr += ((self.memsize - sc_base_mem) * sc_memprice) + ((self.codesize - sc_base_code_size) * sc_code_price)
         payed = 0
         for b in bch:
             for tnx in b.txs:

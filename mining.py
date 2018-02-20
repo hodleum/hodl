@@ -5,7 +5,7 @@ import cryptogr as cg
 
 pow_max = 1000000000000000000000000000000000000
 pos_min = 0.005
-miningprice = [0.4, 0.3, 0.3]
+miningprice = [0.4, 0.3]
 
 
 class TooLessTxsError(Exception):
