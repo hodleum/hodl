@@ -4,8 +4,8 @@ import cryptogr as cg
 balances, bc = json.loads(open('{}.mem'.format(ind), 'r').readlines())   # bc - number of last processed block
 
 
-def add_task(sender, task, sign):
-    if cg.verify_sign(sign, json.dumps(task), get_self().author):
+def add_task(sender, task):
+    if sender == get_self().author:
         append_tasks(task)
 
 

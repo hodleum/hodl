@@ -10,4 +10,5 @@ class TestSmartContracts(unittest.TestCase):
         bch = block.Blockchain()
         bch.clean()
         bch.new_block([my_keys[1], your_pub_key])
-        bch.add_sc(block.Smart_contract('a=0', my_keys[1], (0, 0)))
+        bch.add_sc(block.Smart_contract(open('scex.py', 'r').readlines(), my_keys[1], (0, 0)))
+        bch[0].contracts[0].execute()

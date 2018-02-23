@@ -369,7 +369,7 @@ class Smart_contract:
         self.author = author
         self.index = index
         self.memory = []
-        self.msgs = []  # [[message text, message sender, sender's sign]]
+        self.msgs = []  # [[message func, message args(the first is message's sender), sender's sign]]
         self.timestamp = time.time()
         self.computing = computing
         self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]}, repeats, award, done]]
@@ -382,28 +382,35 @@ class Smart_contract:
         self.awards = {}
 
 
-    def execute(self):
+    def execute(self, func='', args=[]):
         """smart contract's execution"""
-        file = open('tmp/{}.py'.format(str(self.index)), 'w')
+        file = open('tmp/main.py', 'w')
+        if func == '':
+            file.writelines(['from sc import *\n'])
+        else:
+            file.writelines(['from sc import *\n', 'import json\n', 'args = json.loads({})\n'.format(json.dumps(args)),
+                             '{}(*args)\n'.format(func)])
+        file.close()
+        file = open('tmp/sc.py', 'w')
         file.writelines(self.code)
         file.close()
-        file = open('tmp/{}.mem'.format(str(self.index)), 'w')
+        file = open('tmp/sc.mem', 'w')
         file.writelines([str(mem) for mem in list(self.memory)])
         file.close()
-        file = open('tmp/{}.msgs'.format(str(self.index)), 'w')
+        file = open('tmp/sc.msgs', 'w')
         file.writelines([str(mem) for mem in list(self.msgs)])
         file.close()
-        file = open('tmp/{}.tasks'.format(str(self.index)), 'w')
+        file = open('tmp/sc.tasks', 'w')
         file.writelines([json.dumps(task) for task in list(self.tasks)])
         file.close()
-        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/{}.py'.format(str(self.index)))
-        file = open('tmp/{}.mem'.format(str(self.index)), 'r')
+        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/sc.py')
+        file = open('tmp/sc.mem', 'r')
         self.memory = [str(mem) for mem in file.readlines()]
         file.close()
-        file = open('tmp/{}.tasks'.format(str(self.index)), 'r')
+        file = open('tmp/sc.tasks', 'r')
         self.tasks = [json.loads(task) for task in file.readlines()]
         file.close()
-        file = open('tmp/{}.txs'.format(str(self.index)), 'r')
+        file = open('tmp/sc.txs', 'r')
         self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
         file.close()
         os.remove('tmp')
@@ -453,3 +460,9 @@ class Smart_contract:
                         self.awards[w].append([task[3], task[1][w][1]])
                     else:
                         self.awards[w] = [task[3]]
+
+    def handle_messages(self):
+        for mess in self.msgs:
+            if mess[-1] == False:
+                if cg.verify_sign(mess[2], json.dumps([mess[0], mess[1]]), mess[1][0]):
+                    self.execute(mess[0], mess[1])

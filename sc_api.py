@@ -4,13 +4,12 @@ import os
 
 
 bch = block.Blockchain()
-ind = os.listdir()[0].split(']')[0] + ']'
 def tnx(outs, outns):
     pass
 
 
 def append_tasks(task):
-    with open('{}.tasks'.format(ind), 'rw') as f:
+    with open('sc.tasks', 'rw') as f:
         f.write(json.dumps(task) + '\n')
 
 
