@@ -19,8 +19,8 @@ sc_price = 0.01
 
 class Blockchain:
     """Class for blockchain"""
-    def __init__(self):
-        self.conn = sqlite3.connect('bch.db')
+    def __init__(self, filename='bch.db'):
+        self.conn = sqlite3.connect(filename)
         self.c = self.conn.cursor()
         try:
             self.c.execute('''CREATE TABLE blocks
@@ -41,6 +41,7 @@ class Blockchain:
         self.conn.commit()
 
     def index(self, block):
+        """Finds block in chain by hash"""
         for i in range(len(self)):
             if self[i].h == block.h:
                 return i
@@ -108,9 +109,9 @@ class Blockchain:
 
     def __next__(self):
         self.current += 1
-        if not self.current <= len(self):
+        try:
             return self[self.current]
-        else:
+        except TypeError:
             raise StopIteration
 
     def __setitem__(self, key, value):
@@ -118,22 +119,25 @@ class Blockchain:
             key += len(self)
         self.c.execute("UPDATE blocks SET block = '{}' WHERE ind = {}".format(str(value), str(key)))
 
-    def add_miner(self, miner, type='pow'):
-        if type == 'pow':
-            b = self[-1]
-            b.powminers.append(miner)
-            self[-1] = b
-        elif type == 'poc':
-            b = self[-1]
-            b.pocminers.append(miner)
-            self[-1] = b
+    def add_miner(self, miner):
+        """adds proof-of-work miner"""
+        b = self[-1]
+        b.powminers.append(miner)
+        self[-1] = b
 
     def clean(self):
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
+    def add_sc(self, sc):
+        b = self[-1]
+        b.contracts.append(sc)
+        self[-1] = b
+
+
 def get_timestamp(t):
-    return int(time.time()) if t=='now' else int(t)
+    return int(time.time()) if t == 'now' else int(t)
+
 
 def get_prevhash(bch, creators):
     try:
@@ -150,13 +154,12 @@ class Block:
     def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
         self.n = n
         self.prevhash = get_prevhash(bch, creators)
-        self.timestamp = get_timestamp(t);
+        self.timestamp = get_timestamp(t)
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
-        self.pocminers = []
         self.powminers = []
         self.powhash = 0
         self.powhash = self.calc_pow_hash()
@@ -165,7 +168,7 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.pocminers, self.powminers))
+                           [str(c) for c in self.contracts], self.powminers))
 
     @classmethod
     def from_json(cls, s):
@@ -181,7 +184,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.pocminers, self.powminers = s[1], s[2], s[3], s[4], s[6], s[7]
+        self.n, self.timestamp, self.prevhash, self.creators, self.powminers = s[1], s[2], s[3], s[4], s[6]
         self.powhash = self.calc_pow_hash()
         self.update()
         return self
@@ -195,8 +198,7 @@ class Block:
         """Updates hash"""
         self.sort()
         h = ''.join([str(self.prevhash)] + [str(self.powhash)] + [str(t.hash) for t in self.txs] +
-                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers] +
-                    [str(e) for e in self.pocminers])
+                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers])
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
@@ -237,9 +239,9 @@ class Block:
 
     def calc_pow_hash(self):
         try:
-            h = ''.join([str(self.timestamp), str(self.n), self.creators[0]])
+            h = ''.join([str(self.pow_timestamp), str(self.n), self.creators[0]])
         except IndexError:
-            h = ''.join([str(self.timestamp), str(self.n)])
+            h = ''.join([str(self.pow_timestamp), str(self.n)])
         return cg.h(str(h))
 
     def sort(self):
@@ -260,7 +262,7 @@ def is_first_tnx_valid(tnx, bch):
 
 def is_tnx_money_valid(self, bch):
     inp = 0
-    for t in self.froms:  # Проверка наличия требуемых денег в транзакциях-донорах
+    for t in self.froms:  # how much money are available
         try:
             tnx = bch[int(t[0])].txs[int(t[1])]
             if not tnx.is_valid:
@@ -350,7 +352,7 @@ class Transaction:
         spent = [False] * len(self.outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs[1:]:
-                if list(self.index) in tnx.froms and not 'mining' in tnx.outs and not tnx.index in exc:
+                if list(self.index) in tnx.froms and 'mining' not in tnx.outs and not tnx.index in exc:
                     spent[self.outs.index(tnx.author)] = True
         return spent
 
@@ -362,53 +364,69 @@ class Transaction:
 
 
 class Smart_contract:
-    def __init__(self, code, author, index, prolongable=False, computing=False, tasks=[], mem_copies=3, calc_repeats=3):
+    def __init__(self, code, author, index, computing=False, tasks=[], mem_copies=3, calc_repeats=3, memsize=sc_base_mem, codesize=sc_base_code_size):
         self.code = code
         self.author = author
         self.index = index
         self.memory = []
-        self.msgs = []
-        self.prolongable = prolongable
+        self.msgs = []  # [[message func, message args(the first is message's sender), sender's sign]]
         self.timestamp = time.time()
-        self.computing = True
-        self.tasks = tasks
-        self.membs = []
-        self.memsize = sc_base_mem
-        self.codesize = sc_base_code_size
+        self.computing = computing
+        self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]}, repeats, award, done]]
+        self.mempeers = []
+        self.memsize = memsize
+        self.codesize = codesize
         self.txs = []
         self.mem_copies = mem_copies
         self.calc_repeats = calc_repeats
+        self.awards = {}
 
 
-    def execute(self):
+    def execute(self, func='', args=[]):
         """smart contract's execution"""
-        file = open('tmp/{}.py'.format(str(self.index)), 'w')
+        file = open('tmp/main.py', 'w')
+        if func == '':
+            file.writelines(['from sc import *\n'])
+        else:
+            file.writelines(['from sc import *\n', 'import json\n', 'args = json.loads({})\n'.format(json.dumps(args)),
+                             '{}(*args)\n'.format(func)])
+        file.close()
+        file = open('tmp/sc.py', 'w')
         file.writelines(self.code)
         file.close()
-        file = open('tmp/{}.mem'.format(str(self.index)), 'w')
+        file = open('tmp/sc.mem', 'w')
         file.writelines([str(mem) for mem in list(self.memory)])
         file.close()
-        file = open('tmp/{}.msgs'.format(str(self.index)), 'w')
+        file = open('tmp/sc.msgs', 'w')
         file.writelines([str(mem) for mem in list(self.msgs)])
         file.close()
-        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/{}.py'.format(str(self.index)))
-        file = open('tmp/{}.mem'.format(str(self.index)), 'r')
+        file = open('tmp/sc.tasks', 'w')
+        file.writelines([json.dumps(task) for task in list(self.tasks)])
+        file.close()
+        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/tmp/sc.py')
+        file = open('tmp/sc.mem', 'r')
         self.memory = [str(mem) for mem in file.readlines()]
         file.close()
-        file = open('tmp/{}.txs'.format(str(self.index)), 'r')
+        file = open('tmp/sc.tasks', 'r')
+        self.tasks = [json.loads(task) for task in file.readlines()]
+        file.close()
+        file = open('tmp/sc.txs', 'r')
         self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
         file.close()
+        os.remove('tmp')
+
+        # todo: sc tnx
 
     def __str__(self):
         """Encodes contract to str"""
-        return json.dumps((self.code, self.author, self.index, self.prolongable, self.computing, self.tasks,
-                           self.mem_copies, self.calc_repeats, self.msgs, self.membs, self.memsize,
+        return json.dumps((self.code, self.author, self.index, self.computing, self.tasks,
+                           self.mem_copies, self.calc_repeats, self.msgs, self.mempeers, self.memsize,
                            self.codesize, self.timestamp))
 
     @classmethod
     def from_json(cls, s):
         """Decodes contract from str"""
-        self = cls(*json.loads(s)[0:8])
+        self = cls(*json.loads(s)[0:7])
         self.msgs, self.membs, self.memsize, self.codesize, self.timestamp = json.loads[7:]
         return self
 
@@ -420,11 +438,31 @@ class Smart_contract:
             return False
         pr = sc_price
         if self.memsize > sc_base_mem or self.codesize > sc_base_code_size:
-            pr += ((self.memsize - sc_base_mem) * sc_memprice * (time.time()//2592000)) + (self.codesize - sc_base_code_size) * sc_code_price
+            pr += ((self.memsize - sc_base_mem) * sc_memprice) + ((self.codesize - sc_base_code_size) * sc_code_price)
         payed = 0
         for b in bch:
-             for tnx in b.txs:
-                 if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
-                     payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
+            for tnx in b.txs:
+                if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
+                    payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
         if not payed >= pr:
             return False
+
+    def calc_awards(self):
+        self.awards = {}
+        for task in self.tasks:
+            for w in task[1].keys():
+                accepts = 0
+                for a in task[1][w][0]:
+                    if a[0] == 'a':
+                        accepts += 1
+                if accepts < (0.7 * task[2]):
+                    if w in self.awards.keys():
+                        self.awards[w].append([task[3], task[1][w][1]])
+                    else:
+                        self.awards[w] = [task[3]]
+
+    def handle_messages(self):
+        for mess in self.msgs:
+            if mess[-1] == False:
+                if cg.verify_sign(mess[2], json.dumps([mess[0], mess[1]]), mess[1][0]):
+                    self.execute(mess[0], mess[1])

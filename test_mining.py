@@ -18,20 +18,7 @@ class MiningUnittest(unittest.TestCase):
         bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         n, t, h = mining.pow_mine(bch, 900000000000000000000000000000000000, my_keys[1])
-        print(n, t, h)
 
-    def test_poc(self):
-        bch = block.Blockchain()
-        bch.new_block([my_keys[1], my_keys[1], your_pub_key])
-        bch.new_block([my_keys[1], my_keys[1], your_pub_key])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.5, 0.25], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        xs = mining.poc_mine(1000, bch, my_keys[1])
-        bch[-1].pocminers.append([1000, my_keys[1], xs])
-        print(len(xs), xs)
 
     def test_mining(self):
         bch = block.Blockchain()
@@ -42,19 +29,16 @@ class MiningUnittest(unittest.TestCase):
         bch.new_transaction(my_keys[1], [(0, 0)], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [(0, 0)], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         n = 1000
-        xs = mining.poc_mine(n, bch, my_keys[1])
-        bch.add_miner([n, my_keys[1], xs], 'poc')
-        bch.add_miner([n, my_keys[1], xs], 'poc')
-        bch.add_miner([n, my_keys[1], xs], 'poc')
         n, t, h = mining.pow_mine(bch, 90000000000000000000000000000000000, my_keys[1])
-        bch.add_miner([int(h), n, my_keys[1], t], 'pow')
-        bch.add_miner([int(h), n, my_keys[1], t], 'pow')
-        bch.add_miner([int(h), n, my_keys[1], t], 'pow')
+        bch.add_miner([int(h), n, my_keys[1], t])
+        bch.add_miner([int(h), n, my_keys[1], t])
+        bch.add_miner([int(h), n, my_keys[1], t])
         bl = block.Block(n, [my_keys[1]], bch, [], [], t)
         b = mining.mine(bch)
         bch.append(b)
         print('n', bch[-1].n)
         self.assertTrue(mining.validate(bch, -1))
+
 
 class TestMiningDeltaT(unittest.TestCase):
     def test_zero(self):
@@ -64,15 +48,14 @@ class TestMiningDeltaT(unittest.TestCase):
 
 @patch('mining.validate_pow')
 @patch('mining.validate_pos')
-@patch('mining.validate_poc')
 class TestValidate(unittest.TestCase):
-    def test_everything_ok(self, m_poc, m_pos, m_pow):
-        m_poc.return_value = m_pos.return_value = m_pow.return_value = True
+    def test_everything_ok(self, m_pos, m_pow):
+        m_pos.return_value = m_pow.return_value = True
         self.assertTrue(mining.validate(sentinel.bch, sentinel.i))
-        m_poc.assert_called_with(sentinel.bch, sentinel.i)
+        m_pow.assert_called_with(sentinel.bch, sentinel.i)
         
-    def test_everything_fails(self, m_poc, m_pos, m_pow):
-        m_poc.return_value = m_pos.return_value = m_pow.return_value = False
+    def test_everything_fails(self, m_pos, m_pow):
+        m_pos.return_value = m_pow.return_value = False
         self.assertFalse(mining.validate(sentinel.bch, sentinel.i))
         m_pow.assert_called_with(sentinel.bch, sentinel.i)
 

@@ -19,7 +19,19 @@ class Wallet:
         if out > bch.money(self.pubkey):
             return False
         froms = []
-        # todo: write froms generation algorythm
+        o = 0
+        for b in bch:
+            for tnx in b.txs:
+                if self.pubkey in tnx.outs:
+                    o += tnx.outns[tnx.outs.index(self.pubkey)]
+                    froms.append(tnx.index)
+                    if o >= out:
+                        break
+            if o >= out:
+                break
+        if o != out:
+            outns.append(o - out)
+            outs.append(self.pubkey)
         bch.new_transaction(self.pubkey, froms, outs, outns, privkey=self.privkey)
 
     def my_money(self):

@@ -9,6 +9,14 @@ from unittest.mock import sentinel, MagicMock, patch
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
 class BlockUnittest(unittest.TestCase):
+    def test_block_iter(self):
+        bch = block.Blockchain()
+        bch.clean()
+        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
+        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
+        self.assertEqual(len([b for b in bch]), len(bch))
+        self.assertEqual(len(bch), 2)
+
     def test_creations_and_money_counter(self):
         bch = block.Blockchain()
         bch.clean()
@@ -51,6 +59,7 @@ class BlockUnittest(unittest.TestCase):
         self.assertEqual(b2, bch[1].txs[0])
         bch.conn.close()
 
+
 class TestPrevhash(unittest.TestCase):
     def test_empty_empty(self):
         self.assertEqual('0', block.get_prevhash([], []))
@@ -62,20 +71,21 @@ class TestPrevhash(unittest.TestCase):
         blockchain = [MagicMock(), MagicMock(h=sentinel.hash)]
         self.assertEqual(sentinel.hash, block.get_prevhash(blockchain, ['1', '2', '3']))
 
+
 class TestBlock(unittest.TestCase):
     @patch('block.Block.update')
     def test_init_of_blocks(self, m_update):
         b = block.Block()
-        self.assertTrue(hasattr(b, 'n'));
-        self.assertTrue(hasattr(b, 'prevhash'));
-        self.assertTrue(hasattr(b, 'timestamp'));
-        self.assertTrue(hasattr(b, 'txs'));
-        self.assertTrue(hasattr(b, 'contracts'));
-        self.assertTrue(hasattr(b, 'creators'));
-        self.assertTrue(hasattr(b, 'pocminers'));
-        self.assertTrue(hasattr(b, 'powminers'));
-        self.assertTrue(hasattr(b, 'powhash'));
-        m_update.assert_called_with();
+        self.assertTrue(hasattr(b, 'n'))
+        self.assertTrue(hasattr(b, 'prevhash'))
+        self.assertTrue(hasattr(b, 'timestamp'))
+        self.assertTrue(hasattr(b, 'txs'))
+        self.assertTrue(hasattr(b, 'contracts'))
+        self.assertTrue(hasattr(b, 'creators'))
+        self.assertTrue(hasattr(b, 'powminers'))
+        self.assertTrue(hasattr(b, 'powhash'))
+        m_update.assert_called_with()
+
 
 class TestHash(unittest.TestCase):
     def test_hash(self):
@@ -91,9 +101,11 @@ class TestTimestamp(unittest.TestCase):
     def test_fixed(self):
         self.assertEqual(15, block.get_timestamp('15'))
 
+
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('2346710210121041381712114472238187412078', block.Block.calc_pow_hash(block.Block()))
+        self.assertEqual('234608510025022041154841191921831393920460', block.Block.calc_pow_hash(block.Block()))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
