@@ -1,7 +1,7 @@
 from sc_api import *
 import cryptogr as cg
 
-balances, bc = json.loads(open('{}.mem'.format(ind), 'r').readlines())   # bc - number of last processed block
+balances, bc = json.loads(open('sc.mem'.format(ind), 'r').readlines())   # bc - number of last processed block
 
 
 def add_task(sender, task):
@@ -10,7 +10,7 @@ def add_task(sender, task):
 
 
 def write():
-    with open('{}.mem'.format(ind), 'w') as f:
+    with open('sc.mem', 'w') as f:
         f.write(json.dumps(balances))
 
 

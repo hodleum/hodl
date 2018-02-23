@@ -12,3 +12,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key])
         bch.add_sc(block.Smart_contract(open('scex.py', 'r').readlines(), my_keys[1], (0, 0)))
         bch[0].contracts[0].execute()
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

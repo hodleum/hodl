@@ -151,12 +151,13 @@ def get_prevhash(bch, creators):
 
 class Block:
     """Class for blocks"""
-    def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], t='now'):
+    def __init__(self, n=0, creators=[], bch=Blockchain(), txs=[], contracts=[], pow_timestamp='now', t='now'):
         self.n = n
         self.prevhash = get_prevhash(bch, creators)
         self.timestamp = get_timestamp(t)
+        self.pow_timestamp = pow_timestamp
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.timestamp)
+        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.pow_timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
@@ -168,7 +169,7 @@ class Block:
     def __str__(self):
         """Encodes block to str using JSON"""
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.powminers))
+                           [str(c) for c in self.contracts], self.powminers, self.pow_timestamp))
 
     @classmethod
     def from_json(cls, s):
@@ -184,7 +185,7 @@ class Block:
             sc = Smart_contract()
             sc.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.powminers = s[1], s[2], s[3], s[4], s[6]
+        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = s[1], s[2], s[3], s[4], s[6], s[7]
         self.powhash = self.calc_pow_hash()
         self.update()
         return self
@@ -342,7 +343,6 @@ class Transaction:
         is_tnx_money_valid(self, bch)
         self.update()
         return True
-
 
     def __eq__(self, other):
         return self.hash == other.hash

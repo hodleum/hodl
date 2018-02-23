@@ -104,7 +104,7 @@ class TestTimestamp(unittest.TestCase):
 
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('234608510025022041154841191921831393920460', block.Block.calc_pow_hash(block.Block()))
+        self.assertEqual('2346710210121041381712114472238187412078', block.Block.calc_pow_hash(block.Block()))
 
 
 if __name__ == '__main__':
