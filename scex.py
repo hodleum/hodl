@@ -14,26 +14,27 @@ def write():
         f.write(json.dumps(balances))
 
 
-def send(sender, money, to, sign):
+def send(sender, money, to):
     if sender in balances.keys():
-        if cg.verify_sign(sign, json.dumps([str(money), to, sign]), sender) and balances[sender] > money and money > 0:
+        if balances[sender] > money and money > 0:
             balances[sender] -= money
             balances[to] += money
 
 
-def sell(sender, money, sign):
+def sell(sender, money):
     if sender in balances.keys():
-        if cg.verify_sign(sign, json.dumps([str(money), 'sell', sign]), sender) and balances[sender] >= money:
+        if balances[sender] >= money:
             balances[sender] -= money
             tnx([sender], [money])
 
 
-if __name__=='__main__':
-    for b in bch[bc:-1]:
-        for tnx in b.txs:
-            if 'sc' + ind in tnx.outs:
-                try:
-                    balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + ind)]
-                except:
-                    balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + ind)]
-    write()
+for b in bch[bc:-1]:
+    for tnx in b.txs:
+        if 'sc' + ind in tnx.outs:
+            try:
+                balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + ind)]
+            except:
+                balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + ind)]
+write()
+with open('sc.mem', 'rw') as f:
+    f.write('abc')
