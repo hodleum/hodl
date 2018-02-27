@@ -8,6 +8,8 @@ from unittest.mock import sentinel, MagicMock, patch
 
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
+
+
 class BlockUnittest(unittest.TestCase):
     def test_block_iter(self):
         bch = block.Blockchain()
