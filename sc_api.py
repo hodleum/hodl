@@ -15,6 +15,3 @@ def append_tasks(task):
 
 def get_self():
     return bch[list(ind)[0]].contracts[list(ind)[1]]
-
-
-ind = get_self().index

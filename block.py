@@ -392,9 +392,9 @@ class Smart_contract:
         os.mkdir('tmp')
         file = open('tmp/main.py', 'w')
         if func == '':
-            file.writelines(['from sc import *\n'])
+            file.writelines(['from sc import *\n', 'ind = ' + str(self.index) + '\n'])
         else:
-            file.writelines(['from sc import *\n', 'import json\n', 'args = json.loads({})\n'.format(json.dumps(args)),
+            file.writelines(['from sc import *\n', 'ind = ' + str(self.index) + '\n', 'import json\n', 'args = json.loads({})\n'.format(json.dumps(args)),
                              '{}(*args)\n'.format(func)])
         file.close()
         file = open('tmp/sc.py', 'w')
@@ -410,7 +410,7 @@ class Smart_contract:
         file.writelines([json.dumps(task) for task in list(self.tasks)])
         file.close()
         open('tmp/sc.txs', 'w').close()
-        os.system('docker run -v "$(pwd)"/tmp:/home/hodl -v "$(pwd)"/bch.db:/home/hodl/bch.db:ro scrun_container python3 /home/hodl/main.py')
+        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/tmp/bch.db:ro scrun_container python3 /home/hodl/tmp/main.py')
         file = open('tmp/sc.mem', 'r')
         self.memory = [str(mem) for mem in file.readlines()]
         file.close()
