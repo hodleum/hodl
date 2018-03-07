@@ -1,3 +1,23 @@
+"""
+Classes:
+Blockchain:
+Class for storing blockchain. Connects to the sqlite3 database
+Main methods:
+    new_block - creates new block
+    new_transaction - creates new transaction
+    new_sc - creates new smart contract
+Block:
+Class for storing block
+Transaction:
+Class for storing transaction.
+Smart_contract:
+Class for storing smart contract.
+
+Some abbreviations:
+bch - blockchain
+tnx - transaction
+sc - smart contract(DApp)
+"""
 import cryptogr as cg
 import time
 from itertools import chain
@@ -19,14 +39,24 @@ sc_price = 0.01
 
 class Blockchain:
     """Class for blockchain"""
-    def __init__(self, filename='bch.db'):
-        self.conn = sqlite3.connect(filename)
+    def __init__(self, filename='bch.db', m='w'):
+        self.f = filename
+        if m != 'ro':
+            self.conn = sqlite3.connect(filename)
+        else:
+            self.conn = sqlite3.connect('file' + filename + '?mode=ro', uri=True)
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
         self.conn.commit()
 
     def __getitem__(self, item):
+        if type(item)==slice:
+            l = []
+            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is not None],
+                           [item.step, len(self)][item.stop is not None]):
+                l.append(self[i])
+            return l
         if item < 0:
             item += len(self)
         self.c.execute("SELECT * FROM blocks WHERE ind=?", (item, ))
@@ -115,6 +145,7 @@ class Blockchain:
         if key < 0:
             key += len(self)
         self.c.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
+        self.conn.commit()
 
     def add_miner(self, miner):
         """adds proof-of-work miner"""
@@ -181,7 +212,8 @@ class Block:
         for c in s[5]:
             sc = Smart_contract.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = s[1], s[2], s[3], s[4], s[6], s[7]
+        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = s[1], s[2], s[3], \
+                                                                                                   s[4], s[6], s[7]
         self.powhash = self.calc_pow_hash()
         self.update()
         return self
@@ -298,7 +330,8 @@ class Transaction:
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
         """Encodes transaction to str using JSON"""
-        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index, str(list(self.sign)), self.timestamp))
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
+                           str(list(self.sign)), self.timestamp))
 
     def from_json(self, s):
         """Decodes transacion from str using JSON"""
@@ -368,7 +401,7 @@ class Smart_contract:
         self.author = author
         self.index = index
         self.memory = []
-        self.msgs = []  # [[message func, message args(the first is message's sender), str(list(sender's sign))]]
+        self.msgs = []  # [[message func, message args(the first is message's sender), str(list(sender's sign)), is executed]]
         self.timestamp = time.time()
         self.computing = computing
         self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]},
@@ -377,6 +410,7 @@ class Smart_contract:
         self.memsize = memsize
         self.codesize = codesize
         self.txs = []
+        self.membs = []
         self.mem_copies = mem_copies
         self.calc_repeats = calc_repeats
         self.awards = {}
@@ -389,19 +423,21 @@ class Smart_contract:
 
     def execute(self, func='', args=[]):
         """smart contract's execution"""
-        os.mkdir('tmp')
-        file = open('tmp/main.py', 'w')
+        file = open('tmp/__init__.py', 'w')
+        file.close()
+        file = open('sc_main.py', 'w')
         if func == '':
-            file.writelines(['from sc import *\n', 'ind = ' + str(self.index) + '\n'])
+            file.writelines(['from tmp import sc\n'])
         else:
-            file.writelines(['from sc import *\n', 'ind = ' + str(self.index) + '\n', 'import json\n', 'args = json.loads({})\n'.format(json.dumps(args)),
-                             '{}(*args)\n'.format(func)])
+            print('exec')
+            file.writelines(['from tmp import sc\n', 'import json\n',
+                             "args = {}\n".format(args), 'sc.{}(*args)\n'.format(func)])
         file.close()
         file = open('tmp/sc.py', 'w')
-        file.writelines(self.code)
+        file.writelines(['ind = ' + str(self.index) + '\n'] + self.code)
         file.close()
         file = open('tmp/sc.mem', 'w')
-        file.writelines([str(mem) for mem in list(self.memory)])
+        file.writelines(json.dumps(self.memory))
         file.close()
         file = open('tmp/sc.msgs', 'w')
         file.writelines([str(mem) for mem in list(self.msgs)])
@@ -410,9 +446,9 @@ class Smart_contract:
         file.writelines([json.dumps(task) for task in list(self.tasks)])
         file.close()
         open('tmp/sc.txs', 'w').close()
-        os.system('docker run -v "$(pwd)"/tmp:/home/hodl/tmp -v "$(pwd)"/bch.db:/home/hodl/tmp/bch.db:ro scrun_container python3 /home/hodl/tmp/main.py')
+        os.system('docker run -v "$(pwd)":/home/hodl -v "$(pwd)/bch.db":/home/hodl/bch.db:ro -v "$(pwd)/tmp":/home/hodl/tmp scrun_container python3 /home/hodl/sc_main.py')
         file = open('tmp/sc.mem', 'r')
-        self.memory = [str(mem) for mem in file.readlines()]
+        self.memory = json.loads(file.readline())
         file.close()
         file = open('tmp/sc.tasks', 'r')
         self.tasks = [json.loads(task) for task in file.readlines()]
@@ -420,23 +456,11 @@ class Smart_contract:
         file = open('tmp/sc.txs', 'r')
         self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
         file.close()
-        os.system('rm -rf tmp')
 
         # todo: sc tnx
 
     def __str__(self):
         """Encodes contract to str"""
-        json.dumps((str(list(self.sign))))
-        json.dumps((self.author))
-        json.dumps((self.code))
-        json.dumps((self.timestamp))
-        json.dumps((self.codesize))
-        json.dumps((self.memsize))
-        json.dumps((self.mem_copies))
-        json.dumps((self.calc_repeats))
-        json.dumps((self.msgs))
-        json.dumps((self.mempeers))
-        json.dumps((self.tasks))
         return json.dumps((self.code, self.author, self.index, self.computing, self.tasks,
                            self.mem_copies, self.calc_repeats, self.msgs, self.mempeers, self.memsize,
                            self.codesize, self.timestamp, str(list(self.sign))))
@@ -446,6 +470,7 @@ class Smart_contract:
         """Decodes contract from str"""
         self = cls(*json.loads(s)[0:7])
         self.msgs, self.membs, self.memsize, self.codesize, self.timestamp, self.sign = json.loads(s)[7:]
+        self.sign = bytes(eval(self.sign))
         return self
 
     def __eq__(self, other):
@@ -485,10 +510,12 @@ class Smart_contract:
                         self.awards[w] = [task[3]]
 
     def handle_messages(self):
-        for mess in self.msgs:
-            if mess[-1] == False:
-                if cg.verify_sign(mess[2], json.dumps([mess[0], mess[1]]), mess[1][0]):
-                    self.execute(mess[0], mess[1])
+        for i in range(len(self.msgs)):
+            if not self.msgs[i][-1]:
+                if cg.verify_sign(bytes(eval(self.msgs[i][2])), json.dumps([self.msgs[i][0], self.msgs[i][1]]),
+                                  self.msgs[i][1][0]):
+                    self.execute(self.msgs[i][0], self.msgs[i][1])
+                    self.msgs[i][-1] = True
 
     def __eq__(self, other):
         v = True

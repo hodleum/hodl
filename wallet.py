@@ -7,6 +7,7 @@ import time
 
 bch = block.Blockchain()
 
+
 class Wallet:
     def __init__(self):
         self.privkey, self.pubkey = cg.gen_keys()

@@ -1,17 +1,23 @@
-from sc_api import *
+import sc_api as s
+import json
 import cryptogr as cg
 
-balances, bc = json.loads(open('sc.mem'.format(ind), 'r').readlines())   # bc - number of last processed block
+try:
+    balances, bc = json.loads(open('tmp/sc.mem', 'r').readline())   # bc - number of last processed block
+    bc = int(bc)
+except ValueError:
+    balances, bc = {}, 0
 
 
 def add_task(sender, task):
-    if sender == get_self().author:
-        append_tasks(task)
+    if sender == s.get_self().author:
+        s.append_tasks(task)
 
 
 def write():
-    with open('sc.mem', 'w') as f:
-        f.write(json.dumps(balances))
+    with open('tmp/sc.mem', 'w') as f:
+        bc = len(s.bch)
+        f.write(json.dumps((balances, len(s.bch))))
 
 
 def send(sender, money, to):
@@ -22,19 +28,23 @@ def send(sender, money, to):
 
 
 def sell(sender, money):
+    print('selling', balances[sender], money, balances[sender]-money)
+    print('==============================================================================')
     if sender in balances.keys():
         if balances[sender] >= money:
             balances[sender] -= money
-            tnx([sender], [money])
+            s.tnx([sender], [money])
+            print(balances[sender], '\n')
+            write()
 
 
-for b in bch[bc:-1]:
-    for tnx in b.txs:
-        if 'sc' + ind in tnx.outs:
+for i in range(bc, len(s.bch)):
+    print('l', len(s.bch[0].txs))
+    for tnx in s.bch[i].txs:
+        if 'sc' + str(ind) in tnx.outs:
             try:
-                balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + ind)]
+                balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
             except:
-                balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + ind)]
+                balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
+balances['0'] = 0.2
 write()
-with open('sc.mem', 'rw') as f:
-    f.write('abc')
