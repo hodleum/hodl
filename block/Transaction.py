@@ -47,7 +47,10 @@ def sign_tnx(self, sign, privkey, t):
 
 
 class Transaction:
-    """Class for transaction"""
+    """Class for transaction.
+    To create new transaction, use:
+    tnx=Transaction()
+    tnx.gen(parameters)"""
     # форма для передачи транзакций строкой(разделитель - русское а):
     # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
@@ -55,11 +58,14 @@ class Transaction:
         return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
                            str(list(self.sign)), self.timestamp))
 
-    def from_json(self, s):
+    @classmethod
+    def from_json(cls, s):
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
+        self = cls()
         self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
         self.update()
+        return self
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
         self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,

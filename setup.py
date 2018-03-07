@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='hodl',
     version='0.1',
-    packages=[''],
+    packages=[],
     url='github.com/hodleum',
     license='MIT',
     author='hodleum',

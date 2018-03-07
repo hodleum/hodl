@@ -22,7 +22,9 @@ def get_prevhash(bch, creators):
 
 
 class Block:
-    """Class for blocks"""
+    """Class for blocks.
+    To convert block to string, use str(block)
+    To convert string to block, use Block.from_json(string)"""
     def __init__(self, n=0, creators=[], bch=[], txs=[], contracts=[], pow_timestamp='now', t='now'):
         self.n = n
         self.prevhash = get_prevhash(bch, creators)
@@ -50,9 +52,7 @@ class Block:
         s = json.loads(s)
         self.txs = []
         for t in s[0]:
-            tnx = Transaction()
-            tnx.from_json(t)
-            self.txs.append(tnx)
+            self.txs.append(Transaction.from_json(t))
         for c in s[5]:
             sc = Smart_contract.from_json(c)
             self.contracts.append(sc)
@@ -118,6 +118,7 @@ class Block:
         return cg.h(str(h))
 
     def sort(self):
+        """Sort transactions in block"""
         t0 = self.txs[0]
         ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs[1:]]
         ts.sort()
