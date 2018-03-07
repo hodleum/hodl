@@ -180,7 +180,7 @@ def mine(bch):
     b = block.Block()
     tnx = block.Transaction()
     tnx.gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
-    b.txs.append()
+    b.txs.append(tnx)
     b = pow_mining(bch, b)
     b = pos_mining(b, bch)
     b = pok_mining(b, bch)
