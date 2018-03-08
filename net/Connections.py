@@ -8,11 +8,28 @@ global bch
 bch = block.Blockchain()
 
 
-class ConnectionError(Exception):
+def get_many_blocks(minb, maxb):
+    blocks = []
+    return blocks
+
+
+def handle_request(req):
+    ans = []
+    return ans
+
+
+def get_smart_contracts_mem(ind, start=0, stop=-1):
+    pass
+
+
+class ConnectionErr(Exception):
     pass
 
 
 class Connection:
+    """
+    It is an output connection (First user in net's doc).
+    """
     def __init__(self, ip, port):
         self.proc = multiprocessing.Process(target=self.connect, args=(ip, port))
         self.proc.start()
@@ -59,11 +76,13 @@ class Connection:
                     mymess['blocks'] = [str(b) for b in bch[-1000:]]
             self.conn.send(json.dumps(mymess).encode('utf-8'))
         except:
-            return ConnectionError()
-
+            return ConnectionErr()
 
 
 class InputConnection:
+    """
+    It is an input connection (Second user in net's doc).
+    """
     def __init__(self, conn):
         self.conn = conn
         self.proc = multiprocessing.Process(target=self.connect)

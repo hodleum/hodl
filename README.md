@@ -1,5 +1,5 @@
 # HODL
-**HODL is a dezentralized platform for payments, computing, storaging and DApps.** 
+**HODL is a decentralized platform for payments, computing, storing and DApps.**
 
 It has smart contracts which can be written in Python 3. **HODL** will use Proofs-of-work and Proofs-of-stake together. It is also platform for decentralized internet.
 **HODL** will have clients for Linux, Windows, OS X, Android and IOS. It will support NFC.
@@ -38,7 +38,7 @@ You can purchase computing which will be 100% right. Prices will be low because 
 
 ***Decentralized storage***
 
-You can put your data to HODL (encrypted, of course) for low price. (It is low because some money that come to miners for storaging are new money, like in decentralized computing)
+You can put your data to HODL (encrypted, of course) for low price. (It is low because some money that come to miners for storing are new money, like in decentralized computing)
 
 ***Decentralized internet***
 
