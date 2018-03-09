@@ -1,6 +1,6 @@
 """
 It synchronizes blockchain between HODL peers.
-Algorшthm:
+Algorthm:
 The first user sends last block and blockchain's length to the other.
 The second user sends delta between their blockchains' lengths, and if his blockchain is longer, sends 1000 or less blocks to first user.
 The first user sends blocks if his blockchain is longer.
@@ -19,6 +19,11 @@ peers = Peers()
 default_port = 6666
 global conns
 conns = []
+
+
+def get_sc_memory(index, start=0, stop=-1):
+    mem = []
+    return mem
 
 
 def loop():

@@ -40,7 +40,7 @@ class Blockchain:
         self.conn.commit()
 
     def __getitem__(self, item):
-        if type(item)==slice:
+        if type(item) == slice:
             l = []
             for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is not None],
                            [item.step, len(self)][item.stop is not None]):

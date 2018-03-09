@@ -53,8 +53,7 @@ class BlockUnittest(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
-        b2 = block.Transaction()
-        b2.from_json(str(bch[1].txs[0]))
+        b2 = block.Transaction().from_json(str(bch[1].txs[0]))
         self.assertEqual(b2, bch[1].txs[0])
         bch.conn.close()
 
@@ -103,7 +102,7 @@ class TestTimestamp(unittest.TestCase):
 
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('8217513392372373784169119225233615162194', block.Block.calc_pow_hash(block.Block()))
+        self.assertEqual('142249934117814601051212461754312103119', block.Block.calc_pow_hash(block.Block()))
 
 
 if __name__ == '__main__':

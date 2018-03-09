@@ -68,14 +68,12 @@ class Transaction:
         return self
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
-        self.froms = froms  # номера транзакций([номер блока в котором лежит нужная транзакция,
-        # номер нужной транзакции в блоке),
-        # из которых эта берет деньги
+        self.froms = froms  # input transactions
         self.outs = outs  # номера кошельков-адресатов
         self.outns = outns  # количество денег на каждый кошелек-адресат
         self.author = author  # тот, кто проводит транзакцию
         self.index = list(index)
-        self.timestamp = time.time() if sign == 'signing' else t
+        self.timestamp = time.time() if t == 'now' else t
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
         self.hash = self.update()

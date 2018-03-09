@@ -2,6 +2,7 @@ import json
 import time
 import cryptogr as cg
 import os
+import net
 
 
 sc_base_mem = 10000000
@@ -10,6 +11,7 @@ sc_memprice = 10**(1/10)
 sc_max_code_size = 1000000000
 sc_code_price = 10**(1/6)
 sc_price = 0.01
+one_peer_max_mem = 40000000
 
 
 class Smart_contract:
@@ -33,6 +35,7 @@ class Smart_contract:
         self.calc_repeats = calc_repeats
         self.awards = {}
         self.sign = ''
+        self.memory_distribution = []   # [[Miners for part1]]
 
     def sign_sc(self, privkey):
         self.sign = cg.sign(json.dumps((self.code, str(self.author), self.index, self.computing, self.tasks,
@@ -126,7 +129,7 @@ class Smart_contract:
                     else:
                         self.awards[w] = [task[3]]
 
-    def handle_messages(self, bch=[]):
+    def handle_messages(self):
         for i in range(len(self.msgs)):
             if not self.msgs[i][-1]:
                 if cg.verify_sign(bytes(eval(self.msgs[i][2])), json.dumps([self.msgs[i][0], self.msgs[i][1]]),
@@ -143,3 +146,13 @@ class Smart_contract:
             if self.__dict__[k] != other.__dict__[k]:
                 print(k, self.__dict__[k], other.__dict__[k])
         return str(self) == str(other)
+
+    def distribute_peers(self):
+        self.mempeers.sort()
+        l = len(self.memory)
+        m = len(self.mempeers)
+        n = ((one_peer_max_mem * m)//l)+1
+        if self.memsize <= sc_base_mem:
+            self.memory_distribution = 'all'
+        else:
+            self.memory_distribution = [[self.mempeers[i*n:(i+1)*n]] for i in range(l//n)]

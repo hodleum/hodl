@@ -150,7 +150,7 @@ def pok_mining(b, bch):
                 if sc.awards[w][1] > bch[-1].timestamp:
                     outs.append(w)
                     outns.append(sc.awards[w][0])
-    tnx.gen('mining', outs, outns, (len(bch), len(b)), 'mining', 'mining')
+    tnx.gen('mining', outs, outns, [len(bch), len(b.txs)], 'mining', 'mining')
     b.txs.append(tnx)
     return b
 
