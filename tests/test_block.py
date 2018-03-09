@@ -25,11 +25,8 @@ class BlockUnittest(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         self.assertEqual(len(bch), 2)
-        print(len([b for b in bch]), 'len([b for b in bch])')
         self.assertEqual(len([b for b in bch]), 2)
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
-        print(bch.money(my_keys[1]))
-        print(len(bch))
         self.assertAlmostEqual(bch.money(my_keys[1]), 0.3)
         self.assertAlmostEqual(bch.money(your_pub_key), 1.7)
         bch.conn.close()
@@ -106,7 +103,7 @@ class TestTimestamp(unittest.TestCase):
 
 class TestPowHash(unittest.TestCase):
     def test_calculating_pow_hashing(self):
-        self.assertEqual('17005115524599251225254208104901542039365', block.Block.calc_pow_hash(block.Block()))
+        self.assertEqual('8217513392372373784169119225233615162194', block.Block.calc_pow_hash(block.Block()))
 
 
 if __name__ == '__main__':

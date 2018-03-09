@@ -78,7 +78,7 @@ class Transaction:
         self.timestamp = time.time() if sign == 'signing' else t
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
-        self.update()
+        self.hash = self.update()
 
     def is_valid(self, bch):
         """Returns validness of transaction.
@@ -119,4 +119,4 @@ class Transaction:
         x = ''.join(chain(str(self.author), str(self.index), [str(f) for f in self.froms],
                           [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
         self.hash = cg.h(str(x))
-        return self.hash
+        return cg.h(str(x))

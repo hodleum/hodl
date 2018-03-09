@@ -47,7 +47,6 @@ class Smart_contract:
         if func == '':
             file.writelines(['from tmp import sc\n'])
         else:
-            print('exec')
             file.writelines(['from tmp import sc\n', 'import json\n',
                              "args = {}\n".format(args), 'sc.{}(*args)\n'.format(func)])
         file.close()
@@ -127,7 +126,7 @@ class Smart_contract:
                     else:
                         self.awards[w] = [task[3]]
 
-    def handle_messages(self):
+    def handle_messages(self, bch=[]):
         for i in range(len(self.msgs)):
             if not self.msgs[i][-1]:
                 if cg.verify_sign(bytes(eval(self.msgs[i][2])), json.dumps([self.msgs[i][0], self.msgs[i][1]]),

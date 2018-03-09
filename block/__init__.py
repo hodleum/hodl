@@ -105,15 +105,13 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author):
+    def new_sc(self, text, author, author_priv):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        b.contracts.append(Smart_contract(text, author, [len(b), len(self) - 1]))
+        sc = Smart_contract(text, author, [len(b.contracts), len(self) - 1])
+        sc.sign_sc(author_priv)
+        b.contracts.append(sc)
         self[-1] = b
-
-    def __eq__(self, other):
-        """equal function"""
-        return self.__dict__ == other.__dict__
 
     def __len__(self):
         self.c.execute("SELECT ind FROM blocks")
@@ -150,3 +148,7 @@ class Blockchain:
         b = self[-1]
         b.contracts.append(sc)
         self[-1] = b
+
+    def close(self):
+        self.conn.commit()
+        self.conn.close()
