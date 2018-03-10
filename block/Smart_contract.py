@@ -2,7 +2,6 @@ import json
 import time
 import cryptogr as cg
 import os
-import net
 
 
 sc_base_mem = 10000000
@@ -15,6 +14,21 @@ one_peer_max_mem = 40000000
 
 
 class Smart_contract:
+    """
+    Class for smart contracts (SC)
+    SC.code stores smart contract's code.
+    It can be splitted in many files.
+    SC has messages and tasks.
+    Messages are signed function calls.
+    Tasks are task for computing.
+    Memory is splitted into parts, which are stored with copies. (distribution is stored in SC.memory_distribution)
+    Miner who wants to store data writes his public key to SC.mempeers.
+    Miner who wants to calculate writes his public key to SC.calculators.
+    After creating new block all miners become money.
+    Storage miners calculate hash of data with their public keys and with other miners' public keys. Then they compare
+    their answers.
+    Calculating miners also compare their answers.
+    """
     def __init__(self, code, author, index, computing=False, tasks=[], mem_copies=3, calc_repeats=3,
                  memsize=sc_base_mem, codesize=sc_base_code_size):
         self.code = code
@@ -23,6 +37,7 @@ class Smart_contract:
         self.memory = []
         self.msgs = []  # [[message func, message args(the first is message's sender), str(list(sender's sign)), is executed]]
         self.timestamp = time.time()
+        self.calculators = []
         self.computing = computing
         self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]},
         # repeats, award, done]]

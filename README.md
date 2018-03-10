@@ -26,11 +26,11 @@ Features:
 
 *Easy*
 
-It's very easy to write and run smart contracts. They should be written on Python, which is one of the most popular and easiest programming languages. You can put libraries into smart contract.
+It's very easy to write and run smart contracts. They should be written on Python, which is one of the most popular and easiest programming languages.
 
 *Functional*
 
-Smart contracts can use graphical interface and internet.
+Smart contracts can use graphical interface and internet. They are written in Python, so developers can use many libs. Smart contract can have many files.
 
 ***Computing***
 
