@@ -16,7 +16,7 @@ from net.Connections import *
 
 global peers
 peers = Peers()
-default_port = 6666
+default_port = 5000
 global conns
 conns = []
 
@@ -26,10 +26,25 @@ def get_sc_memory(index, start=0, stop=-1):
     return mem
 
 
-def loop():
+def listen_loop(privkey, pubkey, port=default_port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('', port))
+    sock.listen(1)
+    conn, addr = sock.accept()
+    conns.append(InputConnection(conn, privkey, pubkey))
+
+
+def send_loop(privkey, pubkey):
     while True:
         for peer in peers:
             try:
-                conns.append(Connection(peer[0], peer[1]))
+                conns.append(Connection(peer[0], peer[1], privkey, pubkey))
             except:
                 peers.remove(peer)
+
+
+def loop(privkey, pubkey, port=default_port):
+    proc = multiprocessing.Process(target=listen_loop, args=(privkey, pubkey, port))
+    proc.start()
+    proc.join()
+    send_loop(privkey, pubkey)

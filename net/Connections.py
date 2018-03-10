@@ -88,6 +88,7 @@ class Connection:
                 else:
                     mymess['blocks'] = [str(b) for b in bch[-1000:]]
             self.conn.send(json.dumps(mymess).encode('utf-8'))
+            self.conn.close()
             return pubkey
         except:
             raise ConnectionErr()
@@ -146,6 +147,7 @@ class InputConnection:
                         bch[len(bch) - data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                         for b in data['blocks'][1:]:
                             bch.append(b)
+            self.conn.close()
             return pubkey
         except:
             raise ConnectionErr
