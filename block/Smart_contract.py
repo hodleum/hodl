@@ -39,9 +39,10 @@ class Smart_contract:
         self.timestamp = time.time()
         self.calculators = []
         self.computing = computing
-        self.tasks = tasks  # [[command, {miner:[[acceptions or declinations(a/d, sign, address)], time solved]},
+        self.tasks = tasks  # [[command, {miner:[cg.h(str(ans)+miner), ans(appended after)], time solved]},
         # repeats, award, done]]
         self.mempeers = []
+        self.memory_accepts = []   # [[{miner1:[[cg.h(mem, miner1), acceptions or declinations(a/d, sign, address)]}] for part in memory]
         self.memsize = memsize
         self.codesize = codesize
         self.txs = []
@@ -81,7 +82,7 @@ class Smart_contract:
         file.writelines([json.dumps(task) for task in list(self.tasks)])
         file.close()
         open('tmp/sc.txs', 'w').close()
-        os.system('docker run -v "$(pwd)":/home/hodl -v "$(pwd)/bch.db":/home/hodl/bch.db:ro -v "$(pwd)/tmp":/home/hodl/tmp hodl-container python3 /home/hodl/sc_main.py')
+        os.system('docker run -v "$(pwd)":/home/hodl -v "$(pwd)/bch.db":/home/hodl/bch.db:ro -v "$(pwd)/tmp":/home/hodl/tmp --stop-timeout 1 hodl-container python3 /home/hodl/sc_main.py')
         file = open('tmp/sc.mem', 'r')
         self.memory = json.loads(file.readline())
         file.close()
@@ -171,3 +172,13 @@ class Smart_contract:
             self.memory_distribution = 'all'
         else:
             self.memory_distribution = [[self.mempeers[i*n:(i+1)*n]] for i in range(l//n)]
+
+    def distribute_tasks(self):
+        self.calculators.sort()
+        for i in range(len(self.tasks)):
+            for j in range(self.tasks[i][2]):
+                try:
+                    self.tasks[i][1][self.calculators[j]] = []
+                    self.calculators.remove(self.calculators[j])
+                except:
+                    break

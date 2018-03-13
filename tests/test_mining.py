@@ -46,8 +46,8 @@ class TestMiningDeltaT(unittest.TestCase):
         self.assertEqual(7, mining.mining_delta_t(20000))
         self.assertEqual(42, mining.mining_delta_t(321456.5))
 
-@patch('mining.validate_pow')
-@patch('mining.validate_pos')
+@patch('mining.pow_validate')
+@patch('mining.pos_validate')
 class TestValidate(unittest.TestCase):
     def test_everything_ok(self, m_pos, m_pow):
         m_pos.return_value = m_pow.return_value = True

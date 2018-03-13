@@ -2,6 +2,12 @@ import block
 import unittest
 import cryptogr as cg
 import json
+import os
+os.chdir('/home/leo/hodl')
+try:
+    os.mkdir('tmp')
+except:
+    pass
 
 
 my_keys = cg.gen_keys()
