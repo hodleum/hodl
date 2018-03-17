@@ -6,11 +6,17 @@ import os
 
 sc_base_mem = 10000000
 sc_base_code_size = 5000000
-sc_memprice = 10**(1/10)
+sc_memprice = 100
 sc_max_code_size = 1000000000
 sc_code_price = 10**(1/6)
 sc_price = 0.01
 one_peer_max_mem = 40000000
+sc_award_from = 1
+sc_award_to = 5
+
+
+def check_sc_award_tnx(bch, tnxind, sc):
+    pass
 
 
 class Smart_contract:
@@ -39,10 +45,10 @@ class Smart_contract:
         self.timestamp = time.time()
         self.calculators = []
         self.computing = computing
-        self.tasks = tasks  # [[command, {miner:[cg.h(str(ans)+miner), ans(appended after)], time solved]},
-        # repeats, award, done]]
+        self.tasks = tasks  # [[command, {miner:[cg.h(str(ans)+miner), time when cg.h added, ans(appended after)]]},
+        # repeats, award, author, len(bch) when publishing, tnx for awards's index]]
         self.mempeers = []
-        self.memory_accepts = []   # [[{miner1:[[cg.h(mem, miner1), acceptions or declinations(a/d, sign, address)]}] for part in memory]
+        self.memory_accepts = []   # [{miner1:[cg.h(mem, miner1), [acceptions or declinations for this user(a/d, sign, address)]]} for part in memory]
         self.memsize = memsize
         self.codesize = codesize
         self.txs = []
@@ -131,19 +137,37 @@ class Smart_contract:
             return False
         return True
 
-    def calc_awards(self):
+    def calc_awards(self, bch):
         self.awards = {}
+        for p in self.memory_accepts:
+            for m in p:
+                acceptions = 0
+                for w in p[m][1]:
+                    for a in w:
+                        if a[0] == 'a':
+                            acceptions += 1
+                if acceptions >= len(p[m][1]) * 0.7:
+                    self.awards[m] = sc_memprice / (len(self.memory_accepts)*len(p))
+
         for task in self.tasks:
-            for w in task[1].keys():
-                accepts = 0
-                for a in task[1][w][0]:
-                    if a[0] == 'a':
-                        accepts += 1
-                if accepts < (0.7 * task[2]):
-                    if w in self.awards.keys():
-                        self.awards[w].append([task[3], task[1][w][1]])
-                    else:
-                        self.awards[w] = [task[3]]
+            for m in task[1]:
+                a = 0
+                last_time = 0
+                for m in task[1]:
+                    if len(task[1][m]) > 1:
+                        a += 0
+                        last_time = max((task[1][m][1], last_time))
+                if a / len(task[1]) > 0.8 and last_time - time.time() > 600:
+                    ans = [task[1][m][2] for m in task[1]]
+                    c = [ans.count(an) for an in ans]
+                    right_ans = ans[c.index(max(c))]
+                    for m in task[1]:
+                        if task[1][m][2] == right_ans:
+                            if sc_award_to > task[3] > sc_award_from:
+                                self.awards[m] = task[3] / len(task[1])
+                            elif task[3] > sc_award_to:
+                                self.awards[m] = sc_award_to / len(task[1])
+                    bch.new_transaction('sc'+json.dumps(self.index), [task[6]], list(task[1].keys()), [task[3] / len(task[1])]*len(task[1]), sc)
 
     def handle_messages(self):
         for i in range(len(self.msgs)):
@@ -182,3 +206,8 @@ class Smart_contract:
                     self.calculators.remove(self.calculators[j])
                 except:
                     break
+
+    def update(self, bch):
+        # delete not valid tasks
+        # distribute miners if needed
+        pass

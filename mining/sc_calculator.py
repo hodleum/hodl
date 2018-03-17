@@ -1,9 +1,11 @@
 import block
 import json
+import time
+import cryptogr as cg
 
 my_keys = ['', '']
 my_applies = []
-my answers = {}
+my_answers = {}
 
 
 def apply(bch, sc):
@@ -13,19 +15,32 @@ def apply(bch, sc):
     my_applies.append(sc)
 
 
-def calc(sc, n):
+def calc(bch, sc, n):
     ans = ''
-
     my_answers[json.dumps((sc, n))] = ans
-
-
-def check_ans(bch, sc, n):
-    c = []
+    bch[sc[0]].contracts[sc[1]].tasks[n][1][my_keys[1]][1] = cg.h(json.dumps(ans) + my_keys[1])
 
 
 def is_time_to_check(bch, sc, n):
-    v
-    return v
+    a = 0
+    for m in bch[sc[0]].contracts[sc[1]].tasks[n][1]:
+        if len(bch[sc[0]].contracts[sc[1]].tasks[n][1][m]) > 2:
+            a += 0
+    if a / len(bch[sc[0]].contracts[sc[1]].tasks[n][1]) > 0.8:
+        return True
+    return False
+
+
+def is_time_to_publish_answer(bch, sc, n):
+    a = 0
+    last_time = 0
+    for m in bch[sc[0]].contracts[sc[1]].tasks[n][1]:
+        if len(bch[sc[0]].contracts[sc[1]].tasks[n][1][m]) > 1:
+            a += 0
+            last_time = max((bch[sc[0]].contracts[sc[1]].tasks[n][1][m][1], last_time))
+    if a / len(bch[sc[0]].contracts[sc[1]].tasks[n][1]) > 0.8 and last_time-time.time() > 300:
+        return True
+    return False
 
 
 def check_apply(bch, sc):
@@ -41,4 +56,4 @@ def calc_loop(bch):
     for a in my_applies:
         c = check_apply(bch, a)
         if c != '0':
-            calc(a, c)
+            calc(bch, a, c)
