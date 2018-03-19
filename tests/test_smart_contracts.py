@@ -2,8 +2,6 @@ import block
 import unittest
 import cryptogr as cg
 import json
-import os
-os.chdir('/home/leo/hodl')
 try:
     os.mkdir('tmp')
 except:
@@ -43,7 +41,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.conn.commit()
         b.contracts[0].handle_messages()
         bch[0] = b
-        self.assertTrue([{'0':0.2, my_keys[1]:0.05}, 1, 1], b.contracts[0].memory)
+        self.assertEqual([{'0':0.2, my_keys[1]:0.05}, 1, 2], b.contracts[0].memory)
 
     def test_str_encoding(self):
         with open('tests/scex.py', 'r') as f:

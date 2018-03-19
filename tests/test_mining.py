@@ -33,10 +33,8 @@ class MiningUnittest(unittest.TestCase):
         bch.add_miner([int(h), n, my_keys[1], t])
         bch.add_miner([int(h), n, my_keys[1], t])
         bch.add_miner([int(h), n, my_keys[1], t])
-        bl = block.Block(n, [my_keys[1]], bch, [], [], t)
         b = mining.mine(bch)
         bch.append(b)
-        print('n', bch[-1].n)
         self.assertTrue(mining.validate(bch, -1))
 
 
