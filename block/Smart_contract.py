@@ -15,6 +15,10 @@ sc_award_from = 1
 sc_award_to = 5
 
 
+class SCMemoryError(Exception):
+    pass
+
+
 def check_sc_award_tnx(bch, tnxind, sc):
     pass
 
@@ -211,3 +215,36 @@ class Smart_contract:
         # delete not valid tasks
         # distribute miners if needed
         pass
+
+
+class SCMemory:
+    def __init__(self, sc, size):
+        self.scind = sc
+        self.size = size
+        self.local = ''
+        self.localind = [0, 0]
+        self.length = 0
+        self.peers = []
+        self.accepts = []
+
+    def __getitem__(self, item):
+        if item.start < 0:
+            item.start = len(self) - item.start
+        if item.stop < 0:
+            item.stop = len(self) - item.stop
+        if self.size > sc_base_mem:
+            if item.start > self.localind[0] and item.stop < self.localind[1]:
+                return get_sc_memory(self.scind, item.start, item.stop)
+        else:
+            return self.local
+
+    def __add__(self, other):
+        if len(self) + len(other) > self.size:
+            raise SCMemoryError
+        if len(self) + len(other) < sc_base_mem:
+            self.localind[1] = len(self) + len(other)
+            self.local += other
+        self.length = len(self) + len(other)
+
+    def __len__(self):
+        return self.length
