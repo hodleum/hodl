@@ -1,3 +1,5 @@
+import os
+os.chdir('/home/ironman/python/hodl')
 import block
 import unittest
 import cryptogr as cg
