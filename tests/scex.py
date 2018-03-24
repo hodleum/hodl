@@ -1,9 +1,11 @@
 import sc_api as s
 import json
+import block
 import cryptogr as cg
 
 try:
-    balances, bc, tc = json.loads(open('tmp/sc.mem', 'r').readline())   # bc - number of last processed block
+    mem = block.SCMemory.from_json(open('tmp/sc.mem', 'r').readline())
+    balances, bc, tc = json.loads(mem.local)   # bc - number of last processed block
     bc = int(bc)
 except ValueError:
     balances, bc, tc = {}, 0, 0
@@ -17,7 +19,10 @@ def add_task(sender, task):
 def write():
     with open('tmp/sc.mem', 'w') as f:
         bc = len(s.bch)
-        f.write(json.dumps((balances, len(s.bch), len(s.bch[-1].txs))))
+        mem.local = json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
+        mem.localind = [0, len(mem.local)]
+        mem.length = len(mem.local)
+        f.write(str(mem))
 
 
 def send(sender, money, to):

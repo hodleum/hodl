@@ -4,6 +4,12 @@ import block
 import unittest
 import cryptogr as cg
 import json
+import os
+os.chdir('/home/leo/hodl')
+try:
+    os.mkdir('tmp')
+except:
+    pass
 
 
 my_keys = cg.gen_keys()
@@ -22,7 +28,7 @@ class TestSmartContracts(unittest.TestCase):
         bch = block.Blockchain()
         b = bch[0]
         b.contracts[0].execute()
-        self.assertEqual(b.contracts[0].memory, [{'0': 0.2}, 1, 1])
+        self.assertEqual([{'0': 0.2}, 1, 1], json.loads(b.contracts[0].memory.local))
 
     def test_sc_msg(self):
         bch = block.Blockchain()
@@ -39,7 +45,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.conn.commit()
         b.contracts[0].handle_messages()
         bch[0] = b
-        self.assertTrue([{'0':0.2, my_keys[1]:0.05}, 1, 1], b.contracts[0].memory)
+        self.assertEqual(json.dumps([{'0': 0.2, my_keys[1]: 0.05}, 1, 2]), b.contracts[0].memory.local)
 
     def test_str_encoding(self):
         with open('tests/scex.py', 'r') as f:
@@ -47,6 +53,11 @@ class TestSmartContracts(unittest.TestCase):
         sc.sign_sc(my_keys[0])
         sc2 = block.Smart_contract.from_json(str(sc))
         self.assertTrue(sc == sc2)
+
+    def test_scmemory_str(self):
+        m = block.SCMemory([0, 0], block.sc_base_mem)
+        m.local = '{}fadffkjlds;da""[]'
+        self.assertEqual(m.local, block.SCMemory.from_json(str(m)).local)
 
 
 if __name__ == '__main__':

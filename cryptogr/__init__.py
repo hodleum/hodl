@@ -7,7 +7,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 import Crypto.Hash.MD5 as MD5
 from Crypto.Hash import SHA
-# todo: all keys must be str
+from Crypto.Cipher import DES
 
 
 def h(s):
@@ -42,3 +42,23 @@ def verify_sign(sign, plaintext, public_key):
     signature = PKCS1_v1_5.new(pub_key)
     test = signature.verify(myhash, sign)
     return test
+
+
+def encrypt_text(plaintext, key):
+    plaintext = str(plaintext)
+    l = len(plaintext)
+    while len(plaintext) % (len(key)-1):
+        plaintext += ' '
+    plaintext = str(len(plaintext)-l)+';'+plaintext
+    plaintext = plaintext.encode()
+    des = DES.new(key, DES.MODE_ECB)
+    return des.encrypt(plaintext)
+
+
+def decrypt_text(text, key):
+    des = DES.new(key, DES.MODE_ECB)
+    text = des.decrypt(text).decode()
+    i = int(text.split(';')[0])
+    text = ';'.join(text.split(';')[1:])
+    text = text[:-i-1]
+    return text

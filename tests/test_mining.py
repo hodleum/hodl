@@ -33,10 +33,8 @@ class MiningUnittest(unittest.TestCase):
         bch.add_miner([int(h), n, my_keys[1], t])
         bch.add_miner([int(h), n, my_keys[1], t])
         bch.add_miner([int(h), n, my_keys[1], t])
-        bl = block.Block(n, [my_keys[1]], bch, [], [], t)
         b = mining.mine(bch)
         bch.append(b)
-        print('n', bch[-1].n)
         self.assertTrue(mining.validate(bch, -1))
 
 
@@ -46,18 +44,6 @@ class TestMiningDeltaT(unittest.TestCase):
         self.assertEqual(7, mining.mining_delta_t(20000))
         self.assertEqual(42, mining.mining_delta_t(321456.5))
 
-@patch('mining.validate_pow')
-@patch('mining.validate_pos')
-class TestValidate(unittest.TestCase):
-    def test_everything_ok(self, m_pos, m_pow):
-        m_pos.return_value = m_pow.return_value = True
-        self.assertTrue(mining.validate(sentinel.bch, sentinel.i))
-        m_pow.assert_called_with(sentinel.bch, sentinel.i)
-        
-    def test_everything_fails(self, m_pos, m_pow):
-        m_pos.return_value = m_pow.return_value = False
-        self.assertFalse(mining.validate(sentinel.bch, sentinel.i))
-        m_pow.assert_called_with(sentinel.bch, sentinel.i)
 
 
 

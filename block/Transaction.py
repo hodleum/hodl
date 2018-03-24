@@ -83,9 +83,12 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
-        if self.index[1]==0:
+        if self.index[1] == 0:
             is_first_tnx_valid(self, bch)
-        if not self.author[0:2] == 'sc':
+        elif self.author[0:4] == 'scaw':
+            if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
+                return False
+        elif not self.author[0:2] == 'sc':
             if not cg.verify_sign(self.sign, self.hash, self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
