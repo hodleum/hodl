@@ -3,6 +3,9 @@ import json
 bch = block.Blockchain()
 
 
+with open('tmp/sc.ind', 'r') as f:
+    ind = json.loads(f.readlines()[0])
+
 def tnx(outs, outns):
     pass
 

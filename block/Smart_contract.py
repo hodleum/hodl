@@ -70,7 +70,7 @@ class Smart_contract:
         file.close()
         file = open('sc_main.py', 'w')
         if func == '':
-            file.writelines(['from tmp import sc\n'])
+            file.writelines(['from tmp import sc\n', 'import json\n'])
         else:
             file.writelines(['from tmp import sc\n', 'import json\n',
                              "args = {}\n".format(args), 'sc.{}(*args)\n'.format(func)])
@@ -86,6 +86,9 @@ class Smart_contract:
         file.close()
         file = open('tmp/sc.tasks', 'w')
         file.writelines([json.dumps(task) for task in list(self.tasks)])
+        file.close()
+        file = open('tmp/sc.ind', 'w')
+        file.writelines([json.dumps(self.index)])
         file.close()
         open('tmp/sc.txs', 'w').close()
         mount_str = ''
@@ -294,3 +297,8 @@ class SCMemory:
         self.peers = l[5]
         self.accepts = l[6]
         return self
+
+    def clear(self):
+        self.length = 0
+        self.local = ''
+        self.localind = [0, 0]

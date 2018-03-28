@@ -3,8 +3,8 @@ import json
 import block
 import cryptogr as cg
 
+mem = s.get_self().memory
 try:
-    mem = block.SCMemory.from_json(open('tmp/sc.mem', 'r').readline())
     balances, bc, tc = json.loads(mem.local)   # bc - number of last processed block
     bc = int(bc)
 except ValueError:
@@ -16,13 +16,12 @@ def add_task(sender, task):
         s.append_tasks(task)
 
 
-def write():
+def write(memory):
     with open('tmp/sc.mem', 'w') as f:
         bc = len(s.bch)
-        mem.local = json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
-        mem.localind = [0, len(mem.local)]
-        mem.length = len(mem.local)
-        f.write(str(mem))
+        memory.clear()
+        memory + json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
+        f.write(str(memory))
 
 
 def send(sender, money, to):
@@ -37,7 +36,7 @@ def sell(sender, money):
         if balances[sender] >= money:
             balances[sender] -= money
             s.tnx([sender], [money])
-            write()
+            write(mem)
 
 
 if tc != len(s.bch[bc-1].txs):
@@ -56,4 +55,4 @@ if bc != len(s.bch):
                 except:
                     balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
 balances['0'] = 0.2
-write()
+write(mem)
