@@ -16,8 +16,9 @@ def add_task(sender, task):
         s.append_tasks(task)
 
 
-def write(memory):
+def write():
     with open('tmp/sc.mem', 'w') as f:
+        memory = s.get_self().memory
         bc = len(s.bch)
         memory.clear()
         memory + json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
@@ -36,7 +37,7 @@ def sell(sender, money):
         if balances[sender] >= money:
             balances[sender] -= money
             s.tnx([sender], [money])
-            write(mem)
+            write()
 
 
 if tc != len(s.bch[bc-1].txs):
@@ -46,8 +47,8 @@ if tc != len(s.bch[bc-1].txs):
                 balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
             except:
                 balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
-if bc != len(s.bch):
-    for i in range(bc, len(s.bch)):
+if bc+1 != len(s.bch):
+    for i in range(bc+1, len(s.bch)):
         for tnx in s.bch[i].txs:
             if 'sc' + str(ind) in tnx.outs:
                 try:
@@ -55,4 +56,4 @@ if bc != len(s.bch):
                 except:
                     balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
 balances['0'] = 0.2
-write(mem)
+write()

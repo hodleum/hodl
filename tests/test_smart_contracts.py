@@ -42,7 +42,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.conn.commit()
         b.contracts[0].handle_messages()
         bch[0] = b
-        self.assertEqual(json.dumps([{my_keys[1]: 0.05, '0': 0.2}, 1, 2]), b.contracts[0].memory.local)
+        self.assertEqual(json.dumps([{'0': 0.2, my_keys[1]: 0.05}, 1, 2]), b.contracts[0].memory.local)
 
     def test_str_encoding(self):
         with open('tests/scex.py', 'r') as f:
