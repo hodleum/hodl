@@ -146,7 +146,12 @@ class Smart_contract:
         return True
 
     def calc_awards(self, bch):
+        """
+        Calculates how much to pay to miners.
+        :param bch:Blockchain
+        """
         self.awards = {}
+        # Memory miners
         for p in self.memory.accepts:
             for m in p:
                 acceptions = 0
@@ -157,6 +162,7 @@ class Smart_contract:
                 if acceptions >= len(p[m][1]) * 0.7:
                     self.awards[m] = sc_memprice / (len(self.memory.accepts)*len(p))
 
+        # Calculators
         for task in self.tasks:
             for m in task[1]:
                 a = 0

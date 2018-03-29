@@ -42,7 +42,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.conn.commit()
         b.contracts[0].handle_messages()
         bch[0] = b
-        self.assertEqual(json.dumps([{'0': 0.2, my_keys[1]: 0.05}, 1, 2]), b.contracts[0].memory.local)
+        self.assertEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
 
     def test_str_encoding(self):
         with open('tests/scex.py', 'r') as f:
@@ -55,6 +55,7 @@ class TestSmartContracts(unittest.TestCase):
         m = block.SCMemory([0, 0], block.sc_base_mem)
         m.local = '{}fadffkjlds;da""[]'
         self.assertEqual(m.local, block.SCMemory.from_json(str(m)).local)
+
 
 
 if __name__ == '__main__':
