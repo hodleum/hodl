@@ -51,11 +51,20 @@ class TestSmartContracts(unittest.TestCase):
         sc2 = block.Smart_contract.from_json(str(sc))
         self.assertTrue(sc == sc2)
 
-    def test_scmemory_str(self):
+    def test_sc_memory_str(self):
+        block.sc_base_mem = 10
         m = block.SCMemory([0, 0], block.sc_base_mem)
-        m.local = '{}fadffkjlds;da""[]'
+        m.local = '{}fadffkjlds;da""dsakfdjkfdsalkjfdslkjfdsalkjfdlkjfds[]'
         self.assertEqual(m.local, block.SCMemory.from_json(str(m)).local)
 
+    def test_sc_memory_distribution(self):
+        m = block.SCMemory([0, 0], block.sc_base_mem)
+        m.size = 200000000
+        m + '{}fadffkjlds;da""[]'*2000000
+        m.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4']
+        m.distribute_peers()
+        print(len(m), 'len(m.accepts)', len(m.accepts), type(m.accepts),  m.accepts)
+        print(set(list(m.accepts)))
 
 
 if __name__ == '__main__':

@@ -201,20 +201,6 @@ class Smart_contract:
                 print(k, self.__dict__[k], other.__dict__[k])
         return str(self) == str(other)
 
-    def distribute_peers(self):
-        """
-        Distribute memory between miners
-        :return:
-        """
-        self.memory.peers.sort()
-        l = len(self.memory)
-        m = len(self.memory.peers)
-        n = ((one_peer_max_mem * m)//l)+1
-        if self.memory.size <= sc_base_mem:
-            self.memory_distribution = 'all'
-        else:
-            self.memory_distribution = [[self.memory.peers[i*n:(i+1)*n]] for i in range(l//n)]
-
     def distribute_tasks(self):
         """
         Distribute tasks between miners
@@ -231,8 +217,10 @@ class Smart_contract:
 
     def update(self, bch):
         # delete not valid tasks
+
         # distribute miners if needed
-        pass
+        self.distribute_peers()
+        self.distribute_tasks()
 
 
 class SCMemory:
@@ -277,6 +265,21 @@ class SCMemory:
             self.localind[1] = len(self) + len(other)
             self.local += other
         self.length = len(self) + len(other)
+
+    def distribute_peers(self):
+        """
+        Distribute memory between miners
+        :return:
+        """
+        self.peers.sort()
+        l = len(self)
+        m = len(self.peers)
+        n = ((one_peer_max_mem * m)//l)+1
+        print(l, n, sc_base_mem)
+        if self.size <= sc_base_mem:
+            self.accepts = []
+        else:
+            self.accepts = [{p: [] for p in self.peers[i*n:(i+1)*n]} for i in range(l//n)]
 
     def __len__(self):
         return self.length
