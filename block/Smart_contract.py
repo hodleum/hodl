@@ -274,12 +274,13 @@ class SCMemory:
         self.peers.sort()
         l = len(self)
         m = len(self.peers)
-        n = ((one_peer_max_mem * m)//l)+1
+        opm = ((one_peer_max_mem * m)//(l))
+        n = (l//one_peer_max_mem) + 1
         print(l, n, sc_base_mem)
         if self.size <= sc_base_mem:
             self.accepts = []
         else:
-            self.accepts = [{p: [] for p in self.peers[i*n:(i+1)*n]} for i in range(l//n)]
+            self.accepts = [{p: [] for p in self.peers[i*opm:(i+1)*opm]} for i in range(n)]
 
     def __len__(self):
         return self.length
