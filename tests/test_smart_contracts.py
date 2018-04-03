@@ -60,7 +60,7 @@ class TestSmartContracts(unittest.TestCase):
     def test_sc_memory_distribution(self):
         m = block.SCMemory([0, 0], block.sc_base_mem)
         m.size = 20000000000
-        m + '{}fadffkjlds;da""[]'*20000000
+        m += '{}fadffkjlds;da""[]'*20000000
         m.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         m.distribute_peers()
         self.assertEqual(m.accepts[2], {'1': []})

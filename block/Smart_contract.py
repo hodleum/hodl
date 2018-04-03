@@ -97,7 +97,8 @@ class Smart_contract:
         l.remove('tmp')
         for f in l:
             mount_str += mount_temp.format(f, f)
-        run_str = 'docker run {} -v "$(pwd)/tmp":/home/hodl/tmp --stop-timeout 1 hodl-container python3 /home/hodl/sc_main.py'.format(mount_str)
+        run_str = 'docker run {} -v "$(pwd)/tmp":/home/hodl/tmp --stop-timeout 1 hodl-container python3 ' \
+                  '/home/hodl/sc_main.py'.format(mount_str)
         os.system(run_str)
         file = open('tmp/sc.mem', 'r')
         self.memory = SCMemory.from_json(file.readline())
@@ -265,6 +266,7 @@ class SCMemory:
             self.localind[1] = len(self) + len(other)
             self.local += other
         self.length = len(self) + len(other)
+        return self
 
     def distribute_peers(self):
         """
@@ -276,7 +278,6 @@ class SCMemory:
         m = len(self.peers)
         opm = ((one_peer_max_mem * m)//(l))
         n = (l//one_peer_max_mem) + 1
-        print(l, n, sc_base_mem)
         if self.size <= sc_base_mem:
             self.accepts = []
         else:
