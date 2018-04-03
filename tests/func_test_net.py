@@ -17,13 +17,13 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 if name == 'Alice':
-    net.peers = net.Peers([['localhost', 5002], ['localhost', 5003], ['localhost', 5004]])
+    net.peers = net.Peers([net.Peer(keys['Bob'], 'localhost', 5002), net.Peer(keys['Chuck'], 'localhost', 5003), net.Peer(keys['Dave'], 'localhost', 5004)])
 if name == 'Bob':
-    net.peers = net.Peers([['localhost', 5001], ['localhost', 5003], ['localhost', 5004]])
+    net.peers = net.Peers([net.Peer(keys['Alice'], 'localhost', 5001), net.Peer(keys['Chuck'], 'localhost', 5003), net.Peer(keys['Dave'], 'localhost', 5004)])
 if name == 'Chuck':
-    net.peers = net.Peers([['localhost', 5002], ['localhost', 5001], ['localhost', 5004]])
+    net.peers = net.Peers([net.Peer(keys['Bob'], 'localhost', 5002), net.Peer(keys['Alice'], 'localhost', 5001), net.Peer(keys['Dave'], 'localhost', 5004)])
 if name == 'Dave':
-    net.peers = net.Peers([['localhost', 5002], ['localhost', 5003], ['localhost', 5001]])
+    net.peers = net.Peers([net.Peer(keys['Bob'], 'localhost', 5002), net.Peer(keys['Chuck'], 'localhost', 5003), net.Peer(keys['Alice'], 'localhost', 5001)])
 with open('tests/genblock.bl', 'r') as f:
     bch[0] = block.Block.from_json(f.readline())
 loop = multiprocessing.Process(target=net.loop(), args=tuple())
