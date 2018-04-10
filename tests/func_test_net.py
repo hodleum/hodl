@@ -4,15 +4,16 @@ import json
 import multiprocessing
 import net
 import time
-
+import logging as log
 
 #Alice, Bob, Chuck, Dave are creating clear blockchain with genesis block
 #After that Alice creates transaction & waits for synchronization(other are waiting while net.py is doing it)
 #Two seconds later Bob creates block & sends it to Alice & Chuck
 
 
-bch = block.Blockchain()
 name = os.getenv('HODL_NAME')
+bch = block.Blockchain(filename=name+'.db')
+log.basicConfig(filename=name+'.log', level=log.DEBUG)
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
