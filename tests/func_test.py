@@ -20,12 +20,15 @@ class TestFunc(unittest.TestCase):
         bch.new_transaction(my_keys[1], [[0, 0]], ['sc[0, 0]'], [0.1], privkey=my_keys[0])
         with open('tests/scex.py', 'r') as f:
             bch.new_sc(f.readlines(), my_keys[1], my_keys[0])
-        bch = block.Blockchain()
-        b = bch[0]
+        b = bch[1]
+        print(25, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].execute()
+        print(27, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
-        bch[0] = b
-        bch.conn.commit()
+        print(29, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
+        bch[1] = b
+        cc = block.Blockchain()[0].contracts
+        print(32, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].handle_messages()
         bch[0] = b
         self.assertEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])

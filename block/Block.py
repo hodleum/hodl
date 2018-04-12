@@ -51,6 +51,7 @@ class Block:
         self = cls()
         s = json.loads(s)
         self.txs = []
+        self.contracts = []
         for t in s[0]:
             self.txs.append(Transaction.from_json(t))
         for c in s[5]:

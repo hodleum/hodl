@@ -21,7 +21,7 @@ def write():
         memory = s.get_self().memory
         bc = len(s.bch)
         memory.clear()
-        memory + json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
+        memory += json.dumps((balances, len(s.bch), len(s.bch[-1].txs)))
         f.write(str(memory))
 
 
@@ -56,4 +56,5 @@ if bc+1 != len(s.bch):
                 except:
                     balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
 balances['0'] = 0.2
+#import pdb;pdb.set_trace()
 write()
