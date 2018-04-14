@@ -108,7 +108,7 @@ class Blockchain:
     def new_sc(self, text, author, author_priv):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        sc = Smart_contract(text, author, [len(b.contracts), len(self) - 1])
+        sc = Smart_contract(text, author, [len(self) - 1, len(b.contracts)])
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b
@@ -152,3 +152,8 @@ class Blockchain:
     def close(self):
         self.conn.commit()
         self.conn.close()
+
+    def commit(self):
+        self.close()
+        self.conn = sqlite3.connect(self.f)
+        self.c = self.conn.cursor()

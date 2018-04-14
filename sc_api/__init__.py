@@ -16,6 +16,5 @@ def append_tasks(task):
 
 
 def get_self():
-    print('print(list(ind), len(bch), len(bch[0].contracts))', list(ind), len(bch), len(bch[0].__dict__))
     return bch[list(ind)[0]].contracts[list(ind)[1]]
 

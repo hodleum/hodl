@@ -17,24 +17,23 @@ class TestFunc(unittest.TestCase):
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [[0, 0]], ['sc[0, 0]'], [0.1], privkey=my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 0]], ['sc[1, 0]'], [0.1], privkey=my_keys[0])
         with open('tests/scex.py', 'r') as f:
             bch.new_sc(f.readlines(), my_keys[1], my_keys[0])
+        bch.commit()
         b = bch[1]
-        print(25, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].execute()
-        print(27, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
-        print(29, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         bch[1] = b
         cc = block.Blockchain()[0].contracts
-        print(32, len(bch), len(b.contracts), len(block.Blockchain()[0].contracts))
         b.contracts[0].handle_messages()
         bch[0] = b
-        self.assertEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
+        self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
+        b.contracts[0].memory.size = 10**10
         b.contracts[0].memory += '{}fadffkjlds;da""[]'*20000000
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
+        bch[0] = b
         self.assertEqual(b.contracts[0].memory.accepts[2], {'1': []})
         print('Passed!')
 

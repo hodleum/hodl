@@ -7,8 +7,10 @@ mem = s.get_self().memory
 try:
     balances, bc, tc = json.loads(mem.local)   # bc - number of last processed block
     bc = int(bc)
+    start = False
 except ValueError:
     balances, bc, tc = {}, 0, 0
+    start = True
 
 
 def add_task(sender, task):
@@ -40,15 +42,16 @@ def sell(sender, money):
             write()
 
 
-if tc != len(s.bch[bc-1].txs):
-    for tnx in s.bch[bc-1].txs[tc:len(s.bch[bc-1].txs)]:
-        if 'sc' + str(ind) in tnx.outs:
-            try:
-                balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
-            except:
-                balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
-if bc+1 != len(s.bch):
-    for i in range(bc+1, len(s.bch)):
+if not start:
+    if tc != len(s.bch[bc-1].txs):
+        for tnx in s.bch[bc-1].txs[tc:len(s.bch[bc-1].txs)]:
+            if 'sc' + str(ind) in tnx.outs:
+                try:
+                    balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
+                except:
+                    balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
+if bc != len(s.bch):
+    for i in range(bc, len(s.bch)):
         for tnx in s.bch[i].txs:
             if 'sc' + str(ind) in tnx.outs:
                 try:
@@ -56,5 +59,4 @@ if bc+1 != len(s.bch):
                 except:
                     balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
 balances['0'] = 0.2
-#import pdb;pdb.set_trace()
 write()
