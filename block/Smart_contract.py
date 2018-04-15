@@ -182,7 +182,7 @@ class Smart_contract:
                                 self.awards[m] = task[3] / len(task[1])
                             elif task[3] > sc_award_to:
                                 self.awards[m] = sc_award_to / len(task[1])
-                    bch.new_transaction('sc'+json.dumps(self.index), [task[6]], list(task[1].keys()), [task[3] / len(task[1])]*len(task[1]), sc)
+                    bch.new_transaction('sc'+json.dumps(self.index), [task[6]], list(task[1].keys()), [task[3] / len(task[1])]*len(task[1]))
 
     def handle_messages(self):
         for i in range(len(self.msgs)):
@@ -220,7 +220,7 @@ class Smart_contract:
         # delete not valid tasks
 
         # distribute miners if needed
-        self.distribute_peers()
+        self.memory.distribute_peers()
         self.distribute_tasks()
 
 
@@ -243,7 +243,7 @@ class SCMemory:
             if item.start > self.localind[0] and item.stop < self.localind[1]:
                 return get_sc_memory(self.scind, item.start, item.stop)
         else:
-            return self.local
+            return self.local[item]
 
     def __setitem__(self, key, value):
         if type(key) == slice:
@@ -257,7 +257,10 @@ class SCMemory:
             elif key.start <= self.localind[0] and self.localind[1] >= key.stop >= self.localind[0]:
                 self.local[0:key.stop - self.localind[0]] = value
         else:
-            self.local[key] = value
+            if self.localind[1] > key > self.localind[0]:
+                self.local = list(self.local)
+                self.local[key] = value
+                self.local = ''.join(self.local)
 
     def __add__(self, other):
         if len(self) + len(other) > self.size:

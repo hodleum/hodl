@@ -29,12 +29,13 @@ class TestFunc(unittest.TestCase):
         b.contracts[0].handle_messages()
         bch[0] = b
         self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
-        b.contracts[0].memory.size = 10**10
+        b.contracts[0].memory.size = 10**10    # todo: replace this string with memory buying
         b.contracts[0].memory += '{}fadffkjlds;da""[]'*20000000
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
-        bch[0] = b
+        bch[1] = b
         self.assertEqual(b.contracts[0].memory.accepts[2], {'1': []})
+        # tests of SC tasks distribution and mining
         print('Passed!')
 
 
