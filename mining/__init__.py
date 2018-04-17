@@ -69,6 +69,8 @@ def pow_mining(bch, b):
 def pow_validate(bch, num):
     miners = bch[num - 1].powminers
     miners.sort(reverse=True)
+    if len(miners) == 0:
+        raise NoValidMinersError
     i = ((int(bch[num - 1].txs[num - 1].hash) + int(bch[num - 1].txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     i1 = i
     bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])

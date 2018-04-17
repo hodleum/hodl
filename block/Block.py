@@ -31,7 +31,7 @@ class Block:
         self.timestamp = get_timestamp(t)
         self.pow_timestamp = pow_timestamp
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, [0.4, 0.3, 0.3], (len(bch), 0), b'mining', '', self.pow_timestamp)
+        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), b'mining', '', self.pow_timestamp)
         self.txs = [tnx0] + txs
         self.contracts = contracts
         self.creators = creators
@@ -87,7 +87,7 @@ class Block:
             n = 0
             for o in self.txs[0].outns:
                 n += o
-            if n != minerfee:
+            if self.txs[0].outns != mining.miningprice:
                 print('not all money in first tnx')
                 return False
             for t in self.txs[1:]:

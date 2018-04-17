@@ -6,7 +6,7 @@ import os
 
 sc_base_mem = 10000000
 sc_base_code_size = 5000000
-sc_memprice = 100
+sc_memprice = 0.1
 sc_max_code_size = 1000000000
 sc_code_price = 10**(1/6)
 sc_price = 0.01
@@ -133,12 +133,18 @@ class Smart_contract:
             return False
         pr = sc_price
         if self.memory.size > sc_base_mem or self.codesize > sc_base_code_size:
-            pr += ((self.memory.size - sc_base_mem) * sc_memprice) + ((self.codesize - sc_base_code_size) * sc_code_price)
+            mp = ((self.memory.size - sc_base_mem) * sc_memprice)
+            if mp < 0:
+                mp = 0
+            cp = ((self.codesize - sc_base_code_size) * sc_code_price)
+            if cp < 0:
+                cp = 0
+            pr += mp + cp
         payed = 0
         for b in bch:
             for tnx in b.txs:
-                if tnx.author == self.author and str(self.index) + 'payment' in tnx.outs:
-                    payed += tnx.outns[tnx.outs.index(str(self.index) + 'payment')]
+                if tnx.author == self.author and 'sc' + str(self.index) + 'payment' in tnx.outs:
+                    payed += tnx.outns[tnx.outs.index('sc' + str(self.index) + 'payment')]
         if not payed >= pr:
             return False
         if not cg.verify_sign(self.sign, json.dumps((self.code, str(self.author), self.index, self.computing, self.tasks, self.calc_repeats, self.msgs, self.memory.peers, self.memory.size,

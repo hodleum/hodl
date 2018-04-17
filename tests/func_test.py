@@ -9,15 +9,27 @@ class TestFunc(unittest.TestCase):
         my_keys = cg.gen_keys()
         your_pub_key = cg.gen_keys()[1]
         bch = block.Blockchain()
+        bch.clean()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
         with open('tests/genblock.bl', 'r') as f:
-            bch[0] = block.Block.from_json(f.readline())
-        bch.clean()
+            bch.append(block.Block.from_json(f.readline()))
+        bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05], 'signing', keys['Alice'][0])
+        bch.new_transaction(keys['Bob'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Bob'][0])
+        bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Chuck'][0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+
         bch.new_block([my_keys[1], your_pub_key, your_pub_key])
-        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
+        n = 1000
+        n, t, h = block.mining.pow_mine(bch, 90000000000000000000000000000000000, my_keys[1])
+        bch.add_miner([int(h), n, my_keys[1], t])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 2]], ['sc[1, 0]'+'payment'], [1], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [[0, 0]], ['sc[1, 0]'], [0.1], privkey=my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['sc[1, 0]'], [0.1], privkey=my_keys[0])
+        bch.append(block.mining.mine(bch))
         with open('tests/scex.py', 'r') as f:
             bch.new_sc(f.readlines(), my_keys[1], my_keys[0])
         bch.commit()
@@ -29,8 +41,9 @@ class TestFunc(unittest.TestCase):
         b.contracts[0].handle_messages()
         bch[0] = b
         self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
-        b.contracts[0].memory.size = 10**10    # todo: replace this string with memory buying
-        b.contracts[0].memory += '{}fadffkjlds;da""[]'*20000000
+        self.assertTrue(bch.is_valid())
+        b.contracts[0].memory.size = 10000010    # todo: replace this string with memory buying
+        b.contracts[0].memory += '{}fads;"[]'*1000001
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
         bch[1] = b

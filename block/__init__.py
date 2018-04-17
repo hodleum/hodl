@@ -22,6 +22,7 @@ import sqlite3
 from block.Smart_contract import *
 from block.Transaction import *
 from block.Block import *
+import mining
 
 minerfee = 1
 
@@ -42,8 +43,12 @@ class Blockchain:
     def __getitem__(self, item):
         if type(item) == slice:
             l = []
-            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is not None],
-                           [item.step, len(self)][item.stop is not None]):
+            if item.step is None:
+                step = 1
+            else:
+                step = item.step
+            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is None],
+                           [step, len(self)][item.stop is not None]):
                 l.append(self[i])
             return l
         if item < 0:
@@ -80,7 +85,7 @@ class Blockchain:
 
     def is_valid(self):
         """Returns validness of the whole chain"""
-        for b in self:
+        for b in self[1:]:
             if not b.is_valid(self):
                 return False
         return True
@@ -135,7 +140,8 @@ class Blockchain:
         self.conn.commit()
 
     def add_miner(self, miner):
-        """adds proof-of-work miner"""
+        """add proof-of-work miner
+        miner = [hash, n, address, t]"""
         b = self[-1]
         b.powminers.append(miner)
         self[-1] = b
