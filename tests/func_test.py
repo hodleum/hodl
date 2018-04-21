@@ -19,7 +19,6 @@ class TestFunc(unittest.TestCase):
         bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Chuck'][0])
         bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
 
-        bch.new_block([my_keys[1], your_pub_key, your_pub_key])
         n = 1000
         n, t, h = block.mining.pow_mine(bch, 90000000000000000000000000000000000, my_keys[1])
         bch.add_miner([int(h), n, my_keys[1], t])
@@ -39,15 +38,17 @@ class TestFunc(unittest.TestCase):
         bch[1] = b
         cc = block.Blockchain()[0].contracts
         b.contracts[0].handle_messages()
-        bch[0] = b
+        bch[1] = b
         self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
-        self.assertTrue(bch.is_valid())
+        v = bch.is_valid()
+        self.assertTrue(v)
         b.contracts[0].memory.size = 10000010    # todo: replace this string with memory buying
         b.contracts[0].memory += '{}fads;"[]'*1000001
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
         bch[1] = b
         self.assertEqual(b.contracts[0].memory.accepts[2], {'1': []})
+        bch.append(block.mining.mine(bch))
         # tests of SC tasks distribution and mining
         print('Passed!')
 

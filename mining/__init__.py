@@ -14,8 +14,10 @@ import cryptogr as cg
 
 
 pow_max = 1000000000000000000000000000000000000
-pos_min = 0.005
-miningprice = [0.5, 0.5]
+pos_min = 0.05
+pok_total = 100000
+poc_total = 100000
+miningprice = [500, 0.05]
 
 
 class TooLessTxsError(Exception):
@@ -111,7 +113,7 @@ def pos_mining(b, bch):
             b.creators.append(miners[i][1])
         else:
             raise NoValidMinersError
-    b.txs[0].outns.append(miners[i][1])
+    b.txs[0].outs.append(miners[i][1])
     b.update()
     return b
 
@@ -152,6 +154,11 @@ def pok_mining(b, bch):
                 if sc.awards[w][1] > bch[-1].timestamp:
                     outs.append(w)
                     outns.append(sc.awards[w][0])
+    s = 0
+    for n in outns:
+        s += n
+    for i in range(len(outns)):
+        outns[i] = outns[i] * s / pok_total
     tnx.gen('mining', outs, outns, [len(bch), len(b.txs)], 'mining', 'mining')
     b.txs.append(tnx)
     return b
@@ -167,6 +174,11 @@ def pok_validate(bch, n):
                 if bch[n].timestamp > sc.awards[w][1] > bch[n - 1].timestamp:
                     outs.append(w)
                     outns.append(sc.awards[w][0])
+    s = 0
+    for n in outns:
+        s += n
+    for i in range(len(outns)):
+        outns[i] = outns[i] * s / pok_total
     if not (outs == bch[n].txs[1].outs and outns == bch[n].txs[1].outns):
         return False
     return True
@@ -190,9 +202,8 @@ def validate(bch, i=-1):
 def mine(bch):
     """Creates new block"""
     b = block.Block()
-    tnx = block.Transaction()
-    tnx.gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
-    b.txs.append(tnx)
+    b.txs[0] = block.Transaction()
+    b.txs[0].gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
     b = pow_mining(bch, b)
     b = pos_mining(b, bch)
     b = pok_mining(b, bch)

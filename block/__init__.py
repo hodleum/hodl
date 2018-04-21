@@ -22,7 +22,7 @@ import sqlite3
 from block.Smart_contract import *
 from block.Transaction import *
 from block.Block import *
-import mining
+#import mining
 
 minerfee = 1
 
@@ -163,3 +163,6 @@ class Blockchain:
         self.close()
         self.conn = sqlite3.connect(self.f)
         self.c = self.conn.cursor()
+
+    def __repr__(self):
+        return str([[len(b.txs), len(b.contracts)] for b in self])

@@ -63,7 +63,10 @@ class Transaction:
         """Decodes transacion from str using JSON"""
         s = json.loads(s)
         self = cls()
-        self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
+        try:
+            self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
+        except TypeError:
+            self.gen(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6])
         self.update()
         return self
 
