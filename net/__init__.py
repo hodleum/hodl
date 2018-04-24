@@ -10,13 +10,14 @@ import block
 import socket
 import multiprocessing
 import json
+import logging as log
 from net.Peers import *
 from net.Connections import *
 
 
 global peers
 peers = Peers()
-default_port = 5000
+default_port = 7080
 global conns
 conns = []
 
@@ -36,7 +37,7 @@ def listen_loop(privkey, pubkey, port=default_port):
 
 def send_loop(privkey, pubkey):
     while True:
-        for peer in peers:
+        for peer in list(peers):
             try:
                 conns.append(Connection(peer[0], peer[1], privkey, pubkey))
             except:
@@ -44,7 +45,11 @@ def send_loop(privkey, pubkey):
 
 
 def loop(privkey, pubkey, port=default_port):
+    name = 'Alice'
+    log.basicConfig(filename='/home/python/hodl/'+name+'.log', level=log.DEBUG)	 
     proc = multiprocessing.Process(target=listen_loop, args=(privkey, pubkey, port))
+    log.debug('test1')
     proc.start()
+    log.debug('test1')
     proc.join()
     send_loop(privkey, pubkey)
