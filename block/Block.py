@@ -63,6 +63,12 @@ class Block:
         self.update()
         return self
 
+    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):
+        """Creates new transaction and adds it to the chain"""
+        tnx = Transaction()
+        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey)
+        self.append(tnx)
+
     def append(self, txn):
         """Adds txn to block"""
         self.txs.append(txn)  # добавляем транзакцию в список транзакций
@@ -80,7 +86,7 @@ class Block:
         i = bch.index(self)
         v = True
         if i != 0:
-            if self.txs[0].froms != [['nothing']] or self.txs[0].author != 'mining' \
+            if self.txs[0].froms != 'mining' or self.txs[0].author != 'mining' \
                     or self.txs[0].outs != self.creators:
                 print('invalid first tnx')
                 return False
@@ -94,11 +100,14 @@ class Block:
                 if not t.is_valid(bch):
                     print('tnx isnt valid')
                     return False
-            if not i == 0:
+            if i != 0:
                 if not mining.validate(bch, i):
+                    print('not valid mined block. i:', i)
                     return False
             if i != 0:
-                v = self.prevhash == bch[i - 1].h
+                if self.prevhash == bch[i - 1].h:
+                    print('prevhash not valid. i:', i)
+                    return False
             else:
                 pass
         # todo: write first block processing

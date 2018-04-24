@@ -85,8 +85,9 @@ class Blockchain:
 
     def is_valid(self):
         """Returns validness of the whole chain"""
-        for b in self[1:]:
+        for i, b in enumerate(self[1:]):
             if not b.is_valid(self):
+                print('block not valid:', i + 1)
                 return False
         return True
 

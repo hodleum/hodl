@@ -87,8 +87,8 @@ def pow_validate(bch, num):
                 raise NoValidMinersError
             if i == len(bch):
                 i = i - len(bch) + 1
-    if not miners[i][2] == bch[num].creators[0] or not bch[num].timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
-        print(hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].timestamp, miners[i][3], bch[num].n, miners[i][1], i)
+    if not miners[i][2] == bch[num].creators[0] or not bch[num].pow_timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
+        print('block pow mining wrong.', not miners[i][2] == bch[num].creators[0], not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
     return True
 
@@ -159,7 +159,7 @@ def pok_mining(b, bch):
         s += n
     for i in range(len(outns)):
         outns[i] = outns[i] * s / pok_total
-    tnx.gen('mining', outs, outns, [len(bch), len(b.txs)], 'mining', 'mining')
+    tnx.gen('mining', 'mining', outs, outns, [len(bch), len(b.txs)], 'mining', 'mining')
     b.txs.append(tnx)
     return b
 
@@ -169,17 +169,20 @@ def pok_validate(bch, n):
     outns = []
     for bl in bch:
         for sc in bl.contracts:
-            sc.calc_awards()
+            sc.calc_awards(bch)
             for w in sc.awards.keys():
                 if bch[n].timestamp > sc.awards[w][1] > bch[n - 1].timestamp:
                     outs.append(w)
                     outns.append(sc.awards[w][0])
+    print('pok_validate. outns:', outns)
     s = 0
     for n in outns:
         s += n
     for i in range(len(outns)):
         outns[i] = outns[i] * s / pok_total
+    print('pok_validate. total outns:', outns)
     if not (outs == bch[n].txs[1].outs and outns == bch[n].txs[1].outns):
+        print('block pok mining wrong.', outns, bch[n].txs[1].outns, outs == bch[n].txs[1].outs)
         return False
     return True
 
@@ -196,7 +199,12 @@ def poc_validate(bch, n):
 def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
-    return all([pow_validate(bch, i), pos_validate(bch, i), pok_validate(bch, i), poc_validate(bch, i)])
+    powv = pow_validate(bch, i)
+    posv = pos_validate(bch, i)
+    pokv = pok_validate(bch, i)
+    pocv = poc_validate(bch, i)
+    print(powv, posv, pokv, pocv)
+    return all([powv, posv, pokv, pocv])
 
 
 def mine(bch):
@@ -208,6 +216,9 @@ def mine(bch):
     b = pos_mining(b, bch)
     b = pok_mining(b, bch)
     b = poc_mining(b, bch)
+    b.prevhash = bch[-1]
+    b.calc_pow_hash()
+    b.update()
     return b
 
 
