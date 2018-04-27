@@ -48,7 +48,6 @@ class TestFunc(unittest.TestCase):
         bch[1] = b
         self.assertEqual(len(b.contracts[0].memory.accepts), 3)
         self.assertTrue(b.contracts[0].is_valid(bch))
-        bch.append(block.mining.mine(bch))
         # tests of SC tasks distribution and mining
         print('Passed!')
 

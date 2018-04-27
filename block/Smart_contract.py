@@ -122,7 +122,7 @@ class Smart_contract:
         self = cls(*json.loads(s)[0:5])
         self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[6:10]
         self.sign = bytes(eval(self.sign))
-        #self.memory = SCMemory.from_json(json.loads(s)[10])
+        self.memory = SCMemory.from_json(json.loads(s)[10])
         return self
 
     def __eq__(self, other):
