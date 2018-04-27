@@ -105,7 +105,7 @@ class Block:
                     print('not valid mined block. i:', i)
                     return False
             if i != 0:
-                if self.prevhash == bch[i - 1].h:
+                if self.prevhash != bch[i - 1].h:
                     print('prevhash not valid. i:', i)
                     return False
             else:

@@ -216,7 +216,7 @@ def mine(bch):
     b = pos_mining(b, bch)
     b = pok_mining(b, bch)
     b = poc_mining(b, bch)
-    b.prevhash = bch[-1]
+    b.prevhash = bch[-1].h
     b.calc_pow_hash()
     b.update()
     return b

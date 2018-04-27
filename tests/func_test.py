@@ -30,7 +30,7 @@ class TestFunc(unittest.TestCase):
         bch.new_transaction(my_keys[1], [[0, 1]], ['sc[1, 0]'], [0.1], privkey=my_keys[0])
         bch.append(block.mining.mine(bch))
         with open('tests/scex.py', 'r') as f:
-            bch.new_sc(f.readlines(), my_keys[1], my_keys[0])
+            bch.new_sc(f.readlines(), my_keys[1], my_keys[0], memsize=10000520)
         bch.commit()
         b = bch[1]
         b.contracts[0].execute()
@@ -42,12 +42,12 @@ class TestFunc(unittest.TestCase):
         self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
         v = bch.is_valid()
         self.assertTrue(v)
-        b.contracts[0].memory.size = 10000010    # todo: replace this string with memory buying
         b.contracts[0].memory += '{}fads;"[]'*1000001
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
         bch[1] = b
-        self.assertEqual(b.contracts[0].memory.accepts[2], {'1': []})
+        self.assertEqual(len(b.contracts[0].memory.accepts), 3)
+        self.assertTrue(b.contracts[0].is_valid(bch))
         bch.append(block.mining.mine(bch))
         # tests of SC tasks distribution and mining
         print('Passed!')

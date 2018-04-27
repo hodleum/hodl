@@ -22,7 +22,6 @@ import sqlite3
 from block.Smart_contract import *
 from block.Transaction import *
 from block.Block import *
-#import mining
 
 minerfee = 1
 
@@ -111,10 +110,10 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author, author_priv):
+    def new_sc(self, text, author, author_priv, memsize):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        sc = Smart_contract(text, author, [len(self) - 1, len(b.contracts)])
+        sc = Smart_contract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize)
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b
