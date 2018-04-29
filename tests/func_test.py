@@ -16,7 +16,7 @@ class TestFunc(unittest.TestCase):
             bch.append(block.Block.from_json(f.readline()))
         bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05], 'signing', keys['Alice'][0])
         bch.new_transaction(keys['Bob'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Bob'][0])
-        bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Chuck'][0])
+        bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1], keys['Chuck'][1]], [0.95, 0.05], 'signing', keys['Chuck'][0])
         bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
 
         n = 1000
@@ -26,9 +26,11 @@ class TestFunc(unittest.TestCase):
         bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [[0, 2]], ['sc[1, 0]'+'payment'], [1], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [[0, 0], [1, 0]], [your_pub_key, my_keys[1]], [0.5, 0.3], 'signing', my_keys[0])
         bch.new_transaction(my_keys[1], [[0, 1]], ['sc[1, 0]'], [0.1], privkey=my_keys[0])
         bch.append(block.mining.mine(bch))
+        bch.new_transaction(my_keys[1], [[1, 0]], [your_pub_key, my_keys[1]], [0.5, bch[1].txs[0].outns[0]-0.5],
+                            'signing', my_keys[0])
+        print(bch.money(my_keys[1]))
         with open('tests/scex.py', 'r') as f:
             bch.new_sc(f.readlines(), my_keys[1], my_keys[0], memsize=10000520)
         bch.commit()
@@ -48,7 +50,16 @@ class TestFunc(unittest.TestCase):
         bch[1] = b
         self.assertEqual(len(b.contracts[0].memory.accepts), 3)
         self.assertTrue(b.contracts[0].is_valid(bch))
+        bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1]], [0.05], 'signing', keys['Chuck'][0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        bch.new_transaction(my_keys[1], [[0, 1]], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
+        n = 1000
+        n, t, h = block.mining.pow_mine(bch, 90000000000000000000000000000000000, my_keys[1])
+        bch.add_miner([int(h), n, my_keys[1], t])
+        bch.append(block.mining.mine(bch))
         # tests of SC tasks distribution and mining
+        print(bch.money(my_keys[1]), bch.money(your_pub_key))
         print('Passed!')
 
 

@@ -50,7 +50,7 @@ class Smart_contract:
         self.calculators = []
         self.computing = computing
         self.tasks = tasks  # [[command, {miner:[cg.h(str(ans)+miner), time when cg.h added, ans(appended after)]]},
-        # repeats, award, author, len(bch) when publishing, tnx for awards's index]]
+        # repeats, award, author, len(bch) when publishing, tnx for awards's index, solved]]
         self.codesize = codesize
         self.txs = []
         self.membs = []
@@ -173,25 +173,26 @@ class Smart_contract:
                     self.awards[m] = sc_memprice / (len(self.memory.accepts)*len(p))
 
         # Calculators
-        for task in self.tasks:
-            for m in task[1]:
-                a = 0
-                last_time = 0
+        for i, task in enumerate(self.tasks):
+            if not task[-1]:
                 for m in task[1]:
-                    if len(task[1][m]) > 1:
-                        a += 0
-                        last_time = max((task[1][m][1], last_time))
-                if a / len(task[1]) > 0.8 and last_time - time.time() > 600:
-                    ans = [task[1][m][2] for m in task[1]]
-                    c = [ans.count(an) for an in ans]
-                    right_ans = ans[c.index(max(c))]
+                    a = 0
+                    last_time = 0
                     for m in task[1]:
-                        if task[1][m][2] == right_ans:
-                            if sc_award_to > task[3] > sc_award_from:
-                                self.awards[m] = task[3] / len(task[1])
-                            elif task[3] > sc_award_to:
-                                self.awards[m] = sc_award_to / len(task[1])
-                    bch.new_transaction('sc'+json.dumps(self.index), [task[6]], list(task[1].keys()), [task[3] / len(task[1])]*len(task[1]))
+                        if len(task[1][m]) > 1:
+                            a += 0
+                            last_time = max((task[1][m][1], last_time))
+                    if a / len(task[1]) > 0.8 and last_time - time.time() > 600:
+                        ans = [task[1][m][2] for m in task[1]]
+                        c = [ans.count(an) for an in ans]
+                        right_ans = ans[c.index(max(c))]
+                        for m in task[1]:
+                            if task[1][m][2] == right_ans:
+                                if sc_award_to > task[3] > sc_award_from:
+                                    self.awards[m] = task[3] / len(task[1])
+                                elif task[3] > sc_award_to:
+                                    self.awards[m] = sc_award_to / len(task[1])
+                task[-1] = True
 
     def handle_messages(self):
         for i in range(len(self.msgs)):
@@ -293,7 +294,7 @@ class SCMemory:
         if self.size <= sc_base_mem:
             self.accepts = []
         else:
-            self.accepts = [{p: [] for p in self.peers[i*opm:(i+1)*opm]} for i in range(n)]
+            self.accepts = [{p: ['', []] for p in self.peers[i*opm:(i+1)*opm]} for i in range(n)]
 
     def __len__(self):
         return self.length

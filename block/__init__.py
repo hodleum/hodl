@@ -69,8 +69,8 @@ class Blockchain:
     def money(self, wallet):
         """Counts money on wallet"""
         money = 0
-        for bl in self:  # перебираем все транзакции в каждом блоке
-            for tnx in bl.txs:
+        for i in range(len(self)):  # every tnx in every block
+            for tnx in self[i].txs:
                 l = zip(tnx.outs, tnx.outns, range(len(tnx.outns)))
                 for w, n, i in l:
                     if w == wallet and not tnx.spent(self)[i]:
@@ -128,9 +128,9 @@ class Blockchain:
 
     def __next__(self):
         self.current += 1
-        try:
+        if self.current != len(self):
             return self[self.current]
-        except TypeError:
+        else:
             raise StopIteration
 
     def __setitem__(self, key, value):

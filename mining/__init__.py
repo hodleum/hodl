@@ -149,11 +149,10 @@ def pok_mining(b, bch):
     outns = []
     for bl in bch:
         for sc in bl.contracts:
-            sc.calc_awards()
+            sc.calc_awards(bch)
             for w in sc.awards.keys():
-                if sc.awards[w][1] > bch[-1].timestamp:
-                    outs.append(w)
-                    outns.append(sc.awards[w][0])
+                outs.append(w)
+                outns.append(sc.awards[w])
     s = 0
     for n in outns:
         s += n
