@@ -59,7 +59,8 @@ class TestFunc(unittest.TestCase):
         bch.add_miner([int(h), n, my_keys[1], t])
         bch.append(block.mining.mine(bch))
         # tests of SC tasks distribution and mining
-        print(bch.money(my_keys[1]), bch.money(your_pub_key))
+        print('my money', bch.money(my_keys[1]))
+        print('your money', bch.money(your_pub_key))
         print('Passed!')
 
 
