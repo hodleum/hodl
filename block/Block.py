@@ -96,7 +96,7 @@ class Block:
             if self.txs[0].outns != mining.miningprice:
                 print('not all money in first tnx')
                 return False
-            for t in self.txs[2:]:
+            for t in self.txs[3:]:
                 if not t.is_valid(bch):
                     print('tnx isnt valid')
                     return False

@@ -180,8 +180,8 @@ def pok_validate(bch, n):
     for i in range(len(outns)):
         outns[i] = outns[i] * s / pok_total
     print('pok_validate. total outns:', outns)
-    if not (outs == bch[n].txs[1].outs and outns == bch[n].txs[1].outns):
-        print('block pok mining wrong.', outns, bch[n].txs[1].outns, outs == bch[n].txs[1].outs)
+    if not (outs == bch[n].txs[2].outs and outns == bch[n].txs[2].outns):
+        print('block pok mining wrong.', outns, bch[n].txs[2].outns, outs == bch[n].txs[2].outs)
         return False
     return True
 

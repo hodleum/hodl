@@ -73,7 +73,7 @@ class Blockchain:
             for tnx in self[i].txs:
                 l = zip(tnx.outs, tnx.outns, range(len(tnx.outns)))
                 for w, n, j in l:
-                    if w == wallet and not tnx.spent(self)[j] and 'mining' not in tnx.outs:
+                    if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] and 'mining' not in tnx.outs:
                         money += n
         return money
 
@@ -166,3 +166,18 @@ class Blockchain:
 
     def __repr__(self):
         return str([[len(b.txs), len(b.contracts)] for b in self])
+
+    def pubkey_by_nick(self, nick):
+        if nick.startswith('-----BEGIN PUBLIC KEY-----'):
+            if nick.endswith('-----END PUBLIC KEY-----'):
+                return nick
+            else:
+                return nick.split('-----END PUBLIC KEY-----')[0]+'-----END PUBLIC KEY-----'
+        else:
+            o = None
+            for i in range(len(self)):
+                for tnx in self[i].txs:
+                    if tnx.author.endswith(nick+';'):
+                        o = nick.split('-----END PUBLIC KEY-----')[0]+'-----END PUBLIC KEY-----'
+        # todo
+        return

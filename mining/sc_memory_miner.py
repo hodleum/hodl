@@ -11,7 +11,7 @@ class Miner:
         self.conn = sqlite3.connect(hash(addr))
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
-                     (blockind integer, scind integer, mem text)''')
+                     (blockind integer, scind integer, n integer, mem text)''')
         self.conn.commit()
 
     def calculate_hash(self, mem):
@@ -33,11 +33,9 @@ class Miner:
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b
 
-
     def become_peer(self, bch, scind):
         bch[scind[0]].contracts[scind[1]].memory.peers.append(self.addr)
         self.mining_scs.append(scind)
-
 
     def mining(self, bch):
         while True:

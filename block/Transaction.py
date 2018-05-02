@@ -20,10 +20,10 @@ def is_tnx_money_valid(self, bch):
             if not tnx.is_valid:
                 print(self.index, 'is not valid: from is not valid')
                 return False
-            if tnx.spent(bch, [self.index])[tnx.outs.index(self.author)]:
+            if tnx.spent(bch, [self.index])[[bch.pubkey_by_nick(t) for t in tnx.outs].index(bch.pubkey_by_nick(self.author))]:
                 print(self.index, 'is not valid: from is not valid')
                 return False
-            inp = inp + tnx.outns[tnx.outs.index(self.author)]
+            inp = inp + tnx.outns[[bch.pubkey_by_nick(t) for t in tnx.outs].index(bch.pubkey_by_nick(self.author))]
         except:
             print(self.index, 'is not valid: exception')
             return False
@@ -51,8 +51,6 @@ class Transaction:
     To create new transaction, use:
     tnx=Transaction()
     tnx.gen(parameters)"""
-    # форма для передачи транзакций строкой(разделитель - русское а):
-    # author + а + str(froms)+ а + str(outs) + а + str(outns) + а + str(time)+ а + sign
     def __str__(self):
         """Encodes transaction to str using JSON"""
         return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
