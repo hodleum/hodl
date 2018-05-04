@@ -14,6 +14,7 @@ class HSock:
             # create self.sock, self.conn
             self.white_peer = True
         else:
+            # todo
             # create connection (self.conn) between this device and white peer, which connects to this peer.
             # Generate RSA keys.
             self.white_peer = False

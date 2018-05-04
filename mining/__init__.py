@@ -15,9 +15,9 @@ import cryptogr as cg
 
 pow_max = 1000000000000000000000000000000000000
 pos_min = 0.05
-pok_total = 100000
-poc_total = 100000
-miningprice = [500, 0.05]
+pok_total = 10000
+poc_total = 10000
+miningprice = [100, 5]
 
 
 class TooLessTxsError(Exception):
@@ -33,7 +33,7 @@ def is_pow_miner_valid(bch, miner):
 
 
 def mining_delta_t(bch_len):
-    return int(((0.005*bch_len)**0.95)/30+5)
+    return 5    # int(((0.005*bch_len)**0.95)/30+5)
 
 
 def pow_mining(bch, b):
