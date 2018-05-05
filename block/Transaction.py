@@ -20,6 +20,8 @@ def is_tnx_money_valid(self, bch):
             if not tnx.is_valid:
                 print(self.index, 'is not valid: from is not valid')
                 return False
+            if 'mining' in tnx.outs:
+                return False
             if tnx.spent(bch, [self.index])[[bch.pubkey_by_nick(t) for t in tnx.outs].index(bch.pubkey_by_nick(self.author))]:
                 print(self.index, 'is not valid: from is not valid')
                 return False

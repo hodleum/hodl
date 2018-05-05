@@ -3,14 +3,19 @@ import net
 import block
 import mining
 import time
+import json
 
 
 bch = block.Blockchain()
 
 
 class Wallet:
-    def __init__(self):
-        self.privkey, self.pubkey = cg.gen_keys()
+    def __init__(self, keys=cg.gen_keys):
+        try:
+            keys = keys()
+        except:
+            pass
+        self.privkey, self.pubkey = keys
 
     def new_transaction(self, outs, outns):
         """Performs tnx"""
@@ -23,7 +28,7 @@ class Wallet:
         o = 0
         for b in bch:
             for tnx in b.txs:
-                if self.pubkey in tnx.outs:
+                if self.pubkey in tnx.outs and 'mining' not in tnx.outs:
                     o += tnx.outns[tnx.outs.index(self.pubkey)]
                     froms.append(tnx.index)
                     if o >= out:
@@ -46,3 +51,10 @@ class Wallet:
     def act(self):
         if bch[-1].is_full:
             bch.append(mining.mine(bch))
+
+    def __str__(self):
+        return json.dumps((self.privkey, self.pubkey))
+
+    @classmethod
+    def from_json(cls, st):
+        return cls(json.loads(st))
