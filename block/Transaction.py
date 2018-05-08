@@ -2,6 +2,30 @@ import json
 import cryptogr as cg
 from itertools import chain
 import time
+from collections import Counter
+
+
+def indexmany(a, k):
+    return [i for i, e in enumerate(a) if e == k]
+
+
+def rm_dubl_from_outs(outs, outns):
+    outs = list(outs)
+    outns = list(outns)
+    newouts = []
+    newoutns = []
+    c = dict(Counter(outs))
+    for o in c:
+        if c[o] > 1:
+            newouts.append(o)
+            outn = 0
+            for i in indexmany(outs, o):
+                outn += outns[i]
+            newoutns.append(outn)
+        else:
+            newouts.append(o)
+            newoutns.append(outns[outs.index(o)])
+    return newouts, newoutns
 
 
 def is_first_tnx_valid(tnx, bch):
@@ -112,11 +136,12 @@ class Transaction:
 
     def spent(self, bch, exc=[]):
         """Is transaction used by other transaction"""
-        spent = [False] * len(self.outs)
+        outs, outns = rm_dubl_from_outs(self.outs, self.outns)
+        spent = [False] * len(outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs[1:]:
                 if list(self.index) in list(tnx.froms) and 'mining' not in tnx.outs and tnx.index not in exc:
-                    spent[self.outs.index(tnx.author)] = True
+                    spent[outs.index(tnx.author)] = True
         return spent
 
     def update(self):
