@@ -10,8 +10,6 @@ def indexmany(a, k):
 
 
 def rm_dubl_from_outs(outs, outns):
-    outs = list(outs)
-    outns = list(outns)
     newouts = []
     newoutns = []
     c = dict(Counter(outs))
@@ -38,20 +36,25 @@ def is_first_tnx_valid(tnx, bch):
 
 def is_tnx_money_valid(self, bch):
     inp = 0
+    for o in self.outns:
+        if round(o, 10) != o:
+            return False
     for t in self.froms:  # how much money are available
         try:
             tnx = bch[int(t[0])].txs[int(t[1])]
-            if not tnx.is_valid:
-                print(self.index, 'is not valid: from is not valid')
+            clean_outs = rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)
+            is_first = t[0] == 0 and t[1] == 0
+            if not tnx.is_valid and not is_first:
+                print(self.index, 'is not valid: from(', tnx.index, ') is not valid')
                 return False
             if 'mining' in tnx.outs:
                 return False
-            if tnx.spent(bch, [self.index])[[bch.pubkey_by_nick(t) for t in tnx.outs].index(bch.pubkey_by_nick(self.author))]:
-                print(self.index, 'is not valid: from is not valid')
+            if tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
+                print(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
                 return False
-            inp = inp + tnx.outns[[bch.pubkey_by_nick(t) for t in tnx.outs].index(bch.pubkey_by_nick(self.author))]
-        except:
-            print(self.index, 'is not valid: exception')
+            inp = inp + clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
+        except Exception as e:
+            print(self.index, 'is not valid: exception:', e)
             return False
     o = 0
     for n in self.outns:  # all money must be spent
@@ -91,16 +94,20 @@ class Transaction:
             self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
         except TypeError:
             self.gen(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6])
+        for i in range(len(self.outns)):
+            self.outns[i] = round(self.outns[i], 10)
         self.update()
         return self
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
-        self.froms = froms  # input transactions
-        self.outs = outs  # номера кошельков-адресатов
-        self.outns = outns  # количество денег на каждый кошелек-адресат
-        self.author = author  # тот, кто проводит транзакцию
+        self.froms = froms  # transactions to get money from
+        self.outs = outs  # destinations
+        self.outns = outns  # values of money on each destination
+        self.author = author
         self.index = list(index)
         self.timestamp = time.time() if t == 'now' else t
+        for i in range(len(self.outns)):
+            self.outns[i] = round(self.outns[i], 10)
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
         self.hash = self.update()

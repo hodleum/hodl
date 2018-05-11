@@ -33,7 +33,7 @@ def is_pow_miner_valid(bch, miner):
 
 
 def mining_delta_t(bch_len):
-    return 5    # int(((0.005*bch_len)**0.95)/30+5)
+    return 300    # int(((0.005*bch_len)**0.95)/30+5)
 
 
 def pow_mining(bch, b):

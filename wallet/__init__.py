@@ -20,19 +20,21 @@ class Wallet:
     def new_transaction(self, outs, outns):
         """Performs tnx"""
         out = 0
-        for outn in outns:
-            out += outn
+        for i in range(len(outns)):
+            outns[i] = round(outns[i], 10)
+            out += outns[i]
         if out > bch.money(self.pubkey):
             return False
         froms = []
         o = 0
-        for b in bch:
-            for tnx in b.txs:
-                if self.pubkey in tnx.outs and 'mining' not in tnx.outs:
-                    o += tnx.outns[tnx.outs.index(self.pubkey)]
-                    froms.append(tnx.index)
-                    if o >= out:
-                        break
+        for i in range(len(bch)):
+            for tnx in bch[i].txs:
+                if self.pubkey in [bch.pubkey_by_nick(out) for out in tnx.outs] and 'mining' not in tnx.outs:
+                    if not tnx.spent(bch)[block.rm_dubl_from_outs(tnx.outs, tnx.outns)[0].index(self.pubkey)]:
+                        o += block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[1][block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[0].index(self.pubkey)]
+                        froms.append(tnx.index)
+                        if o >= out:
+                            break
             if o >= out:
                 break
         if o != out:
