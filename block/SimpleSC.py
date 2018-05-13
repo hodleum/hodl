@@ -1,6 +1,7 @@
 import json
 import time
 import cryptogr as cg
+from block.Smart_contract import Smart_contract
 
 
 allowed_imports = []
