@@ -188,10 +188,12 @@ def pok_validate(bch, n):
 
 def poc_mining(b, bch):
     """Proof-of-calcing new block processing"""
+    # todo
     return b
 
 
 def poc_validate(bch, n):
+    # todo
     return True
 
 
