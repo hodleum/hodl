@@ -29,3 +29,9 @@ class SimpleSC(Smart_contract):
                     if not is_allowed_import(self.code[i+6:]):
                         return False
         return True
+
+    def execute(self):
+        exec(self.code)
+
+    def is_valid(self, bch):
+        return self.check() and super().is_valid(bch)
