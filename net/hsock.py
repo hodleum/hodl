@@ -1,6 +1,7 @@
 from socket import socket
 import multiprocessing
 import json
+import time
 
 
 class HSock:
@@ -51,3 +52,23 @@ class HSock:
         """
         self.conn.close()
         self.l.terminate()
+
+    def listen_msg(self, delt=0.05):
+        l = len(self.in_msgs)
+        while True:
+            time.sleep(delt)
+            if len(self.in_msgs) > l:
+                return self.in_msgs[-1]
+
+
+def listen():
+    sock = socket()
+    sock.bind(('', 5000))
+    sock.listen(1)
+    conn, addr = sock.accept()
+    data = b''
+    while True:
+        p = conn.recv(1024)
+        data += p
+        if not p:
+            break
