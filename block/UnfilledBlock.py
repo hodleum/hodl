@@ -8,6 +8,7 @@ class UnfilledBlock:
     UnfilledBlock
     It is class for part of the block, for example this block can store not all transactions,
     not all smart contracts etc
+    Unfilled block shouldn't be last, because hash cannot be recalculated.
     """
     def __init__(self, n=0, creators=[], bch=[], txs=[], contracts=[], pow_timestamp='now', t='now'):
         self.n = n
@@ -25,10 +26,8 @@ class UnfilledBlock:
         self.update()
 
     def update(self):
-        """Updates hash"""
-        h = ''.join([str(self.prevhash)] + [str(self.powhash)] + [str(t.hash) for t in self.txs] +
-                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers])
-        self.h = cg.h(str(h))
+        """Updates hash. Pass because only unfilled block is only for unchangeable blocks"""
+        pass
 
     def __str__(self):
         s = ''

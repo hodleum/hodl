@@ -5,6 +5,8 @@ from block.Smart_contract import Smart_contract
 
 
 allowed_imports = []
+
+
 def is_allowed_import(c):
     v = False
     for i in allowed_imports:
