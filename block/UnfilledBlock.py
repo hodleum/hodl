@@ -50,3 +50,8 @@ class UnfilledBlock:
 
     def is_unfilled(self):
         return True
+
+    def get_tnx(self, ind):
+        for tnx in self.txs:
+            if tnx.index[1] == ind:
+                return tnx
