@@ -44,3 +44,9 @@ class UnfilledBlock:
         except IndexError:
             h = ''.join([str(self.pow_timestamp), str(self.n)])
         return cg.h(str(h))
+
+    def is_valid(self):
+        return True
+
+    def is_unfilled(self):
+        return True

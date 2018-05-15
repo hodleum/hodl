@@ -88,10 +88,11 @@ class Blockchain:
 
     def is_valid(self):
         """Returns validness of the whole chain"""
-        for i, b in enumerate(self[1:]):
-            if not b.is_valid(self):
-                print('block not valid:', i + 1)
-                return False
+        for i in range(1, len(self)):
+            if not self[i].is_unfilled():
+                if not self[i].is_valid(self):
+                    print('block not valid:', i + 1)
+                    return False
         return True
 
     def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):

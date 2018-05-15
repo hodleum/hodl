@@ -135,3 +135,12 @@ class Block:
         self.txs = [t0] + [t[2] for t in ts]
         for i in range(len(self.txs)):
             self.txs[i].index[1] = i
+
+    def is_unfilled(self):
+        return False
+
+    def make_unfilled(self, important_wallets=[]):
+        txs = [self.txs[0]]
+        for tnx in self.txs:
+            if tnx.author in important_wallets or not set(important_wallets).isdisjoint(set(tnx.outs)):
+                txs.append(tnx)
