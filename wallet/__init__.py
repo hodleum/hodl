@@ -63,4 +63,4 @@ def new_wallet():
 
 
 def sync_loop():
-    loop([w.privkey, w.pubkey for w in wallets])
+    loop([[w.privkey, w.pubkey] for w in wallets])

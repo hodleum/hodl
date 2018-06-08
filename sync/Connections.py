@@ -6,7 +6,7 @@ import socket
 import multiprocessing
 import block
 import cryptogr as cg
-from sync.hsock import HSock
+from net.hsock import HSock
 
 
 global bch
