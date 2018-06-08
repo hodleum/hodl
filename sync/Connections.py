@@ -4,9 +4,9 @@ Here are classes InputConnection and Connection. They defines communication betw
 import json
 import socket
 import multiprocessing
-from . import block
+import block
 import cryptogr as cg
-from net.hsock import HSock
+from sync.hsock import HSock
 
 
 global bch

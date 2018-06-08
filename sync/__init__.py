@@ -6,13 +6,9 @@ The second user sends delta between their blockchains' lengths, and if his block
 The first user sends blocks if his blockchain is longer.
 User checks blocks he accepted by getting the same blocks from other users (get_many_blocks), and if |delta|>1000, gets missing blocks
 """
-import block
-import socket
-import multiprocessing
-import json
 import logging as log
-from net.Peers import *
-from net.Connections import *
+from net.Peers import Peers
+from sync.Connections import *
 
 
 global peers
@@ -33,29 +29,29 @@ def get_block(index):
     # todo
 
 
-def listen_loop(privkey, pubkey, port=default_port):
+def listen_loop(keys, port=default_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('', port))
     sock.listen(1)
     conn, addr = sock.accept()
-    conns.append(InputConnection(conn, privkey, pubkey))
+    conns.append(InputConnection(conn, keys))
 
 
-def send_loop(privkey, pubkey):
+def send_loop(keys):
     while True:
         for peer in list(peers):
             try:
-                conns.append(Connection(peer[0], peer[1], privkey, pubkey))
+                conns.append(Connection(peer, keys, peers))
             except:
                 peers.remove(peer)
 
 
-def loop(privkey, pubkey, port=default_port):
+def loop(keys, port=default_port):
     name = 'Alice'
     log.basicConfig(filename='/home/python/hodl/'+name+'.log', level=log.DEBUG)	 
-    proc = multiprocessing.Process(target=listen_loop, args=(privkey, pubkey, port))
+    proc = multiprocessing.Process(target=listen_loop, args=(keys, port))
     log.debug('test1')
     proc.start()
     log.debug('test1')
     proc.join()
-    send_loop(privkey, pubkey)
+    send_loop(keys)

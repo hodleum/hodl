@@ -1,5 +1,5 @@
 import cryptogr as cg
-import net
+from sync import loop
 import block
 import mining
 import time
@@ -7,6 +7,7 @@ import json
 
 
 bch = block.Blockchain()
+wallets = []
 
 
 class Wallet:
@@ -45,11 +46,6 @@ class Wallet:
     def my_money(self):
         return bch.money(self.pubkey)
 
-    def listen_in_thread(self):
-        while True:
-            mess = net.listen(bch)
-            net.handle_mess(bch, mess[0], mess[1])
-
     def act(self):
         if bch[-1].is_full:
             bch.append(mining.mine(bch))
@@ -60,3 +56,11 @@ class Wallet:
     @classmethod
     def from_json(cls, st):
         return cls(json.loads(st))
+
+
+def new_wallet():
+    wallets.append(Wallet())
+
+
+def sync_loop():
+    loop([w.privkey, w.pubkey for w in wallets])
