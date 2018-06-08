@@ -30,6 +30,7 @@ class Block:
         self.prevhash = get_prevhash(bch, creators)
         self.timestamp = get_timestamp(t)
         self.pow_timestamp = pow_timestamp
+        self.is_unfilled = False
         tnx0 = Transaction()
         tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), b'mining', '', self.pow_timestamp)
         self.txs = [tnx0] + txs
@@ -135,9 +136,6 @@ class Block:
         self.txs = [t0] + [t[2] for t in ts]
         for i in range(len(self.txs)):
             self.txs[i].index[1] = i
-
-    def is_unfilled(self):
-        return False
 
     def make_unfilled(self, important_wallets=[]):
         txs = [self.txs[0]]

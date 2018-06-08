@@ -27,6 +27,7 @@ from block.UnfilledBlock import UnfilledBlock
 from block.SimpleSC import SimpleSC
 
 minerfee = 1
+#__all__ = ['Blockchain', 'Block', 'UnfilledBlock', 'SimpleSC', 'Smart_contract', 'Transaction']
 
 
 class Blockchain:
@@ -89,7 +90,7 @@ class Blockchain:
     def is_valid(self):
         """Returns validness of the whole chain"""
         for i in range(1, len(self)):
-            if not self[i].is_unfilled():
+            if not self[i].is_unfilled:
                 if not self[i].is_valid(self):
                     print('block not valid:', i + 1)
                     return False
@@ -143,6 +144,12 @@ class Blockchain:
             key += len(self)
         self.c.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
         self.conn.commit()
+
+    def get_block(self, i):
+        if not self[i].is_unfilled:
+            return self[i]
+        else:
+            pass # todo
 
     def add_miner(self, miner):
         """add proof-of-work miner

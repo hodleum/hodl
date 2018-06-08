@@ -3,7 +3,7 @@ import cryptogr as cg
 from itertools import chain
 import time
 from collections import Counter
-import net
+#import net
 
 
 def indexmany(a, k):
@@ -48,7 +48,7 @@ def is_tnx_money_valid(self, bch):
                 if bch[int(t[0])].get_tnx(int(t[1])):
                     tnx = bch[int(t[0])].get_tnx(int(t[1]))
                 else:
-                    tnx = net.get_block(int(t[0])).txs[int(t[1])]
+                    tnx = bch.get_block(int(t[0])).txs[int(t[1])]
             clean_outs = rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)
             is_first = t[0] == 0 and t[1] == 0
             if not tnx.is_valid and not is_first:

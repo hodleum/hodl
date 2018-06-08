@@ -21,6 +21,7 @@ class UnfilledBlock:
         self.contracts = contracts
         self.creators = creators
         self.powminers = []
+        self.is_unfilled = True
         self.powhash = 0
         self.powhash = self.calc_pow_hash()
         self.update()
@@ -48,10 +49,16 @@ class UnfilledBlock:
     def is_valid(self):
         return True
 
-    def is_unfilled(self):
-        return True
-
     def get_tnx(self, ind):
         for tnx in self.txs:
             if tnx.index[1] == ind:
                 return tnx
+        else:
+            pass   # todo
+
+    def get_sc(self, ind):
+        for sc in self.contracts:
+            if sc.index[1] == ind:
+                return sc
+        else:
+            pass   # todo
