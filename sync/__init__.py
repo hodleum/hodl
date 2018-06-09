@@ -8,6 +8,7 @@ User checks blocks he accepted by getting the same blocks from other users (get_
 """
 import logging as log
 from net.Peers import Peers, Peer
+import net
 from sync.Connections import *
 
 
@@ -29,29 +30,26 @@ def get_block(index):
     # todo
 
 
-def listen_loop(keys, port=default_port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('', port))
-    sock.listen(1)
-    conn, addr = sock.accept()
-    conns.append(InputConnection(conn, keys))
+def listen_loop(keys, log=None):
+    while True:
+        sock = net.listen()
+        if log:
+            log.debug('input connection in listen loop')
+        conns.append(InputConnection(sock, keys, log=log))
 
 
-def send_loop(keys):
+def send_loop(keys, log=None):
     while True:
         for peer in list(peers):
             try:
-                conns.append(Connection(peer, keys, peers))
+                conns.append(Connection(peer, keys, peers, log=log))
             except:
                 peers.remove(peer)
 
 
-def loop(keys, port=default_port):
+def loop(keys, port=default_port, log=None):
     name = 'Alice'
-    log.basicConfig(filename='/home/python/hodl/'+name+'.log', level=log.DEBUG)	 
-    proc = multiprocessing.Process(target=listen_loop, args=(keys, port))
-    log.debug('test1')
+    proc = multiprocessing.Process(target=listen_loop, args=(keys, log))
     proc.start()
-    log.debug('test1')
     proc.join()
     send_loop(keys)

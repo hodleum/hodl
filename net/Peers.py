@@ -60,6 +60,7 @@ class Peer:
         self = cls(s[0], s[1][0], s[1][1])
         return self
 
+
 class Peers(set):
     """
     Class for storing peers.

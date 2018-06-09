@@ -42,7 +42,7 @@ if name == 'Dave':
     port = 5004
 with open('tests/genblock.bl', 'r') as f:
     bch.append(block.Block.from_json(f.readline()))
-loop = multiprocessing.Process(target=sync.loop, args=(my_keys, port))
+loop = multiprocessing.Process(target=sync.loop, args=(my_keys, port, log))
 loop.start()
 log.debug('loop started; len(bch): '+str(len(bch))+', len(bch[0]): '+str(len(bch[0].txs)))
 if name == 'Alice':

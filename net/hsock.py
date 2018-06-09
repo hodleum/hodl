@@ -1,6 +1,8 @@
 from socket import socket
 import multiprocessing
 import time
+from net.Peers import Peers
+import cryptogr
 
 
 class HSock:
@@ -8,28 +10,34 @@ class HSock:
     HODL socket:
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
-    def __init__(self, addr, myaddrs):
-        peer = peers.srchbyaddr(addr)
-        if peer.is_white(myaddrs):
-            # create self.sock, self.conn
-            self.white_peer = True
+    def __init__(self, sock=None, conn=None, addr='', myaddrs=[], peers=Peers()):
+        if not (sock and conn):
+            peer = peers.srchbyaddr(addr)
+            if peer.is_white(myaddrs):
+                # create self.sock, self.conn
+                # todo
+                pass
+            else:
+                # todo
+                # create connection (self.conn) between this device and white peer, which connects to this peer.
+                # Generate RSA keys.
+                pass
         else:
-            # todo
-            # create connection (self.conn) between this device and white peer, which connects to this peer.
-            # Generate RSA keys.
-            self.white_peer = False
+            self.sock = sock
+            self.conn = conn
         self.in_msgs = []
         # start listen as daemon (using multiprocessing) and put messages to self.in_msgs
         self.l = multiprocessing.Process(target=self.listen)
         self.l.start()
         self.l.join()
 
+    @classmethod
+    def input(cls, sock, conn):
+        self = cls(sock=sock, conn=conn)
+
     def send(self, data):
-        if self.white_peer:
-            self.conn.send(data.encode())
-        else:
-            # encrypt with RSA and send using self.conn
-            pass
+        # todo: encode data using RSA
+        self.conn.send(data.encode())
 
     def listen(self):
         """
@@ -65,9 +73,4 @@ def listen():
     sock.bind(('', 5000))
     sock.listen(1)
     conn, addr = sock.accept()
-    data = b''
-    while True:
-        p = conn.recv(1024)
-        data += p
-        if not p:
-            break
+    return HSock.input(sock, conn)
