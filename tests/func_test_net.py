@@ -41,16 +41,16 @@ if name == 'Dave':
                              sync.Peer(keys['Alice'][1], 'localhost', 5001)])
     port = 5004
 with open('tests/genblock.bl', 'r') as f:
-    bch[0] = block.Block.from_json(f.readline())
+    bch.append(block.Block.from_json(f.readline()))
 loop = multiprocessing.Process(target=sync.loop, args=(my_keys, port))
 loop.start()
-log.debug('loop started')
-loop.join()
-log.debug('loop joined')
+log.debug('loop started; len(bch): '+str(len(bch))+', len(bch[0]): '+str(len(bch[0].txs)))
 if name == 'Alice':
     bch.new_transaction(my_keys[1], [0, 0], [keys['Bob']], [1], privkey=my_keys[0])
     log.debug('tnx created')
+log.debug('st2; len(bch): '+str(len(bch))+', len(bch[0]): '+str(len(bch[0].txs)))
 time.sleep(2)
-log.debug('slept')
+log.debug('slept; len(bch): '+str(len(bch))+', len(bch[0]): '+str(len(bch[0].txs)))
 if name == 'Bob':
     bch.append(block.Block())
+log.debug('fin; len(bch): '+str(len(bch))+', len(bch[0]): '+str(len(bch[0].txs)))

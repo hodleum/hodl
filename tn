@@ -1,0 +1,8 @@
+echo "Alice:"
+cat Alice.log
+echo "Bob:"
+cat Bob.log
+echo "Chuck:"
+cat Chuck.log
+rm -rf *.log
+docker kill $(docker container ls -q)
