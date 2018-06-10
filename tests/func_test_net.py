@@ -2,7 +2,7 @@ import os
 import json
 import multiprocessing
 import logging as log
-import net
+from net import hsock
 from net.Peers import Peer, Peers
 
 
@@ -31,3 +31,12 @@ if name == 'Dave':
                              Peer(keys['Chuck'][1], 'localhost', 5003),
                              Peer(keys['Alice'][1], 'localhost', 5001)])
     port = 5004
+
+try:
+    if name == 'Bob':
+        log.debug('listen')
+        s = hsock.listen()
+    elif name == 'Alice':
+        s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
+except Exception as e:
+    log.debug('exception: ' + str(e))
