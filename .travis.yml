@@ -1,0 +1,16 @@
+language: python
+python: 3.6
+sudo: required
+services: docker
+before_install: 
+    - "mkdir tmp"
+    - "chmod +x install.sh"
+    - "./install.sh"
+script: "python3 -m tests.func_wallet_test"
+notifications:
+webhooks:
+urls:
+    - https://integrations.bonbotics.io/travis/webhook/sOjyWg9ZB2dxRyJTazGE6CgIQpQQWCpga2VO8tIPbfU
+on_success: always
+on_failure: always
+on_start: never
