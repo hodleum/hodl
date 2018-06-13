@@ -7,9 +7,9 @@ before_install:
     - "./install.sh"
 script: "python3 -m tests.func_wallet_test"
 notifications:
-webhooks:
-urls:
-    - https://integrations.bonbotics.io/travis/webhook/sOjyWg9ZB2dxRyJTazGE6CgIQpQQWCpga2VO8tIPbfU
-on_success: always
-on_failure: always
-on_start: never
+   webhooks:
+     urls:
+       - https://integrations.bonbotics.io/travis/webhook/sOjyWg9ZB2dxRyJTazGE6CgIQpQQWCpga2VO8tIPbfU
+     on_success: always
+     on_failure: always
+     on_start: never
