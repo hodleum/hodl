@@ -3,7 +3,6 @@ python: 3.6
 sudo: required
 services: docker
 before_install: 
-    - "mkdir tmp"
     - "chmod +x install.sh"
     - "./install.sh"
 script: "python3 -m tests.func_wallet_test"
