@@ -2,6 +2,7 @@ import json
 from socket import socket
 import random
 import cryptogr as cg
+from .Connections import Proto
 
 
 class Peer:
@@ -20,20 +21,15 @@ class Peer:
         :param myaddrs: list
         :return: is_valid: bool
         """
-        sock = socket()
+        sock = Proto(socket())
         try:
             sock.connect(self.netaddr)
             mess = {'request': ['peercheck', random.randint(0, 10000)]}
             mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
-            sock.send(json.dumps(mess).encode())
+            sock.send(mess)
             sock.listen(1)
-            conn = sock.accept()[0]
-            data = b''
-            while True:
-                p = conn.recv(1024)
-                data += p
-                if not p:
-                    break
+            conn = Proto(sock.accept()[0])
+            data = conn.recv()
             h = cg.h(data.decode('utf-8'))
             data = json.loads(data.decode('utf-8'))
             pubkeys = data['pubkeys']
@@ -43,7 +39,7 @@ class Peer:
             if self.addr in pubkeys:
                 return True
             return False
-        except:
+        except:  # А можно сказать, какой тут ексепт?? TODO: Too broad exception clause
             return False
 
     def __str__(self):
@@ -59,6 +55,7 @@ class Peer:
         s = json.loads(s)
         self = cls(s[0], s[1][0], s[1][1])
         return self
+
 
 class Peers(set):
     """

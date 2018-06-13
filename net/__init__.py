@@ -6,19 +6,14 @@ The second user sends delta between their blockchains' lengths, and if his block
 The first user sends blocks if his blockchain is longer.
 User checks blocks he accepted by getting the same blocks from other users (get_many_blocks), and if |delta|>1000, gets missing blocks
 """
-import block
-import socket
 import multiprocessing
-import json
 import logging as log
-from net.Peers import *
-from net.Connections import *
+from .Peers import *
+from .Connections import *
 
 
-global peers
 peers = Peers()
 default_port = 7080
-global conns
 conns = []
 
 
@@ -28,10 +23,10 @@ def get_sc_memory(index, start=0, stop=-1):
 
 
 def listen_loop(privkey, pubkey, port=default_port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = Proto(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
     sock.bind(('', port))
     sock.listen(1)
-    conn, addr = sock.accept()
+    conn, _ = sock.accept()
     conns.append(InputConnection(conn, privkey, pubkey))
 
 
@@ -40,7 +35,7 @@ def send_loop(privkey, pubkey):
         for peer in list(peers):
             try:
                 conns.append(Connection(peer[0], peer[1], privkey, pubkey))
-            except:
+            except:  # Тоже, что за except?  TODO: Too broad exception clause
                 peers.remove(peer)
 
 
@@ -53,3 +48,5 @@ def loop(privkey, pubkey, port=default_port):
     log.debug('test1')
     proc.join()
     send_loop(privkey, pubkey)
+    # Прям ну очень не хорошо, по хорошему выносится в отдельный класс и в поток, но трогать пока не буду
+    # TODO: clear __init__.py and move this s... to another file

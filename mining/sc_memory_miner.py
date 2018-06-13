@@ -8,7 +8,7 @@ class Miner:
     def __init__(self, addr):
         self.mining_scs = []
         self.addr = addr
-        self.conn = sqlite3.connect(hash(addr))
+        self.conn = sqlite3.connect(str(hash(addr)))
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (blockind integer, scind integer, n integer, mem text)''')
