@@ -1,0 +1,8 @@
+{
+   structure: {
+       type: "hodl/ip_list",
+       version: 1
+       },
+   nodelist: ["entry.hodleum.org"]
+       
+}
