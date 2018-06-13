@@ -130,6 +130,7 @@ class Transaction:
             if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
                 return False
         elif not self.author[0:2] == 'sc':
+            print("Log VSign: \nSign: {}. \nHash: {}. \nAuthor: {}.")
             if not cg.verify_sign(self.sign, self.hash, self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
