@@ -3,10 +3,10 @@ Here are classes InputConnection and Connection. They defines communication betw
 """
 import json
 import socket
-import multiprocessing
+from threading import Thread
 import block
 import cryptogr as cg
-
+import struct
 
 global bch
 bch = block.Blockchain()
@@ -34,33 +34,73 @@ def get_smart_contracts_mem(ind, start=0, stop=-1):
     pass
 
 
-class Connection:
+class Proto:
+    def __init__(self, conn):
+        self.sock = conn
+
+    def connect(self, addr):
+        self.sock.connect(addr)
+
+    def listen(self, i):
+        self.sock.listen(i)
+
+    def accept(self):
+        return self.sock.accept()
+
+    def close(self):
+        self.sock.close()
+
+    def bind(self, addr):
+        self.sock.bind(addr)
+
+    def recv(self):
+        if not self.sock:
+            return
+
+        chunk = self.sock.recv(4)
+        if len(chunk) < 4:
+            return
+        slen = struct.unpack('>L', chunk)[0]
+        chunk = self.sock.recv(slen)
+        while len(chunk) < slen:
+            chunk = chunk + self.sock.recv(slen - len(chunk))
+        return chunk
+
+    def send(self, record):
+
+        if not self.sock:
+            return
+
+        msg = json.dumps(record).encode('utf-8')
+        slen = struct.pack('>L', len(msg))
+        self.sock.sendall(slen + msg)
+
+
+class Connection(Thread):
     """
     It is an output connection (First user in net's doc).
     """
+
     def __init__(self, ip, port, privkeys, pubkeys):
         self.privkeys = privkeys
         self.pubkeys = pubkeys
-        self.proc = multiprocessing.Process(target=self.connect, args=(ip, port))
-        self.proc.start()
-        self.proc.join()
+
+        self.sock = None
+        self.conn = None
+
+        super().__init__(target=self.connect, args=(ip, port))
 
     def connect(self, ip, port=5000):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = Proto(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         self.sock.connect((ip, port))
         data = {'len(bch)': len(bch), 'lb': str(bch[-1])}
         h = cg.h(json.dumps(data))
-        self.sock.send(json.dumps([data, [[pubkey, list(cg.sign(h, privkey))] for privkey, pubkey in
-                                          zip(self.privkeys, self.pubkeys)]]).encode('utf-8'))
+        self.sock.send([data, [[pubkey, list(cg.sign(h, privkey))] for privkey, pubkey in
+                               zip(self.privkeys, self.pubkeys)]])
         ############
         self.sock.listen(1)
-        self.conn = self.sock.accept()[0]
-        data = b''
-        while True:
-            p = self.conn.recv(1024)
-            data += p
-            if not p:
-                break
+        self.conn = Proto(self.sock.accept()[0])
+        data = self.conn.recv()
         hdata = json.loads(data.decode('utf-8'))
         hdata.pop('pubkeys')
         h = cg.h(json.dumps(hdata))
@@ -71,7 +111,7 @@ class Connection:
                 pubkeys.remove([pubkey, sign])
         if data['delta'] < 0:
             if data['delta'] >= -1000:
-                bch[len(bch)-data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
+                bch[len(bch) - data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                 for b in data['blocks'][1:]:
                     bch.append(b)
             else:
@@ -91,33 +131,29 @@ class Connection:
         mymess = {}
         if mymess['delta'] > 0:
             if mymess['delta'] < 1000:
-                mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
+                mymess['blocks'] = [str(b) for b in bch[len(bch) + mymess['delta'] - 1:]]
             else:
                 mymess['blocks'] = [str(b) for b in bch[-1000:]]
-        self.conn.send(json.dumps(mymess).encode('utf-8'))
+        self.conn.send(mymess)
         self.conn.close()
         return pubkeys
 
 
-class InputConnection:
+class InputConnection(Proto, Thread):
     """
     It is an input connection (Second user in net's doc).
     """
+
     def __init__(self, conn, privkey, pubkey):
         self.privkey = privkey
         self.pubkey = pubkey
-        self.conn = conn
-        self.proc = multiprocessing.Process(target=self.connect)
-        self.proc.start()
-        self.proc.join()
 
-    def connect(self):
-        data = b''
-        while True:
-            p = self.conn.recv(1024)
-            data += p
-            if not p:
-                break
+        super(Proto).__init__(conn)
+        super(Thread).__init__(target=self.connect)
+        self.start()
+
+    def connect(self, *_):
+        data = self.recv()
         hdata = json.loads(data.decode('utf-8'))
         hdata.pop('pubkeys')
         h = cg.h(json.dumps(hdata))
@@ -128,10 +164,10 @@ class InputConnection:
                 pubkeys.remove([pubkey, sign])
         sync = 'len(bch)' in data.keys()
         if sync:
-            mymess = {'delta': data['len(bch)']-len(bch)}
+            mymess = {'delta': data['len(bch)'] - len(bch)}
             if mymess['delta'] < 0:
                 if mymess['delta'] > -1000:
-                    mymess['blocks'] = [str(b) for b in bch[len(bch)+mymess['delta']-1:]]
+                    mymess['blocks'] = [str(b) for b in bch[len(bch) + mymess['delta'] - 1:]]
                 else:
                     mymess['blocks'] = [str(b) for b in bch[-1000:]]
             lb = block.Block.from_json(data['lb'])
@@ -146,19 +182,15 @@ class InputConnection:
             bch[-1] = b
             mymess['lb'] = bch[-1]
         mymess['answer'] = handle_request(data['request'])
-        self.conn.send(json.dumps(mymess).encode('utf-8'))
+        self.send(mymess)
         if sync:
             if mymess['delta'] > 0:
-                data = b''
-                while True:
-                    data += self.conn.recv(1024)
-                    if not data:
-                        break
+                data = self.recv()
                 data = json.loads(data.decode('utf-8'))
                 if data['delta'] < 0:
                     if data['delta'] >= -1000:
                         bch[len(bch) - data['delta'] - 1] = block.Block.from_json(data['blocks'][1])
                         for b in data['blocks'][1:]:
                             bch.append(b)
-        self.conn.close()
+        self.close()
         return pubkeys
