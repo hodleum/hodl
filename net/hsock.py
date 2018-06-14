@@ -1,8 +1,20 @@
 from socket import socket
-import multiprocessing
+from threading import Thread
 import time
 from net.Peers import Peers
 import cryptogr
+import struct
+
+
+def recv(conn):
+    chunk = conn.recv(4)
+    if len(chunk) < 4:
+        return
+    slen = struct.unpack('>L', chunk)[0]
+    chunk = conn.recv(slen)
+    while len(chunk) < slen:
+        chunk += conn.recv(slen - len(chunk))
+    return chunk
 
 
 class HSock:
@@ -23,13 +35,12 @@ class HSock:
                 # Generate RSA keys.
                 pass
         else:
-            self.sock = sock
-            self.conn = conn
+            self.socks = [sock]
+            self.conns = [conn]
         self.in_msgs = []
         # start listen as daemon (using multiprocessing) and put messages to self.in_msgs
-        self.l = multiprocessing.Process(target=self.listen)
+        self.l = Thread(target=self.listen)
         self.l.start()
-        self.l.join()
 
     @classmethod
     def input(cls, sock, conn):
@@ -37,28 +48,30 @@ class HSock:
 
     def send(self, data):
         # todo: encode data using RSA
-        self.conn.send(data.encode())
+        data = struct.pack('>L', len(data)) + data
+        for conn in self.conns:
+            conn.send(data.encode())
 
     def listen(self):
         """
         Listen for new messages and write it to self.in_msgs
         :return:
         """
-        data = b''
-        while True:
-            p = self.conn.recv(1024)
-            if not p:
-                self.in_msgs.append(data.decode())
-                data = b''
-            data += p
+        # todo: decode msg using RSA
+        for conn in self.conns:
+            Thread(target=self.recv_by_conn, args=(conn, )).start()
 
     def close(self):
         """
         Close socket.
         :return:
         """
-        self.conn.close()
-        self.l.terminate()
+        for conn in self.conns:
+            conn.close()
+
+    def recv_by_conn(self, conn):
+        while True:
+            self.in_msgs.append(recv(c))
 
     def listen_msg(self, delt=0.05):
         l = len(self.in_msgs)
