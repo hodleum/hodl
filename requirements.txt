@@ -1,2 +1,2 @@
-pycrypto==3.4.7
+pycrypto==2.6.1
 docker
