@@ -71,7 +71,7 @@ class HSock:
 
     def recv_by_conn(self, conn):
         while True:
-            self.in_msgs.append(recv(c))
+            self.in_msgs.append(recv(conn))
 
     def listen_msg(self, delt=0.05):
         l = len(self.in_msgs)

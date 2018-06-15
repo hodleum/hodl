@@ -7,9 +7,11 @@ import wallet
 
 class TestFunc(unittest.TestCase):
     def test_func(self):
-        my_keys = cg.gen_keys()
+        with open('tests/my_keys', 'r') as f:
+            my_keys = json.loads(f.read())
         my_wallet = wallet.Wallet(my_keys)
-        your_pub_key = cg.gen_keys()[1]
+        with open('tests/your_key', 'r') as f:
+            your_pub_key = json.loads(f.read())
         wallet.bch.clean()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
