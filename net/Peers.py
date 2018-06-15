@@ -4,50 +4,95 @@ import random
 import cryptogr as cg
 
 
+meta = """HODL ver1"""
+
+
+def ats(addr):
+    return addr[0] + ':' + str(addr[1])
+
+
+def afs(addr):
+    return [addr.split(':')[0], int(addr.split(':')[1])]
+
+
 class Peer:
     """
     Class for one peer.
     """
-    def __init__(self, addr, ip, port):
+    def __init__(self, addr, netaddrs):
         self.addr = addr
-        self.netaddr = (ip, port)
+        self.netaddrs = {ats(addr): None for addr in netaddrs}
 
-    def is_white(self, myaddrs):
+    def update(self, myaddrs):
         """
-        Checks
+        Checks whiteness of addresses
         myaddrs is list of this computer's addresses:
         [[private key1, public key1], ...]
         :param myaddrs: list
-        :return: is_valid: bool
         """
-        sock = socket()
-        try:
-            sock.connect(self.netaddr)
-            mess = {'request': ['peercheck', random.randint(0, 10000)]}
-            mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
-            sock.send(json.dumps(mess).encode())
-            sock.listen(1)
-            conn = sock.accept()[0]
-            data = b''
-            while True:
-                p = conn.recv(1024)
-                data += p
-                if not p:
-                    break
-            h = cg.h(data.decode('utf-8'))
-            data = json.loads(data.decode('utf-8'))
-            pubkeys = data['pubkeys']
-            for pubkey, sign in pubkeys:
-                if not cg.verify_sign(sign, h, pubkey):
-                    pubkeys.remove([pubkey, sign])
-            if self.addr in pubkeys:
-                return True
-            return False
-        except:
-            return False
+        for addr in self.netaddrs:
+            try:
+                sock = socket()
+                sock.connect(afs(addr))
+                mess = {'request': ['peercheck', random.randint(0, 10000)]}
+                mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
+                sock.send(json.dumps(mess).encode())
+                sock.listen(1)
+                conn = sock.accept()[0]
+                data = b''
+                while True:
+                    p = conn.recv(1024)
+                    data += p
+                    if not p:
+                        break
+                h = cg.h(data.decode('utf-8'))
+                data = json.loads(data.decode('utf-8'))
+                pubkeys = data['pubkeys']
+                for pubkey, sign in pubkeys:
+                    if not cg.verify_sign(sign, h, pubkey):
+                        pubkeys.remove([pubkey, sign])
+                if self.addr in pubkeys:
+                    self.netaddrs[addr] = True
+                else:
+                    self.netaddrs.pop(addr)
+                self.netaddrs[addr] = False
+            except:
+                self.netaddrs[addr] = False
+
+    def connect(self, peers, log=None):
+        """Generate sockets to all IP addresses for this peer"""
+        if log:
+            log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(self.addr))
+        sockets = []
+        for addr, white in self.netaddrs:
+            if log:
+                log.debug('Peer.connect: connecting to ' + str(addr) + '. Whiteness: ' + str(white))
+            try:
+                if white:
+                    sock = socket()
+                    sock.connect(afs(addr))
+                    sockets.append(sock)
+                else:
+                    sockets.append(peers.white_conn_to(self.addr))
+            except Exception as e:
+                if log:
+                    log.debug('Peer.connect: exception while connecting: ' + str(e))
+        return sockets
+
+    def connect_white(self):
+        sockets = []
+        for addr, white in self.netaddrs:
+            if white:
+                sock = socket()
+                sock.connect(afs(addr))
+                sockets.append(sock)
+        if sockets == []:
+            return
+        else:
+            return sockets
 
     def __str__(self):
-        return json.dumps([self.addr, self.netaddr])
+        return json.dumps([self.addr, self.netaddrs])
 
     @classmethod
     def from_json(cls, s):
@@ -57,7 +102,7 @@ class Peer:
         :return: Peer
         """
         s = json.loads(s)
-        self = cls(s[0], s[1][0], s[1][1])
+        self = cls(s[0], s[1])
         return self
 
 
@@ -99,3 +144,10 @@ class Peers(set):
             if p.addr == addr:
                 return p
         return False
+
+    def white_conn_to(self, to):
+        for peer in self:
+            socks = peer.connect_white()
+            if socks:
+                socks[0].send(json.dumps([meta, to]))
+                return socks[0]

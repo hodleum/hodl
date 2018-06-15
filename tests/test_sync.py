@@ -4,7 +4,7 @@ import multiprocessing
 import time
 import logging as log
 import block
-import net
+from net.Peers import Peer, Peers
 import sync
 
 
@@ -21,25 +21,26 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 if name == 'Alice':
-    sync.peers = sync.Peers([sync.Peer(keys['Bob'][1], 'localhost', 5002),
-                             sync.Peer(keys['Chuck'][1], 'localhost', 5003),
-                             sync.Peer(keys['Dave'][1], 'localhost', 5004)])
+    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
+                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
+                             Peer(keys['Dave'][1], [('localhost', 5004)])])
     port = 5001
 if name == 'Bob':
-    sync.peers = sync.Peers([sync.Peer(keys['Alice'][1], 'localhost', 5001),
-                             sync.Peer(keys['Chuck'][1], 'localhost', 5003),
-                             sync.Peer(keys['Dave'][1], 'localhost', 5004)])
+    peers = Peers([Peer(keys['Alice'][1], [('localhost', 5001)]),
+                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
+                             Peer(keys['Dave'][1], [('localhost', 5004)])])
     port = 5002
 if name == 'Chuck':
-    sync.peers = sync.Peers([sync.Peer(keys['Bob'][1], 'localhost', 5002),
-                             sync.Peer(keys['Alice'][1], 'localhost', 5001),
-                             sync.Peer(keys['Dave'][1], 'localhost', 5004)])
+    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
+                             Peer(keys['Alice'][1], [('localhost', 5001)]),
+                             Peer(keys['Dave'][1], [('localhost', 5004)])])
     port = 5003
 if name == 'Dave':
-    sync.peers = sync.Peers([sync.Peer(keys['Bob'][1], 'localhost', 5002),
-                             sync.Peer(keys['Chuck'][1], 'localhost', 5003),
-                             sync.Peer(keys['Alice'][1], 'localhost', 5001)])
+    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
+                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
+                             Peer(keys['Alice'][1], [('localhost', 5001)])])
     port = 5004
+
 with open('tests/genblock.bl', 'r') as f:
     bch.append(block.Block.from_json(f.readline()))
 loop = multiprocessing.Process(target=sync.loop, args=(my_keys, port, log))

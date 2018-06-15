@@ -12,10 +12,8 @@ import net
 from sync.Connections import *
 
 
-global peers
 peers = Peers()
 default_port = 7080
-global conns
 conns = []
 
 
@@ -34,12 +32,13 @@ def listen_loop(keys, log=None):
     while True:
         sock = net.listen()
         if log:
-            log.debug('input connection in listen loop')
+            log.debug('net.listen_loop: input connection in listen loop')
         conns.append(InputConnection(sock, keys, log=log))
 
 
 def send_loop(keys, log=None):
     while True:
+        log.debug('net.send_loop')
         for peer in list(peers):
             try:
                 conns.append(Connection(peer, keys, peers, log=log))
@@ -48,8 +47,13 @@ def send_loop(keys, log=None):
 
 
 def loop(keys, port=default_port, log=None):
-    name = 'Alice'
+    if log:
+        log.debug('net.loop')
     proc = multiprocessing.Process(target=listen_loop, args=(keys, log))
     proc.start()
     proc.join()
-    send_loop(keys)
+    if log:
+        log.debug('net.loop: started listen_loop')
+    send_loop(keys, log=log)
+    if log:
+        log.debug('net.loop: started send_loop')
