@@ -33,12 +33,10 @@ if name == 'Dave':
     port = 5004
 
 peers.update([keys['Alice']], log=log)
-try:
-    if name == 'Bob':
+if name == 'Bob':
+    while True:
         log.debug('listen')
         s = hsock.listen()
-    elif name == 'Alice':
-        log.debug('creating HSock')
-        s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers, log=log)
-except Exception as e:
-    log.debug('exception: ' + str(e))
+elif name == 'Alice':
+    log.debug('creating HSock')
+    s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers, log=log)

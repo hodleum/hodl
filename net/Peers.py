@@ -68,7 +68,7 @@ class Peer:
         if log:
             log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(self.addr))
         sockets = []
-        for addr, white in self.netaddrs:
+        for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
             if log:
                 log.debug('Peer.connect: connecting to ' + str(addr) + '. Whiteness: ' + str(white))
             try:
@@ -85,7 +85,7 @@ class Peer:
 
     def connect_white(self):
         sockets = []
-        for addr, white in self.netaddrs:
+        for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
             if white:
                 sock = socket()
                 sock.connect(afs(addr))

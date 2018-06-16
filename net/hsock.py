@@ -55,7 +55,8 @@ class HSock:
         """
         # todo: decode msg using RSA
         for sock in self.socks:
-            Thread(target=self.recv_by_sock, args=(sock, )).start()
+            if sock:
+                Thread(target=self.recv_by_sock, args=(sock, )).start()
 
     def close(self):
         """
