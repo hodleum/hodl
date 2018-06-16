@@ -5,11 +5,9 @@ services: docker
 before_install: 
     - "chmod +x install.sh"
     - "./install.sh"
-script: "python3 -m tests.func_wallet_test; ./net_test.sh; echo Alice; cat Alice.log; echo Bob; cat Bob.log;"
-notifications:
-   webhooks:
-     urls:
-       - https://integrations.bonbotics.io/travis/webhook/sOjyWg9ZB2dxRyJTazGE6CgIQpQQWCpga2VO8tIPbfU
-     on_success: always
-     on_failure: alwayshttps://camo.githubusercontent.com/33cb85bab89db6989e5290bd7f27a0367ba49fb4/68747470733a2f2f7472617669732d63692e6f72672f686f646c65756d2f686f646c2e7376673f6272616e63683d6d6173746572
-     on_start: never
+jobs:
+  include:
+    - stage: Wallet test
+    - script: python3 -m tests.func_wallet_test
+    - stage: Network test
+    - script: ./net_test.sh
