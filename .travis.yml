@@ -5,9 +5,10 @@ services: docker
 before_install: 
     - "chmod +x install.sh"
     - "./install.sh"
+    
 jobs:
   include:
     - stage: Wallet test
-    - script: python3 -m tests.func_wallet_test
+      script: python3 -m tests.func_wallet_test
     - stage: Network test
-    - script: ./net_test.sh
+      script: ./net_test.sh
