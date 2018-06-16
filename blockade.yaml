@@ -1,0 +1,15 @@
+containers:
+    c1:
+        image: hodl-container
+        command: /bin/myapp
+        volumes:
+            "hodl": "/home/hodl"
+        expose: [80]
+        environment:
+            "name": "Alice"
+        ports:
+            5000: 5001
+
+                                                                                                                                                                        network:
+  flaky: 30%
+  slow: 75ms 100ms distribution normal

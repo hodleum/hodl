@@ -12,24 +12,24 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 if name == 'Alice':
-    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
-                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
-                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
+                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
+                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
     port = 5001
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('192.169.200.200', 5001)]),
-                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
-                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
+    peers = Peers([Peer(keys['Alice'][1], [('192.168.200.200', 5001)]),
+                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
+                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
     port = 5002
 if name == 'Chuck':
-    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
-                             Peer(keys['Alice'][1], [('192.169.200.200', 5001)]),
-                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
+                             Peer(keys['Alice'][1], [('192.168.200.200', 5001)]),
+                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
     port = 5003
 if name == 'Dave':
-    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
-                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
-                             Peer(keys['Alice'][1], [('192.169.200.200', 5001)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
+                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
+                             Peer(keys['Alice'][1], [('192.168.200.200', 5001)])])
     port = 5004
 
 peers.update([keys['Alice']], log=log)
