@@ -135,7 +135,7 @@ class Transaction:
             print("Log TypeSign: \nSign: {}. \nHash: {}. \nAuthor: {}.".format(type(self.sign), type(self.hash),
                                                                                type(self.author)))
             sign_bytes = bytes(self.sign)
-            if not cg.verify_sign(sign_bytes.encode(), self.hash, self.author):
+            if not cg.verify_sign(sign_bytes.decode(encoding="utf8"), self.hash, self.author):
                 print(self.index, 'is not valid: sign is wrong')
                 return False
         else:
