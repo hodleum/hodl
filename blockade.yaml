@@ -1,15 +1,25 @@
 containers:
     c1:
         image: hodl-container
-        command: /bin/myapp
+        command: python3 func_test_net.py
         volumes:
             "hodl": "/home/hodl"
         expose: [80]
         environment:
-            "name": "Alice"
+            "HODL_NAME": "Alice"
         ports:
             5000: 5001
+    c2:
+        image: hodl-container
+        command: python3 func_test_net.py
+        volumes:
+            "hodl": "/home/hodl"
+        expose: [80]
+        environment:
+            "HODL_NAME": "Alice"
+        ports:
+            5000: 5002
 
                                                                                                                                                                         network:
-  flaky: 30%
+  flaky: 0%
   slow: 75ms 100ms distribution normal
