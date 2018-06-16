@@ -2,6 +2,7 @@ import os
 import json
 import multiprocessing
 import logging as log
+import time
 from net import hsock
 from net.Peers import Peer, Peers
 
@@ -12,26 +13,24 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 if name == 'Alice':
-    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
-                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
-                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
-    port = 5001
+    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.2', 5000)]),
+                             Peer(keys['Chuck'][1], [('172.19.0.3', 5000)]),
+                             Peer(keys['Dave'][1], [('172.19.0.4', 5000)])])
+    time.sleep(2)
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('192.168.200.200', 5001)]),
-                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
-                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
-    port = 5002
+    peers = Peers([Peer(keys['Alice'][1], [('172.19.0.1', 5000)]),
+                             Peer(keys['Chuck'][1], [('172.19.0.3', 5000)]),
+                             Peer(keys['Dave'][1], [('172.19.0.4', 5000)])])
 if name == 'Chuck':
-    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
-                             Peer(keys['Alice'][1], [('192.168.200.200', 5001)]),
-                             Peer(keys['Dave'][1], [('192.168.200.200', 5004)])])
-    port = 5003
+    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.2', 5000)]),
+                             Peer(keys['Alice'][1], [('172.19.0.1', 5000)]),
+                             Peer(keys['Dave'][1], [('172.19.0.4', 5000)])])
 if name == 'Dave':
-    peers = Peers([Peer(keys['Bob'][1], [('192.168.200.200', 5002)]),
-                             Peer(keys['Chuck'][1], [('192.168.200.200', 5003)]),
-                             Peer(keys['Alice'][1], [('192.168.200.200', 5001)])])
-    port = 5004
-
+    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.2', 5000)]),
+                             Peer(keys['Chuck'][1], [('172.19.0.3', 5000)]),
+                             Peer(keys['Alice'][1], [('172.19.0.1', 5000)])])
+port = 5000
+log.debug(os.popen('ifconfig').read())
 peers.update([keys['Alice']], log=log)
 if name == 'Bob':
     for i in range(20):
