@@ -5,6 +5,7 @@ services: docker
 before_install: 
     - "chmod +x install.sh"
     - "./install.sh"
+    - sudo echo "192.169.200.200 localhost" >> /etc/hosts
 script: "python3 -m tests.func_wallet_test; ./net_test.sh; echo Alice; cat Alice.log; echo Bob; cat Bob.log;"
 notifications:
    webhooks:

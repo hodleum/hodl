@@ -12,31 +12,34 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 if name == 'Alice':
-    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
-                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
-                             Peer(keys['Dave'][1], [('localhost', 5004)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
+                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
+                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
     port = 5001
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('localhost', 5001)]),
-                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
-                             Peer(keys['Dave'][1], [('localhost', 5004)])])
+    peers = Peers([Peer(keys['Alice'][1], [('192.169.200.200', 5001)]),
+                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
+                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
     port = 5002
 if name == 'Chuck':
-    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
-                             Peer(keys['Alice'][1], [('localhost', 5001)]),
-                             Peer(keys['Dave'][1], [('localhost', 5004)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
+                             Peer(keys['Alice'][1], [('192.169.200.200', 5001)]),
+                             Peer(keys['Dave'][1], [('192.169.200.200', 5004)])])
     port = 5003
 if name == 'Dave':
-    peers = Peers([Peer(keys['Bob'][1], [('localhost', 5002)]),
-                             Peer(keys['Chuck'][1], [('localhost', 5003)]),
-                             Peer(keys['Alice'][1], [('localhost', 5001)])])
+    peers = Peers([Peer(keys['Bob'][1], [('192.169.200.200', 5002)]),
+                             Peer(keys['Chuck'][1], [('192.169.200.200', 5003)]),
+                             Peer(keys['Alice'][1], [('192.169.200.200', 5001)])])
     port = 5004
 
 peers.update([keys['Alice']], log=log)
 if name == 'Bob':
-    while True:
+    for i in range(20):
         log.debug('listen')
-        s = hsock.listen()
+        try:
+            s = hsock.listen()
+        except Exception as e:
+            log.debug('exception while listening: ' + str(e))
 elif name == 'Alice':
     log.debug('creating HSock')
     s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers, log=log)
