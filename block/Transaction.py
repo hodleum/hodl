@@ -134,9 +134,12 @@ class Transaction:
                 str(self.index), self.sign, self.hash, self.author))
             print("Log TypeSign: \nSign: {}. \nHash: {}. \nAuthor: {}.".format(type(self.sign), type(self.hash),
                                                                                type(self.author)))
-            sign_bytes = bytes(self.sign)
-            if not cg.verify_sign(sign_bytes.decode(encoding="utf8", errors="ignore"), self.hash, self.author):
-                print(self.index, 'is not valid: sign is wrong')
+            try:
+                if not cg.verify_sign(bytes(self.sign), self.hash, self.author):
+                    print(self.index, 'is not valid: sign is wrong')
+                    return False
+            except Exception as e:
+                print(self.index, 'is not valid: exception while checking sign:', e)
                 return False
         else:
             scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
