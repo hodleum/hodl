@@ -4,6 +4,8 @@
 It has smart contracts which can be written in Python 3. **HODL** will use Proofs-of-work and Proofs-of-stake together. It is also platform for decentralized internet.
 **HODL** will have clients for Linux, Windows, OS X, Android and IOS. It will support NFC.
 
+![travis](https://travis-ci.org/hodleum/hodl.svg?branch=master)
+
 Installation
 ------
 **On Linux:**
