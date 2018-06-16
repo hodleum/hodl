@@ -32,6 +32,7 @@ if name == 'Dave':
                              Peer(keys['Alice'][1], [('localhost', 5001)])])
     port = 5004
 
+peers.update([keys['Alice']], log=log)
 try:
     if name == 'Bob':
         log.debug('listen')
@@ -40,4 +41,4 @@ try:
         log.debug('creating HSock')
         s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers, log=log)
 except Exception as e:
-    log.debug('exception: ' + str(e) + '   ' + str(e.__dict__))
+    log.debug('exception: ' + str(e))

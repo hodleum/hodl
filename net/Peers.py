@@ -12,24 +12,26 @@ def ats(addr):
 
 
 def afs(addr):
-    return [addr.split(':')[0], int(addr.split(':')[1])]
+    return (addr.split(':')[0], int(addr.split(':')[1]))
 
 
 class Peer:
     """
     Class for one peer.
     """
-    def __init__(self, addr, netaddrs):
+    def __init__(self, addr, netaddrs, log=None):
         self.addr = addr
         self.netaddrs = {ats(addr): None for addr in netaddrs}
 
-    def update(self, myaddrs):
+    def update(self, myaddrs, log=None):
         """
         Checks whiteness of addresses
         myaddrs is list of this computer's addresses:
         [[private key1, public key1], ...]
         :param myaddrs: list
         """
+        if log:
+            log.debug('Peer.update')
         for addr in self.netaddrs:
             try:
                 sock = socket()
@@ -56,7 +58,9 @@ class Peer:
                 else:
                     self.netaddrs.pop(addr)
                 self.netaddrs[addr] = False
-            except:
+            except Exception as e:
+                if log:
+                    log.debug('Peer.update: exception: ' + str(e))
                 self.netaddrs[addr] = False
 
     def connect(self, peers, log=None):
@@ -151,3 +155,9 @@ class Peers(set):
             if socks:
                 socks[0].send(json.dumps([meta, to]))
                 return socks[0]
+
+    def update(self, myaddrs, log=None):
+        if log:
+            log.debug('Peers.update')
+        for peer in self:
+            peer.update(myaddrs, log=log)
