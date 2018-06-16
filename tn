@@ -5,4 +5,6 @@ cat Bob.log
 echo "Chuck:"
 cat Chuck.log
 rm -rf *.log
-docker kill $(docker container ls -q)
+docker stop Alice Bob Chuck Dave
+docker rm Alice Bob Chuck Dave
+docker network rm hodlnet
