@@ -9,7 +9,7 @@ from net.Peers import Peer, Peers
 
 name = str(os.getenv('HODL_NAME'))
 log.basicConfig(filename=name+'.log', level=log.DEBUG)
-log.debug('\n\n\n\n\n\nstart\n---------\n')
+log.debug('\n\n\n\n\n\n--------------------------------------\nstart\n--------------------------------------\n\n\n\n\n\n\n\n\n')
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
@@ -32,7 +32,8 @@ if name == 'Dave':
                              Peer(keys['Alice'][1], [('172.19.0.2', 5000)])])
 port = 5000
 log.debug(os.popen('ifconfig|grep inet |grep addr').read())
-peers.update([keys['Alice']], log=log)
+peers.update([my_keys], log=log)
+log.debug('\n'.join([str(p.__dict__) for p in peers]))
 if name == 'Bob':
     for i in range(20):
         log.debug('listen')
