@@ -4,7 +4,7 @@ import random
 import cryptogr as cg
 
 
-meta = """HODL ver1"""
+meta = """HODL_NetP v1"""
 
 
 def ats(addr):
@@ -146,8 +146,8 @@ class Peers(set):
         """
         for p in self:
             if p.addr == addr:
-                return p
-        return False
+                return (True, p)
+        return (False, None)
 
     def white_conn_to(self, to):
         for peer in self:

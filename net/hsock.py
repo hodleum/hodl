@@ -26,7 +26,7 @@ class HSock:
         if not (sock and conn):
             if log:
                 log.debug('HSock.__init__: creating HSock by connecting by address')
-            peer = peers.srchbyaddr(addr)
+            peer = peers.srchbyaddr(addr)[1]
             self.socks = peer.connect(peers, log=log)
         else:
             if log:
