@@ -3,7 +3,6 @@ from socket import socket
 import random
 import cryptogr as cg
 
-
 meta = """HODL_NetP v1"""
 
 
@@ -19,6 +18,7 @@ class Peer:
     """
     Class for one peer.
     """
+
     def __init__(self, addr, netaddrs, log=None):
         self.addr = addr
         self.netaddrs = {ats(addr): None for addr in netaddrs}
@@ -66,7 +66,8 @@ class Peer:
     def connect(self, peers, log=None):
         """Generate sockets to all IP addresses for this peer"""
         if log:
-            log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(self.addr))
+            log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(
+                self.addr))
         sockets = []
         for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
             if log:
@@ -115,6 +116,7 @@ class Peers(set):
     Class for storing peers.
     It is a set of peers(class Peer)
     """
+
     def save(self, file):
         """
         Save peers to file

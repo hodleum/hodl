@@ -4,6 +4,7 @@ import time
 from net.Peers import Peers
 import cryptogr
 import struct
+import logging as log
 
 
 def recv(sock):
@@ -17,36 +18,36 @@ def recv(sock):
     return chunk
 
 
-class HSock:
+class HSock(Thread):
     """
     HODL socket:
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
-    def __init__(self, sock=None, conn=None, addr='', myaddrs=[], peers=Peers(), log=None):
+    def __init__(self, sock=None, conn=None, addr='', myaddrs=(), peers=Peers()):
         if not (sock and conn):
-            if log:
-                log.debug('HSock.__init__: creating HSock by connecting by address')
+            log.debug('HSock.__init__: creating HSock by connecting by address')
             peer = peers.srchbyaddr(addr)[1]
             self.socks = peer.connect(peers, log=log)
         else:
-            if log:
-                log.debug('HSock.__init__: creating input HSock by conn and sock')
+            log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
             self.conns = [conn]
         self.in_msgs = []
         # start listen as daemon (using multiprocessing) and put messages to self.in_msgs
-        self.l = Thread(target=self.listen)
-        self.l.start()
+
+        super().__init__(self.listen())
+        self.name = addr
+        self.start()
 
     @classmethod
     def input(cls, sock, conn):
-        self = cls(sock=sock, conn=conn)
+        cls(sock=sock, conn=conn)
 
     def send(self, data):
         # todo: encode data using RSA
         data = struct.pack('>L', len(data)) + data
         for sock in self.socks:
-            sock.send(data.encode())
+            sock.send(data.encode('utf-8'))
 
     def listen(self):
         """
@@ -71,10 +72,10 @@ class HSock:
             self.in_msgs.append(recv(sock))
 
     def listen_msg(self, delt=0.05):
-        l = len(self.in_msgs)
+        len_msg = len(self.in_msgs)
         while True:
             time.sleep(delt)
-            if len(self.in_msgs) > l:
+            if len(self.in_msgs) > len_msg:
                 return self.in_msgs[-1]
 
 

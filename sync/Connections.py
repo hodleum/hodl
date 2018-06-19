@@ -2,14 +2,14 @@
 Here are classes InputConnection and Connection. They defines communication between peers.
 """
 import json
-import socket
-import multiprocessing
+from threading import Thread
 import block
 import cryptogr as cg
+import logging as log
+import traceback
 from net.hsock import HSock
 
 
-global bch
 bch = block.Blockchain()
 
 
@@ -35,15 +35,15 @@ def get_smart_contracts_mem(ind, start=0, stop=-1):
     pass
 
 
-class Connection:
+class Connection(Thread):
     """
     It is an output connection (First user in net's doc).
     """
     def __init__(self, addr, myaddrs, peers, log=None):
         self.addrs = myaddrs
-        self.proc = multiprocessing.Process(target=self.connect, args=(addr, peers, log))
-        self.proc.start()
-        self.proc.join()
+        self.sock = None
+        super().__init__(target=self.connect, args=(addr, peers, log))
+        self.start()
 
     def connect(self, addr, peers, log=None):
         if log:
@@ -98,21 +98,18 @@ class Connection:
         raise ConnectionErr()
 
 
-class InputConnection:
+class InputConnection(Thread):
     """
     It is an input connection (Second user in net's doc).
     """
-    def __init__(self, sock, myaddrs, log=None):
+    def __init__(self, sock, myaddrs):
         self.addrs = myaddrs
         self.sock = sock
-        self.log = log
-        self.proc = multiprocessing.Process(target=self.connect)
-        self.proc.start()
-        self.proc.join()
+        super().__init__(target=self.connect())
+        self.start()
 
     def connect(self):
-        if self.log:
-            log.debug('input connection.')
+        log.debug('input connection.')
         try:
             data = self.sock.listen_msg()
             hdata = json.loads(data)
@@ -156,7 +153,6 @@ class InputConnection:
                                 bch.append(b)
             self.sock.close()
             return pubkeys
-        except Exception as e:
-            if self.log:
-                log.debug('inputconnection exception: '+str(e))
+        except:
+            log.debug('inputconnection exception: %s' % traceback.format_exc())
         raise ConnectionErr()
