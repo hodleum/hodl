@@ -63,8 +63,15 @@ class Smart_contract:
         self.sign = cg.sign(json.dumps((self.code, str(self.author), self.index, self.computing, self.calc_repeats, self.memory.size,
                            self.codesize, self.timestamp)), privkey)
 
-    def execute(self, func='', args=[]):
-        """smart contract's execution"""
+    def execute(self, func='', args=[], is_task=False):
+        """
+        Execute SC's code.
+        SC can modify its memory, read blockchain, provide txs
+        :param func: function to execute(if executing msg or task)
+        :param args: func's args
+        :param is_task: if executing task, no timeout needed
+        """
+        # todo: allow SC to confirm its memory, not to calculate it every time
         file = open('tmp/__init__.py', 'w')
         file.close()
         file = open('sc_main.py', 'w')
@@ -94,11 +101,15 @@ class Smart_contract:
         mount_temp = ' -v "$(pwd)"/{}:/home/hodl/{}:ro'
         l = os.listdir()
         l.remove('tmp')
+        if not is_task:
+            timeout = '--stop-timeout 1'
+        else:
+            timeout = ''
         for f in l:
             mount_str += mount_temp.format(f, f)
-        run_str = 'docker run {} -v "$(pwd)/tmp":/home/hodl/tmp --stop-timeout 1 hodl-container python3 ' \
-                  '/home/hodl/sc_main.py'.format(mount_str)
-        os.system(run_str)
+        run_str = 'docker run {} -v "$(pwd)/tmp":/home/hodl/tmp{} hodl-container python3 ' \
+                  '/home/hodl/sc_main.py'.format(mount_str, timeout)
+        os.system(run_str)   # todo: replace with docker lib
         file = open('tmp/sc.mem', 'r')
         self.memory = SCMemory.from_json(file.readline())
         file.close()
@@ -112,23 +123,39 @@ class Smart_contract:
         # todo: sc tnx
 
     def __str__(self):
-        """Encodes contract to str"""
+        """
+        Encode contract to str
+        :return: str
+        """
         return json.dumps((self.code, self.author, self.index, self.computing, self.tasks, self.calc_repeats, self.msgs,
-                           self.codesize, self.timestamp, str(list(self.sign)), str(self.memory)))
+                           self.codesize, self.timestamp, self.sign, str(self.memory)))
 
     @classmethod
     def from_json(cls, s):
-        """Decodes contract from str"""
+        """
+        Decode contract from str
+        :param s: SC encoded to string
+        :return: SC
+        """
         self = cls(*json.loads(s)[0:5])
         self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[6:10]
-        self.sign = bytes(eval(self.sign))
         self.memory = SCMemory.from_json(json.loads(s)[10])
         return self
 
     def __eq__(self, other):
+        """
+        Compare SCs
+        :param other: SC
+        :return: is equal
+        """
         return self.__dict__ == other.__dict__
 
     def is_valid(self, bch):
+        """
+        Validate SC
+        :param bch: Blockchain
+        :return: validness(bool)
+        """
         if self.codesize > sc_max_code_size:
             print('too much code in sc')
             return False
@@ -195,22 +222,16 @@ class Smart_contract:
                 task[-1] = True
 
     def handle_messages(self):
+        """
+        Handle all messages(commands) sent to SC
+        :return:
+        """
         for i in range(len(self.msgs)):
             if not self.msgs[i][-1]:
-                if cg.verify_sign(bytes(eval(self.msgs[i][2])), json.dumps([self.msgs[i][0], self.msgs[i][1]]),
+                if cg.verify_sign(self.msgs[i][2], json.dumps([self.msgs[i][0], self.msgs[i][1]]),
                                   self.msgs[i][1][0]):
                     self.execute(self.msgs[i][0], self.msgs[i][1])
                     self.msgs[i][-1] = True
-
-    def __eq__(self, other):
-        v = True
-        if self.__dict__.keys() != other.__dict__.keys():
-            print('sc.__eq__ keys not equal', self.__dict__.keys(), other.__dict__.keys())
-            v = False
-        for k in self.__dict__.keys():
-            if self.__dict__[k] != other.__dict__[k]:
-                print(k, self.__dict__[k], other.__dict__[k])
-        return str(self) == str(other)
 
     def distribute_tasks(self):
         """
