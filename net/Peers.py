@@ -115,7 +115,17 @@ class Peers(set):
         :return:
         """
         with open(file, 'w') as f:
-            f.write(json.dumps([json.dumps(peer) for peer in list(self)]))
+            f.write(str(self))
+
+    def __str(self):
+        return json.dumps([json.dumps(peer) for peer in list(self)])
+
+    @classmethod
+    def from_json(cls, s):
+        self = cls()
+        for peer in json.loads(f.read()):
+            self.add(Peer.from_json(peer))
+        return self
 
     @classmethod
     def open(cls, file):
@@ -124,10 +134,8 @@ class Peers(set):
         :type file: str
         :return:
         """
-        self = cls()
         with open(file, 'r') as f:
-            for peer in json.loads(f.read()):
-                self.add(Peer.from_json(peer))
+            self = cls.from_json(f.read())
         return self
 
     def srchbyaddr(self, addr):
