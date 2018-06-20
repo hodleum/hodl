@@ -22,6 +22,10 @@ class Peer:
     """
 
     def __init__(self, addr, netaddrs):
+        """
+        :param addr: Peer's HODL wallet
+        :param netaddrs: Peer's IPs (dict: {IP1: whiteness of IP1, IP2: whiteness of IP2})
+        """
         self.addr = addr
         self.netaddrs = {ats(addr): None for addr in netaddrs}
 
