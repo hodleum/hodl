@@ -127,7 +127,7 @@ class Peers(set):
     @classmethod
     def from_json(cls, s):
         self = cls()
-        for peer in json.loads(f.read()):
+        for peer in json.loads(s):
             self.add(Peer.from_json(peer))
         return self
 
