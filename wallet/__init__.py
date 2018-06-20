@@ -5,7 +5,6 @@ import mining
 import time
 import json
 
-
 bch = block.Blockchain()
 wallets = []
 
@@ -32,7 +31,11 @@ class Wallet:
             for tnx in bch[i].txs:
                 if self.pubkey in [bch.pubkey_by_nick(out) for out in tnx.outs] and 'mining' not in tnx.outs:
                     if not tnx.spent(bch)[block.rm_dubl_from_outs(tnx.outs, tnx.outns)[0].index(self.pubkey)]:
-                        o += block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[1][block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[0].index(self.pubkey)]
+                        o += block.rm_dubl_from_outs(
+                            [bch.pubkey_by_nick(out) for out in tnx.outs],
+                            tnx.outns)[1][
+                            block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[0].index(
+                                self.pubkey)]
                         froms.append(tnx.index)
                         if o >= out:
                             break
@@ -46,7 +49,8 @@ class Wallet:
     def my_money(self):
         return bch.money(self.pubkey)
 
-    def act(self):
+    @staticmethod
+    def act():
         if bch[-1].is_full:
             bch.append(mining.mine(bch))
 
