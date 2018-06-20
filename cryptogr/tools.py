@@ -28,7 +28,7 @@ def sign(plaintext, private_key):
     myhash = SHA.new(plaintext)
     signature = PKCS1_v1_5.new(priv_key)
     signature = signature.sign(myhash)
-    return signature
+    return base64.encodebytes(signature).decode()
 
 
 def verify_sign(s, plaintext, public_key):
@@ -38,7 +38,7 @@ def verify_sign(s, plaintext, public_key):
     # decryption signature
     myhash = SHA.new(plaintext)
     signature = PKCS1_v1_5.new(pub_key)
-    test = signature.verify(myhash, s)
+    test = signature.verify(myhash, base64.decodebytes(s.encode()))
     return test
 
 
