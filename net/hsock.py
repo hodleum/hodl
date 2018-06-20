@@ -2,12 +2,18 @@ from socket import socket
 from threading import Thread
 import time
 from net.Peers import Peers
-import cryptogr
 import struct
 import logging as log
 
 
 def recv(sock):
+    """
+    Receive function for socket connections
+
+    :type sock: socket
+    :return: data (bytes)
+    """
+
     chunk = sock.recv(4)
     if len(chunk) < 4:
         return
@@ -16,6 +22,22 @@ def recv(sock):
     while len(chunk) < slen:
         chunk += sock.recv(slen - len(chunk))
     return chunk
+
+
+def send(sock, data):
+    """
+    Send function for socket connections
+
+    :type sock: socket
+
+    :param data: data to send
+    :type data: bytes
+
+    :return: None
+    """
+
+    data = struct.pack('>L', len(data)) + data
+    sock.sendall(data)
 
 
 class HSock(Thread):
@@ -45,9 +67,8 @@ class HSock(Thread):
 
     def send(self, data):
         # todo: encode data using RSA
-        data = struct.pack('>L', len(data)) + data
         for sock in self.socks:
-            sock.send(data.encode('utf-8'))
+            send(sock, data.encode('utf-8'))
 
     def listen(self):
         """
