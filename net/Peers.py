@@ -3,7 +3,7 @@ from socket import socket
 import random
 import cryptogr as cg
 import logging as log
-from .hsock import recv, send
+from .proto import recv, send
 
 meta = """HODL_NetP v1"""
 
@@ -21,7 +21,7 @@ class Peer:
     Class for one peer.
     """
 
-    def __init__(self, addr, netaddrs, log=None):
+    def __init__(self, addr, netaddrs):
         self.addr = addr
         self.netaddrs = {ats(addr): None for addr in netaddrs}
 

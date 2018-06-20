@@ -2,42 +2,8 @@ from socket import socket
 from threading import Thread
 import time
 from net.Peers import Peers
-import struct
 import logging as log
-
-
-def recv(sock):
-    """
-    Receive function for socket connections
-
-    :type sock: socket
-    :return: data (bytes)
-    """
-
-    chunk = sock.recv(4)
-    if len(chunk) < 4:
-        return
-    slen = struct.unpack('>L', chunk)[0]
-    chunk = sock.recv(slen)
-    while len(chunk) < slen:
-        chunk += sock.recv(slen - len(chunk))
-    return chunk
-
-
-def send(sock, data):
-    """
-    Send function for socket connections
-
-    :type sock: socket
-
-    :param data: data to send
-    :type data: bytes
-
-    :return: None
-    """
-
-    data = struct.pack('>L', len(data)) + data
-    sock.sendall(data)
+from .proto import recv, send
 
 
 class HSock(Thread):
@@ -55,7 +21,6 @@ class HSock(Thread):
             self.socks = [sock]
             self.conns = [conn]
         self.in_msgs = []
-        # start listen as daemon (using multiprocessing) and put messages to self.in_msgs
 
         super().__init__(self.listen())
         self.name = addr
