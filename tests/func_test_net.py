@@ -30,16 +30,17 @@ if name == 'Dave':
                    Peer(keys['Chuck'][1], [('172.19.0.4', 5000)]),
                    Peer(keys['Alice'][1], [('172.19.0.2', 5000)])])
 port = 5000
-log.debug(os.popen('ifconfig|grep inet |grep addr').read())
-peers.update([my_keys], log=log)
-log.debug('\n'.join([str(p.__dict__) for p in peers]))
 if name == 'Bob':
     for i in range(20):
         log.debug('listen')
         try:
             s = hsock.listen()
+            s.listen_msg()
         except Exception as e:
             log.debug('exception while listening: ' + str(e))
 elif name == 'Alice':
     log.debug('creating HSock')
     s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
+    s.send('hi i am alice')
+
+peers.update([my_keys], log=log)

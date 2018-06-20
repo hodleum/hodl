@@ -58,6 +58,11 @@ class HSock(Thread):
             self.in_msgs.append(recv(sock))
 
     def listen_msg(self, delt=0.05):
+        """
+        Listen for one msg
+        :param delt: float
+        :return: msg: str
+        """
         len_msg = len(self.in_msgs)
         while True:
             time.sleep(delt)
@@ -76,6 +81,10 @@ class BetweenSock:
 
 
 def listen():
+    """
+    Listen for one connection
+    :return: sock: HSock
+    """
     sock = socket()
     sock.bind(('', 5000))
     sock.listen(1)
