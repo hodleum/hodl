@@ -146,10 +146,16 @@ class Blockchain:
         self.conn.commit()
 
     def get_block(self, i):
+        """
+        Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
+        then get full block from other peer)
+        :param i: block's index
+        :return: Block
+        """
         if not self[i].is_unfilled:
             return self[i]
         else:
-            pass # todo
+            pass   # todo
 
     def add_miner(self, miner):
         """add proof-of-work miner
@@ -159,15 +165,24 @@ class Blockchain:
         self[-1] = b
 
     def clean(self):
+        """
+        Delete all blocks from blockchain
+        """
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
     def add_sc(self, sc):
+        """
+        Add smart contract
+        :param sc:
+        :return:
+        """
         b = self[-1]
         b.contracts.append(sc)
         self[-1] = b
 
     def close(self):
+        """Close connection to database"""
         self.conn.commit()
         self.conn.close()
 

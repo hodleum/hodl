@@ -3,7 +3,6 @@ import cryptogr as cg
 from itertools import chain
 import time
 from collections import Counter
-#import net
 
 
 def indexmany(a, k):
@@ -11,6 +10,12 @@ def indexmany(a, k):
 
 
 def rm_dubl_from_outs(outs, outns):
+    """
+    Remove dublicated addresses from tnx's outs
+    :param outs: list, tnx.outs
+    :param outns: list, tnx.outns
+    :return: clean outs: list, clean outns: list
+    """
     newouts = []
     newoutns = []
     c = dict(Counter(outs))
@@ -27,15 +32,13 @@ def rm_dubl_from_outs(outs, outns):
     return newouts, newoutns
 
 
-def is_first_tnx_valid(tnx, bch):
-    if tnx.froms != [['nothing']] or tnx.author != 'mining' \
-            or tnx.outs != bch[tnx.index[0]].creators or tnx.outns != mining.miningprice:
-        return False
-    else:
-        return True
-
-
 def is_tnx_money_valid(self, bch):
+    """
+    Validate tnx
+    :param self: Transaction
+    :param bch: Blockchain
+    :return: validness(bool)
+    """
     inp = 0
     for o in self.outns:
         if round(o, 10) != o:
@@ -75,6 +78,14 @@ def is_tnx_money_valid(self, bch):
 
 
 def sign_tnx(self, sign, privkey, t):
+    """
+    Sign tnx with privkey or use existing sign
+    :param self: tnx
+    :param sign: existing sign or 'signing'
+    :param privkey: private key or nothing
+    :param t: existing timestamp if privkey is 'signing' or something else
+    :return: sign (str)
+    """
     if sign == 'signing':
         self.sign = cg.sign(self.hash, privkey)
     else:
@@ -90,7 +101,7 @@ class Transaction:
     def __str__(self):
         """Encodes transaction to str using JSON"""
         return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
-                           str(list(self.sign)), self.timestamp))
+                           self.sign, self.timestamp))
 
     @classmethod
     def from_json(cls, s):
@@ -98,7 +109,7 @@ class Transaction:
         s = json.loads(s)
         self = cls()
         try:
-            self.gen(s[0], s[1], s[2], s[3], list(s[4]), bytearray(eval(s[5])), '', s[6])
+            self.gen(s[0], s[1], s[2], s[3], list(s[4]), s[5], '', s[6])
         except TypeError:
             self.gen(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6])
         for i in range(len(self.outns)):
@@ -117,26 +128,25 @@ class Transaction:
             self.outns[i] = round(self.outns[i], 10)
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
-        self.hash = self.update()
+        self.update()
 
     def is_valid(self, bch):
         """Returns validness of transaction.
         Checks:
         is sign valid
         are all money spent"""
-        if self.index[1] == 0:
-            is_first_tnx_valid(self, bch)
-        elif self.author[0:4] == 'scaw':
+        if self.author[0:4] == 'scaw':
             if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
                 return False
         elif not self.author[0:2] == 'sc':
-            print("Log VSign: \n Index: {}. \nSign: {}. \nHash: {}. \nAuthor: {}. \n------------------------\n".format(
-                str(self.index), self.sign, self.hash, self.author))
             print("Log TypeSign: \nSign: {}. \nHash: {}. \nAuthor: {}.".format(type(self.sign), type(self.hash),
                                                                                type(self.author)))
-
-            if not cg.verify_sign(self.sign, self.hash, self.author):
-                print(self.index, 'is not valid: sign is wrong')
+            try:
+                if not cg.verify_sign(self.sign, self.hash, self.author):
+                    print(self.index, 'is not valid: sign is wrong')
+                    return False
+            except Exception as e:
+                print(self.index, 'is not valid: exception while checking sign:', e)
                 return False
         else:
             scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
@@ -151,10 +161,15 @@ class Transaction:
         return True
 
     def __eq__(self, other):
+        """Compare with other tnx"""
         return self.hash == other.hash
 
-    def spent(self, bch, exc=[]):
-        """Is transaction used by other transaction"""
+    def spent(self, bch, exc=tuple()):
+        """
+        :param bch: Blockchain
+        :param exc: txs to exclude
+        :return: Is transaction used by other transaction
+        """
         outs, outns = rm_dubl_from_outs(self.outs, self.outns)
         spent = [False] * len(outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
@@ -164,7 +179,9 @@ class Transaction:
         return spent
 
     def update(self):
+        """
+        Update hash
+        """
         x = ''.join(chain(str(self.author), str(self.index), [str(f) for f in self.froms],
                           [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
         self.hash = cg.h(str(x))
-        return cg.h(str(x))

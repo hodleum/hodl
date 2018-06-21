@@ -1,7 +1,8 @@
 import time
 import json
-from block.Transaction import *
-from block.Smart_contract import *
+from block.Transaction import Transaction
+from block.Smart_contract import Smart_contract
+import cryptogr as cg
 import mining
 
 maxblocksize = 4000000
@@ -42,13 +43,20 @@ class Block:
         self.update()
 
     def __str__(self):
-        """Encodes block to str using JSON"""
+        """
+        Encodes block to str using JSON
+        :return:block, converted to str
+        """
         return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
                            [str(c) for c in self.contracts], self.powminers, self.pow_timestamp))
 
     @classmethod
     def from_json(cls, s):
-        """Decodes block from str using JSON"""
+        """
+        Decodes block from str using JSON
+        :param s: string - encoded block
+        :return: Block
+        """
         self = cls()
         s = json.loads(s)
         self.txs = []
@@ -64,14 +72,11 @@ class Block:
         self.update()
         return self
 
-    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):
-        """Creates new transaction and adds it to the chain"""
-        tnx = Transaction()
-        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey)
-        self.append(tnx)
-
     def append(self, txn):
-        """Adds txn to block"""
+        """
+        Adds txn to block
+        :param txn: Transaction to add to block
+        """
         self.txs.append(txn)  # добавляем транзакцию в список транзакций
         self.update()  # обновляем хэш
 
@@ -83,7 +88,11 @@ class Block:
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
-        """Returns validness of block"""
+        """
+        Validate block
+        :param bch: Blockchain
+        :return: validness (bool)
+        """
         i = bch.index(self)
         v = True
         if i != 0:
@@ -115,6 +124,11 @@ class Block:
         return v
 
     def __eq__(self, other):
+        """
+        compare blocks
+        :param other: Block
+        :return: is equal
+        """
         return self.h == other.h
 
     def is_full(self):

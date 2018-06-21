@@ -2,5 +2,5 @@
 sudo apt install sqlite3
 sudo pip3 install -r requirements.txt
 python3 setup.py install
-docker build -t hodl-container - < Dockerfile
+sudo docker build -t hodl-container - < Dockerfile
 mkdir tmp

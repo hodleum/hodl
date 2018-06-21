@@ -2,51 +2,50 @@ from socket import socket
 from threading import Thread
 import time
 from net.Peers import Peers
-import cryptogr
-import struct
+import logging as log
+from .proto import recv, send
+import json5
 
-
-def recv(sock):
-    chunk = sock.recv(4)
-    if len(chunk) < 4:
-        return
-    slen = struct.unpack('>L', chunk)[0]
-    chunk = sock.recv(slen)
-    while len(chunk) < slen:
-        chunk += sock.recv(slen - len(chunk))
-    return chunk
-
-
-class HSock:
+class HSockProtocol():
     """
-    HODL socket:
+    HODL Socket protocol
+    Main transport protocol
+    """
+    def __init__(self):
+        pass
+    def generate(self):
+        pass
+    def handle(self, answer):
+        pass
+
+class HSock(Thread):
+    """
+    HODL Socket:
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
-    def __init__(self, sock=None, conn=None, addr='', myaddrs=[], peers=Peers(), log=None):
+    def __init__(self, sock=None, conn=None, addr='', myaddrs=(), peers=Peers()):
         if not (sock and conn):
-            if log:
-                log.debug('HSock.__init__: creating HSock by connecting by address')
-            peer = peers.srchbyaddr(addr)
+            log.debug('HSock.__init__: creating HSock by connecting by address')
+            peer = peers.srchbyaddr(addr)[1]
             self.socks = peer.connect(peers, log=log)
         else:
-            if log:
-                log.debug('HSock.__init__: creating input HSock by conn and sock')
+            log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
             self.conns = [conn]
         self.in_msgs = []
-        # start listen as daemon (using multiprocessing) and put messages to self.in_msgs
-        self.l = Thread(target=self.listen)
-        self.l.start()
+
+        super().__init__(self.listen())
+        self.name = addr
+        self.start()
 
     @classmethod
     def input(cls, sock, conn):
-        self = cls(sock=sock, conn=conn)
+        cls(sock=sock, conn=conn)
 
     def send(self, data):
         # todo: encode data using RSA
-        data = struct.pack('>L', len(data)) + data
         for sock in self.socks:
-            sock.send(data.encode())
+            send(sock, data.encode('utf-8'))
 
     def listen(self):
         """
@@ -71,10 +70,15 @@ class HSock:
             self.in_msgs.append(recv(sock))
 
     def listen_msg(self, delt=0.05):
-        l = len(self.in_msgs)
+        """
+        Listen for one msg
+        :param delt: float
+        :return: msg: str
+        """
+        len_msg = len(self.in_msgs)
         while True:
             time.sleep(delt)
-            if len(self.in_msgs) > l:
+            if len(self.in_msgs) > len_msg:
                 return self.in_msgs[-1]
 
 
@@ -89,6 +93,10 @@ class BetweenSock:
 
 
 def listen():
+    """
+    Listen for one connection
+    :return: sock: HSock
+    """
     sock = socket()
     sock.bind(('', 5000))
     sock.listen(1)
