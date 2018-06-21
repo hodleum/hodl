@@ -4,11 +4,23 @@ import time
 from net.Peers import Peers
 import logging as log
 from .proto import recv, send
+import json5
 
+class HSockProtocol():
+    """
+    HODL Socket protocol
+    Main transport protocol
+    """
+    def __init__(self):
+        pass
+    def generate(self):
+        pass
+    def handle(self, answer):
+        pass
 
 class HSock(Thread):
     """
-    HODL socket:
+    HODL Socket:
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
     def __init__(self, sock=None, conn=None, addr='', myaddrs=(), peers=Peers()):
