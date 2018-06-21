@@ -4,7 +4,7 @@ import time
 from net.Peers import Peers
 import logging as log
 from .proto import recv, send
-import json5 as json
+import json5
 
 class HSockProtocol():
     """
