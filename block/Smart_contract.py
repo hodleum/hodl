@@ -7,9 +7,8 @@ import os
 sc_base_mem = 10000000
 sc_base_code_size = 5000000
 sc_memprice = 0.001
-sc_max_code_size = 1000000000
 sc_code_price = 10**(-6)
-sc_price = 0.01
+sc_price = 0
 one_peer_max_mem = 4000000
 sc_award_from = 1
 sc_award_to = 5
@@ -156,9 +155,6 @@ class Smart_contract:
         :param bch: Blockchain
         :return: validness(bool)
         """
-        if self.codesize > sc_max_code_size:
-            print('too much code in sc')
-            return False
         pr = sc_price
         if self.memory.size > sc_base_mem or self.codesize > sc_base_code_size:
             mp = ((self.memory.size - sc_base_mem) * sc_memprice)
@@ -168,11 +164,7 @@ class Smart_contract:
             if cp < 0:
                 cp = 0
             pr += mp + cp
-        payed = 0
-        for b in bch:
-            for tnx in b.txs:
-                if tnx.author == self.author and 'sc' + str(self.index) + 'payment' in tnx.outs:
-                    payed += tnx.outns[tnx.outs.index('sc' + str(self.index) + 'payment')]
+        payed = bch.money('sc' + str(self.index) + 'payment')
         if not payed >= pr:
             print('sc not payed. payed:', payed, 'needed:', pr)
             return False
