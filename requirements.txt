@@ -1,3 +1,4 @@
-pycrypto
+pycryptodome
 json5
 docker
+raven

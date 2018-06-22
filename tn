@@ -1,9 +1,9 @@
 echo "Alice:"
-cat Alice.log
+docker container logs Alice
 echo "Bob:"
-cat Bob.log
+docker container logs Bob
 echo "Chuck:"
-cat Chuck.log
+docker container logs Chuck
 docker stop Alice Bob Chuck Dave
 docker rm Alice Bob Chuck Dave
 docker network rm hodlnet

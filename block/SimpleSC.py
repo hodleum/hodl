@@ -23,6 +23,8 @@ class SimpleSC(Smart_contract):
     def check(self):
         if 'exec' in self.code or 'eval' in self.code or 'open' in self.code:
             return False
+        if 'allowed_imports' in self.code:
+            return False
         if 'import ' not in self.code:
             return True
         else:
@@ -32,8 +34,10 @@ class SimpleSC(Smart_contract):
                         return False
         return True
 
-    def execute(self):
+    def execute(self, func='', args=[], is_task=False):
         exec(self.code)
+        func = exec(func)
+        func(*args)
 
     def is_valid(self, bch):
         return self.check() and super().is_valid(bch)

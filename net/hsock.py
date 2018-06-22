@@ -4,19 +4,8 @@ import time
 from net.Peers import Peers
 import logging as log
 from .proto import recv, send
-import json5
+import json5 as json
 
-class HSockProtocol():
-    """
-    HODL Socket protocol
-    Main transport protocol
-    """
-    def __init__(self):
-        pass
-    def generate(self):
-        pass
-    def handle(self, answer):
-        pass
 
 class HSock(Thread):
     """
@@ -27,7 +16,8 @@ class HSock(Thread):
         if not (sock and conn):
             log.debug('HSock.__init__: creating HSock by connecting by address')
             peer = peers.srchbyaddr(addr)[1]
-            self.socks = peer.connect(peers, log=log)
+            self.socks = peer.connect(peers)
+            self.conns = []
         else:
             log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
@@ -40,7 +30,8 @@ class HSock(Thread):
 
     @classmethod
     def input(cls, sock, conn):
-        cls(sock=sock, conn=conn)
+        log.debug('hsock.HSock.input from sock and conn: ' + str(sock) + ', ' + str(conn))
+        return cls(sock=sock, conn=conn)
 
     def send(self, data):
         # todo: encode data using RSA
@@ -53,9 +44,14 @@ class HSock(Thread):
         :return:
         """
         # todo: decode msg using RSA
-        for sock in self.socks:
-            if sock:
-                Thread(target=self.recv_by_sock, args=(sock, )).start()
+        if self.conns:
+            for conn in self.conns:
+                if conn:
+                    Thread(target=self.recv_by_sock, args=(conn,)).start()
+        else:
+            for sock in self.socks:
+                if sock:
+                    Thread(target=self.recv_by_sock, args=(sock, )).start()
 
     def close(self):
         """
@@ -66,8 +62,7 @@ class HSock(Thread):
             conn.close()
 
     def recv_by_sock(self, sock):
-        while True:
-            self.in_msgs.append(recv(sock))
+        self.in_msgs.append(recv(sock))
 
     def listen_msg(self, delt=0.05):
         """
@@ -75,10 +70,10 @@ class HSock(Thread):
         :param delt: float
         :return: msg: str
         """
-        len_msg = len(self.in_msgs)
+        len_msgs = len(self.in_msgs)
         while True:
             time.sleep(delt)
-            if len(self.in_msgs) > len_msg:
+            if len(self.in_msgs) > len_msgs:
                 return self.in_msgs[-1]
 
 
@@ -92,13 +87,15 @@ class BetweenSock:
         # todo
 
 
-def listen():
+def listen(port=9276):
     """
     Listen for one connection
     :return: sock: HSock
     """
+    log.debug('hsock.listen')
     sock = socket()
-    sock.bind(('', 5000))
+    sock.bind(('', port))
     sock.listen(1)
     conn, addr = sock.accept()
+    log.debug('hsock.listen: input connection')
     return HSock.input(sock, conn)

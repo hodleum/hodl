@@ -9,11 +9,12 @@ def recv(sock):
     :type sock: socket
     :return: data (bytes)
     """
-
+    print(sock)
     chunk = sock.recv(4)
     if len(chunk) < 4:
         return
     slen = struct.unpack('>L', chunk)[0]
+    print(slen)
     chunk = sock.recv(slen)
     while len(chunk) < slen:
         chunk += sock.recv(slen - len(chunk))
