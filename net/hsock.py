@@ -29,7 +29,7 @@ class HSock(Thread):
 
     @classmethod
     def input(cls, sock, conn):
-        cls(sock=sock, conn=conn)
+        return cls(sock=sock, conn=conn)
 
     def send(self, data):
         # todo: encode data using RSA
