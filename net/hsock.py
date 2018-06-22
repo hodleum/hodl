@@ -6,6 +6,7 @@ import logging as log
 from .proto import recv, send
 import json5 as json
 
+
 class HSock(Thread):
     """
     HODL Socket:
@@ -16,6 +17,7 @@ class HSock(Thread):
             log.debug('HSock.__init__: creating HSock by connecting by address')
             peer = peers.srchbyaddr(addr)[1]
             self.socks = peer.connect(peers)
+            self.conns = []
         else:
             log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
@@ -42,9 +44,14 @@ class HSock(Thread):
         :return:
         """
         # todo: decode msg using RSA
-        for sock in self.socks:
-            if sock:
-                Thread(target=self.recv_by_sock, args=(sock, )).start()
+        if self.conns:
+            for conn in self.conns:
+                if conn:
+                    Thread(target=self.recv_by_sock, args=(conn,)).start()
+        else:
+            for sock in self.socks:
+                if sock:
+                    Thread(target=self.recv_by_sock, args=(sock, )).start()
 
     def close(self):
         """
@@ -55,7 +62,6 @@ class HSock(Thread):
             conn.close()
 
     def recv_by_sock(self, sock):
-
         self.in_msgs.append(recv(sock))
 
     def listen_msg(self, delt=0.05):
@@ -64,10 +70,10 @@ class HSock(Thread):
         :param delt: float
         :return: msg: str
         """
-        len_msg = len(self.in_msgs)
+        len_msgs = len(self.in_msgs)
         while True:
             time.sleep(delt)
-            if len(self.in_msgs) > len_msg:
+            if len(self.in_msgs) > len_msgs:
                 return self.in_msgs[-1]
 
 
