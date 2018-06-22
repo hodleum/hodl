@@ -4,7 +4,8 @@ import time
 from net.Peers import Peers
 import logging as log
 from .proto import recv, send
-import json5
+import json5 as json
+
 
 class HSock(Thread):
     """
@@ -80,13 +81,13 @@ class BetweenSock:
         # todo
 
 
-def listen():
+def listen(port=9276):
     """
     Listen for one connection
     :return: sock: HSock
     """
     sock = socket()
-    sock.bind(('', 5000))
+    sock.bind(('', port))
     sock.listen(1)
     conn, addr = sock.accept()
     return HSock.input(sock, conn)
