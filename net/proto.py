@@ -14,6 +14,7 @@ def recv(sock):
     if len(chunk) < 4:
         return
     slen = struct.unpack('>L', chunk)[0]
+    print(slen)
     chunk = sock.recv(slen)
     while len(chunk) < slen:
         chunk += sock.recv(slen - len(chunk))
