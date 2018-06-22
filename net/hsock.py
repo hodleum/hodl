@@ -61,8 +61,9 @@ class HSock(Thread):
             while True:
 
                 self.in_msgs.append(recv(sock))
-        except Exception:
+        except Exception as ex:
             client.captureException()
+            print(ex)
     def listen_msg(self, delt=0.05):
         """
         Listen for one msg
