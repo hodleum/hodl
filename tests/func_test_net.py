@@ -1,12 +1,12 @@
+import logging as log
 import os
 import json
-import logging as log
 import time
 from net import hsock
 from net.Peers import Peer, Peers
 
 name = str(os.getenv('HODL_NAME'))
-log.basicConfig(filename=name + '.log', level=log.DEBUG)
+log.basicConfig(level=log.DEBUG)
 log.debug(
     '\n\n\n\n\n\n-------------------------------------\nstart\n-------------------------------------\n\n\n\n\n\n\n\n\n')
 with open('tests/keys', 'r') as f:
