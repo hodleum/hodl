@@ -1,11 +1,18 @@
 from threading import Thread
 import time
+import logging as log
 from net.hsock import HSock, listen
 from net.Peers import Peers, Peer
 
 
-peers1 = Peers([Peer('2', [('localhost', 1222)])])
-peers2 = Peers([Peer('1', [('localhost', 1221)])])
+log.basicConfig(filename='hsock-listen.log', level=log.DEBUG)
+log.debug('hsock-listen')
+peer2 = Peer('2', [('localhost', 1222)])
+peer2.netaddrs['localhost:1222'] = True
+peers1 = Peers([peer2])
+peer1 = Peer('1', [('localhost', 1221)])
+peer1.netaddrs['localhost:1221'] = True
+peers2 = Peers([peer1])
 
 
 def sendertester():
