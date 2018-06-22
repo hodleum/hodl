@@ -9,7 +9,7 @@ def recv(sock):
     :type sock: socket
     :return: data (bytes)
     """
-
+    print(sock)
     chunk = sock.recv(4)
     if len(chunk) < 4:
         return

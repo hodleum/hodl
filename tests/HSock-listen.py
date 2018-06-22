@@ -26,5 +26,5 @@ def listentester():
 
 
 Thread(target=listentester).start()
-time.sleep(0.1)
+time.sleep(1)
 Thread(target=sendertester).start()
