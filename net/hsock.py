@@ -29,6 +29,7 @@ class HSock(Thread):
 
     @classmethod
     def input(cls, sock, conn):
+        log.debug('hsock.HSock.input from sock and conn: ' + str(sock) + ', ' + str(conn))
         return cls(sock=sock, conn=conn)
 
     def send(self, data):
@@ -86,8 +87,10 @@ def listen(port=9276):
     Listen for one connection
     :return: sock: HSock
     """
+    log.debug('hsock.listen')
     sock = socket()
     sock.bind(('', port))
     sock.listen(1)
     conn, addr = sock.accept()
+    log.debug('hsock.listen: input connection')
     return HSock.input(sock, conn)
