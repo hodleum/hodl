@@ -5,8 +5,6 @@ from net.Peers import Peers
 import logging as log
 from .proto import recv, send
 import json5 as json
-from raven import Client
-client = Client('https://00cd54de21ed465fa826a7f110150c90:a38f2580448948089f44e3fb20bb03f6@sentry.io/1231222')
 
 class HSock(Thread):
     """
@@ -57,13 +55,9 @@ class HSock(Thread):
             conn.close()
 
     def recv_by_sock(self, sock):
-        try:
-            while True:
 
-                self.in_msgs.append(recv(sock))
-        except Exception as ex:
-            client.captureException()
-            print(ex)
+        self.in_msgs.append(recv(sock))
+
     def listen_msg(self, delt=0.05):
         """
         Listen for one msg
