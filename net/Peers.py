@@ -74,10 +74,11 @@ class Peer:
                     sock = socket()
                     sock.connect(afs(addr))
                     sockets.append(sock)
-                else:
-                    sockets.append(peers.white_conn_to(self.addr))
+                    log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
             except Exception as e:
                 log.debug('Peer.connect: exception while connecting: ' + str(e))
+        if False in self.netaddrs.values():
+            sockets.append(peers.white_conn_to(self.addr))
         return sockets
 
     def connect_white(self):

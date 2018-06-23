@@ -12,24 +12,30 @@ log.debug(
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
+
+
+def white(peer):
+    for n in peer.netaddrs:
+        peer.netaddrs[n] = True
+
+
 if name == 'Alice':
-    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.3', 5000)]),
-                   Peer(keys['Chuck'][1], [('172.19.0.4', 5000)]),
-                   Peer(keys['Dave'][1], [('172.19.0.5', 5000)])])
+    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
+                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
+                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
     time.sleep(2)
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('172.19.0.2', 5000)]),
-                   Peer(keys['Chuck'][1], [('172.19.0.4', 5000)]),
-                   Peer(keys['Dave'][1], [('172.19.0.5', 5000)])])
+    peers = Peers([white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)])),
+                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
+                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
 if name == 'Chuck':
-    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.3', 5000)]),
-                   Peer(keys['Alice'][1], [('172.19.0.2', 5000)]),
-                   Peer(keys['Dave'][1], [('172.19.0.5', 5000)])])
+    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
+                   white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)])),
+                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
 if name == 'Dave':
-    peers = Peers([Peer(keys['Bob'][1], [('172.19.0.3', 5000)]),
-                   Peer(keys['Chuck'][1], [('172.19.0.4', 5000)]),
-                   Peer(keys['Alice'][1], [('172.19.0.2', 5000)])])
-port = 5000
+    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
+                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
+                   white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)]))])
 if name == 'Bob':
     log.debug('Bob listen')
     for i in range(20):
