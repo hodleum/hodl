@@ -31,16 +31,17 @@ if name == 'Dave':
                    Peer(keys['Alice'][1], [('172.19.0.2', 5000)])])
 port = 5000
 if name == 'Bob':
+    log.debug('Bob listen')
     for i in range(20):
         log.debug('listen')
         try:
             s = hsock.listen()
-            s.listen_msg()
+            print(s.listen_msg())
         except Exception as e:
             log.debug('exception while listening: ' + str(e))
 elif name == 'Alice':
-    log.debug('creating HSock')
+    log.debug('Alice: creating HSock to send')
     s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
     s.send('hi i am alice')
-
-peers.update([my_keys], log=log)
+log.debug('func_test_net peers.update')
+peers.update([my_keys])
