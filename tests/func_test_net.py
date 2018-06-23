@@ -17,6 +17,7 @@ my_keys = keys[name]
 def white(peer):
     for n in peer.netaddrs:
         peer.netaddrs[n] = True
+    return peer
 
 
 if name == 'Alice':
@@ -42,7 +43,8 @@ if name == 'Bob':
         log.debug('listen')
         try:
             s = hsock.listen()
-            print(s.listen_msg())
+            log.debug('Bob caught a connection. Listening for a message')
+            log.debug('Message: ' + s.listen_msg())
         except Exception as e:
             log.debug('exception while listening: ' + str(e))
 elif name == 'Alice':
