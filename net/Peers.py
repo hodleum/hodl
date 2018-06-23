@@ -1,4 +1,5 @@
 import json
+import time
 from socket import socket
 import random
 import cryptogr as cg
@@ -68,7 +69,7 @@ class Peer:
                 self.addr))
         sockets = []
         for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
-            log.debug('Peer.connect: connecting to ' + str(addr) + '. Whiteness: ' + str(white))
+            log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr) + '. Whiteness: ' + str(white))
             try:
                 if white:
                     sock = socket()
@@ -78,7 +79,7 @@ class Peer:
             except Exception as e:
                 log.debug('Peer.connect: exception while connecting: ' + str(e))
         if False in self.netaddrs.values():
-            sockets.append(peers.white_conn_to(self.addr))
+            sockets += peers.white_conn_to(self.addr)
         return sockets
 
     def connect_white(self):

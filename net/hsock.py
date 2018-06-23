@@ -40,6 +40,7 @@ class HSock(Thread):
             if sock:
                 log.debug('HSock.send: send by sock ' + str(sock))
                 send(sock, data.encode('utf-8'))
+                log.debug('HSock.send: sent by sock ' + str(sock))
 
     def listen(self):
         """

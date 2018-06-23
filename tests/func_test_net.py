@@ -6,7 +6,7 @@ from net import hsock
 from net.Peers import Peer, Peers
 
 name = str(os.getenv('HODL_NAME'))
-log.basicConfig(level=log.DEBUG)
+log.basicConfig(level=log.DEBUG, format='{}:%(message)s'.format(name))
 log.debug(
     '\n\n\n\n\n\n-------------------------------------\nstart\n-------------------------------------\n\n\n\n\n\n\n\n\n')
 with open('tests/keys', 'r') as f:
@@ -21,34 +21,31 @@ def white(peer):
 
 
 if name == 'Alice':
-    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
-                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
-                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
+    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
+                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
+                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
     time.sleep(2)
 if name == 'Bob':
-    peers = Peers([white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)])),
-                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
-                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
+    peers = Peers([white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)])),
+                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
+                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
 if name == 'Chuck':
-    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
-                   white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)])),
-                   white(Peer(keys['Dave'][1], [('172.19.0.5', 5000)]))])
+    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
+                   white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)])),
+                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
 if name == 'Dave':
-    peers = Peers([white(Peer(keys['Bob'][1], [('172.19.0.3', 5000)])),
-                   white(Peer(keys['Chuck'][1], [('172.19.0.4', 5000)])),
-                   white(Peer(keys['Alice'][1], [('172.19.0.2', 5000)]))])
+    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
+                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
+                   white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)]))])
 if name == 'Bob':
     log.debug('Bob listen')
-    for i in range(20):
-        log.debug('listen')
-        try:
-            s = hsock.listen()
-            log.debug('Bob caught a connection. Listening for a message')
-            log.debug('Message: ' + s.listen_msg())
-        except Exception as e:
-            log.debug('exception while listening: ' + str(e))
+    log.debug(str(time.time()) + ':listen')
+    s = hsock.listen()
+    log.debug(str(time.time()) + 'Bob caught a connection. Listening for a message. List of messages in HSock '
+                                 'now: ' + str(s.in_msgs))
+    log.debug('Message: ' + str(s.listen_msg()))
 elif name == 'Alice':
-    log.debug('Alice: creating HSock to send')
+    log.debug(str(time.time()) + ': creating HSock to send')
     s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
     s.send('hi i am alice')
 log.debug('func_test_net peers.update')
