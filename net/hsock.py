@@ -22,11 +22,12 @@ class HSock(Thread):
             log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
             self.conns = [conn]
+        log.debug('HSock.__init__: self.socks, self.conns created. self.socks:' + str([str(sock) for sock in self.socks]))
         self.in_msgs = []
-
         super().__init__(self.listen())
         self.name = addr
         self.start()
+        log.debug('HSock.__init__ self.start finished')
 
     @classmethod
     def input(cls, sock, conn):
@@ -36,7 +37,10 @@ class HSock(Thread):
     def send(self, data):
         # todo: encode data using RSA
         for sock in self.socks:
-            send(sock, data.encode('utf-8'))
+            if sock:
+                log.debug('HSock.send: send by sock ' + str(sock))
+                send(sock, data.encode('utf-8'))
+                log.debug('HSock.send: sent by sock ' + str(sock))
 
     def listen(self):
         """
