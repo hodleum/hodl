@@ -37,11 +37,14 @@ class Peer:
         [[private key1, public key1], ...]
         :type myaddrs: list
         """
-        log.debug('Peer.update')
+        log.debug('Peer.update for ' + self.addr)
         for addr in self.netaddrs:
             try:
+                log.debug('Peer.update: updating addr: ' + str(addr))
                 sock = socket()
+                log.debug('Peer.update: sock: ' + str(sock))
                 sock.connect(afs(addr))
+                log.debug('Peer.update: sock connected')
                 mess = {'request': ['peercheck', random.randint(0, 10000)]}
                 mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
                 send(sock, json.dumps(mess).encode())
@@ -59,6 +62,7 @@ class Peer:
                 else:
                     self.netaddrs.pop(addr)
                 self.netaddrs[addr] = False
+                log.debug('Peer.update: addr updated. Whiteness: ' + str(self.netaddrs[addr]))
             except Exception as e:
                 log.debug('Peer.update: exception: ' + str(e))
                 self.netaddrs[addr] = False

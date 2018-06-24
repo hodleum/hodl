@@ -7,6 +7,9 @@ from .proto import recv, send
 import json5 as json
 
 
+hsocks = []
+
+
 class HSock(Thread):
     """
     HODL Socket:
@@ -102,4 +105,15 @@ def listen(port=9276):
     sock.listen(1)
     conn, addr = sock.accept()
     log.debug('hsock.listen: input connection')
-    return HSock.input(sock, conn)
+    hsock = HSock.input(sock, conn)
+    hsocks.append(hsock)
+    return hsock
+
+
+def listen_loop(port=9276):
+    while True:
+        listen(port)
+
+
+def listen_thread(port=9276):
+    Thread(target=listen_loop, args=(port, ))
