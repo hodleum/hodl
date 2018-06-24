@@ -3,7 +3,7 @@ from threading import Thread
 import time
 from net.Peers import Peers
 import logging as log
-from .proto import recv, send
+from .proto import recv, send, sock_to
 import json5 as json
 
 

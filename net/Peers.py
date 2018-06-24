@@ -29,73 +29,35 @@ class Peer:
         :param netaddrs: Peer's IPs (dict: {IP1: whiteness of IP1, IP2: whiteness of IP2})
         """
         self.addr = addr
-        self.netaddrs = {ats(addr): None for addr in netaddrs}
-
-    def update(self, myaddrs):
-        """
-        Checks whiteness of addresses
-        myaddrs is list of this computer's addresses:
-        [[private key1, public key1], ...]
-        :type myaddrs: list
-        """
-        log.debug('Peer.update for ' + self.addr)
-        for addr in self.netaddrs:
-            try:
-                log.debug('Peer.update: updating addr: ' + str(addr))
-                sock = socket()
-                log.debug('Peer.update: sock: ' + str(sock))
-                log.debug('Peer.update: connecting to ' + str(afs(addr)))
-                sock.connect(afs(addr))
-                log.debug('Peer.update: sock connected')
-                mess = {'request': ['peercheck', random.randint(0, 10000)]}
-                mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
-                send(sock, json.dumps(mess).encode())
-                conn = sock.accept()[0]
-                data = recv(conn)
-                h = cg.h(data.decode('utf-8'))
-                data = json.loads(data.decode('utf-8'))
-                pubkeys = data['pubkeys']
-                for pubkey, sign in pubkeys:
-                    if not cg.verify_sign(sign, h, pubkey):
-                        pubkeys.remove([pubkey, sign])
-                if self.addr in pubkeys:
-                    self.netaddrs[addr] = True
-                else:
-                    self.netaddrs.pop(addr)
-                self.netaddrs[addr] = False
-                log.debug('Peer.update: addr updated. Whiteness: ' + str(self.netaddrs[addr]))
-            except Exception as e:
-                log.debug('Peer.update: exception: ' + traceback.format_exc())
-                self.netaddrs[addr] = False
+        self.netaddrs = [ats(addr) for addr in netaddrs]
 
     def connect(self, peers):
         """Generate sockets to all IP addresses for this peer"""
         log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(
                 self.addr))
         sockets = []
-        for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
-            log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr) + '. Whiteness: ' + str(white))
+        for addr in self.netaddrs:
+            log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr))
             try:
-                if white:
-                    sock = socket()
-                    sock.connect(afs(addr))
-                    sockets.append(sock)
-                    log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
+                sock = socket()
+                sock.connect(afs(addr))
+                sockets.append(sock)
+                log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
             except Exception as e:
                 log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
-        if False in self.netaddrs.values():
-            sockets += peers.white_conn_to(self.addr)
+        sockets += peers.white_conn_to(self.addr)
         return sockets
 
     def connect_white(self):
         sockets = []
-        for addr, white in zip(self.netaddrs.keys(), self.netaddrs.values()):
-            if white:
+        for addr in self.netaddrs:
+            try:
                 sock = socket()
+                sock.settimeout(2)
                 sock.connect(afs(addr))
                 sockets.append(sock)
-        if not socket:
-            return
+            except:
+                pass
         return sockets
 
     def __str__(self):
@@ -167,8 +129,3 @@ class Peers(set):
             if socks:
                 send(socks[0], json.dumps([meta, to]))
                 return socks[0]
-
-    def update(self, myaddrs):
-        log.debug('Peers.update')
-        for peer in self:
-            peer.update(myaddrs)

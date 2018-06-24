@@ -2,6 +2,12 @@ from socket import socket
 import struct
 
 
+def sock_to(addr):
+    sock = socket()
+    sock.connect(addr)
+    return sock
+
+
 def recv(sock):
     """
     Receive function for socket connections
