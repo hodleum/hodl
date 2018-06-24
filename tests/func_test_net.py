@@ -39,14 +39,16 @@ if name == 'Dave':
                    white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)]))])
 if name == 'Bob':
     log.debug('Bob listen')
-    hsock.listen()
+    hsock.listen_thread()
     while len(hsock.hsocks) == 0:
         pass
     s = hsock.hsocks[0]
     log.debug(str(time.time()) + 'Bob caught a connection. Listening for a message. List of messages in HSock '
                                  'now: ' + str(s.in_msgs))
-    log.debug('Message: ' + str(s.listen_msg()))
-    hsock.listen_thread()
+    if len(s.in_msgs) == 0:
+        log.debug('Message: ' + str(s.listen_msg()))
+    else:
+        log.debug('Message was already caught: ' + str(s.in_msgs[0]))
 elif name == 'Alice':
     log.debug(str(time.time()) + ': creating HSock to send')
     s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)

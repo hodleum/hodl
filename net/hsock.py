@@ -110,6 +110,14 @@ def listen(port=9276):
     return hsock
 
 
+def connect_to(addr, myaddrs=tuple(), peers=Peers()):
+    for hsock in hsocks:
+        if hsock.name == addr:
+            return hsock
+    else:
+        hsock = HSock(addr=addr, myaddrs=myaddrs, peers=peers)
+
+
 def listen_loop(port=9276):
     while True:
         listen(port)

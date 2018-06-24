@@ -1,5 +1,6 @@
 import json
 import time
+import traceback
 from socket import socket
 import random
 import cryptogr as cg
@@ -43,12 +44,12 @@ class Peer:
                 log.debug('Peer.update: updating addr: ' + str(addr))
                 sock = socket()
                 log.debug('Peer.update: sock: ' + str(sock))
+                log.debug('Peer.update: connecting to ' + str(afs(addr)))
                 sock.connect(afs(addr))
                 log.debug('Peer.update: sock connected')
                 mess = {'request': ['peercheck', random.randint(0, 10000)]}
                 mess['pubkeys'] = [[addr[1], cg.sign(json.dumps(mess), addr[0])] for addr in myaddrs]
                 send(sock, json.dumps(mess).encode())
-                sock.listen(1)
                 conn = sock.accept()[0]
                 data = recv(conn)
                 h = cg.h(data.decode('utf-8'))
@@ -64,7 +65,7 @@ class Peer:
                 self.netaddrs[addr] = False
                 log.debug('Peer.update: addr updated. Whiteness: ' + str(self.netaddrs[addr]))
             except Exception as e:
-                log.debug('Peer.update: exception: ' + str(e))
+                log.debug('Peer.update: exception: ' + traceback.format_exc())
                 self.netaddrs[addr] = False
 
     def connect(self, peers):
@@ -81,7 +82,7 @@ class Peer:
                     sockets.append(sock)
                     log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
             except Exception as e:
-                log.debug('Peer.connect: exception while connecting: ' + str(e))
+                log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
         if False in self.netaddrs.values():
             sockets += peers.white_conn_to(self.addr)
         return sockets
