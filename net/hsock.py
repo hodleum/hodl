@@ -116,4 +116,4 @@ def listen_loop(port=9276):
 
 
 def listen_thread(port=9276):
-    Thread(target=listen_loop, args=(port, ))
+    Thread(target=listen_loop, args=(port, )).start()
