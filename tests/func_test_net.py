@@ -15,8 +15,6 @@ my_keys = keys[name]
 
 
 def white(peer):
-    for n in peer.netaddrs:
-        peer.netaddrs[n] = True
     return peer
 
 
@@ -57,5 +55,3 @@ elif name == 'Alice':
 else:
     hsock.listen_thread()
 time.sleep(4)
-log.debug('func_test_net peers.update')
-peers.update([my_keys])

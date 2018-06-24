@@ -6,6 +6,7 @@ import random
 import cryptogr as cg
 import logging as log
 from .proto import recv, send
+from .protocol import generate
 
 meta = """HODL_NetP v1"""
 
@@ -45,7 +46,7 @@ class Peer:
                 log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
             except Exception as e:
                 log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
-        sockets += peers.white_conn_to(self.addr)
+        sockets.append(peers.white_conn_to(self.addr))
         return sockets
 
     def connect_white(self):
@@ -127,5 +128,9 @@ class Peers(set):
         for peer in self:
             socks = peer.connect_white()
             if socks:
-                send(socks[0], json.dumps([meta, to]))
-                return socks[0]
+                for sock in socks:
+                    try:
+                        send(sock, json.dumps(generate(type="between", message=to)))
+                        return sock
+                    except:
+                        pass

@@ -38,6 +38,7 @@ def send(sock, data):
 
     :return: None
     """
-
+    if type(data) == str:
+        data = data.encode()
     data = struct.pack('>L', len(data)) + data
     sock.sendall(data)
