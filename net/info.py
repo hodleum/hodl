@@ -5,8 +5,10 @@ VERSION="v0.1-alpha"
 SUPPORTED_TYPES=[
     "sync",
     "PRequest",
+    "PReturn",
     "E2E-SmartContract",
-    "AvailabilityPing"
+    "AvailabilityPing",
+    "reconnect"
 ]
 
 SUPPORTED_ENCODINGS=[
