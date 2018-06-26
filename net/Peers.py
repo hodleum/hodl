@@ -8,6 +8,7 @@ import logging as log
 from .proto import recv, send
 from .protocol import generate
 
+
 meta = """HODL_NetP v1"""
 
 
@@ -75,6 +76,19 @@ class Peer:
         self = cls(s[0], s[1])
         return self
 
+    def __hash__(self):
+        return hash(str(self))
+
+    def __add__(self, other):
+        if hash(self) == hash(other):
+            return self
+        elif self.addr == other.addr:
+            new = self
+            new.netaddrs = set(self.netaddrs + other.netaddrs)
+            return new
+        else:
+            return self
+
 
 class Peers(set):
     """
@@ -134,3 +148,23 @@ class Peers(set):
                         return sock
                     except:
                         pass
+
+    @classmethod
+    def from_list(cls, l):
+        self = cls()
+        for peer in l:
+            self.add(peer)
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __add__(self, other):
+        if hash(self) == hash(other):
+            return self
+        else:
+            peers = list(self)
+            other = list(other)
+            for i in range(len(peers)):
+                for j in range(len(other)):
+                    peers[i] += other[j]
+            return Peers.from_list(peers)

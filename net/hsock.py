@@ -19,8 +19,8 @@ class HSock(Thread):
     def __init__(self, sock=None, conn=None, addr='', myaddrs=(), peers=Peers()):
         if not (sock and conn):
             log.debug('HSock.__init__: creating HSock by connecting by address')
-            peer = peers.srchbyaddr(addr)[1]
-            self.socks = peer.connect(peers)
+            self.peer = peers.srchbyaddr(addr)[1]
+            self.socks = self.peer.connect(peers)
             self.conns = []
         else:
             log.debug('HSock.__init__: creating input HSock by conn and sock')
@@ -84,6 +84,18 @@ class HSock(Thread):
             if len(self.in_msgs) > len_msgs:
                 return self.in_msgs[-1]
 
+    def extend(self, peer):
+        """
+        If new IPs for this peer are received, make connections with this IPs
+        :param peer: Peer
+        """
+        current_ips = set(self.peer.netaddrs)
+        # todo
+
+    def __hash__(self):
+        return hash(','.join([str(hash(self.__dict__.get('peer', 'none')))] + [str(conn) for conn in self.conns]
+                             + [str(sock) for sock in self.socks]))
+
 
 class BetweenSock:
     def __init__(self, conn, sock):
@@ -126,3 +138,11 @@ def listen_loop(port=9276):
 
 def listen_thread(port=9276):
     Thread(target=listen_loop, args=(port, )).start()
+
+def connect_to_all(peers):
+    peers = list(peers)
+    connected = [hsock.addr for hsock in hsocks]
+    for peer in peers:
+        if peer.addr in connected:
+            hsock = hsocks[connected.index(peer.addr)]
+            hsock.extend(peer)
