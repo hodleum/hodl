@@ -84,13 +84,14 @@ class HSock(Thread):
             if len(self.in_msgs) > len_msgs:
                 return self.in_msgs[-1]
 
-    def extend(self, peer):
+    def extend(self, peer, peers=Peers()):
         """
         If new IPs for this peer are received, make connections with this IPs
         :param peer: Peer
+        :param peers: Peers
         """
         current_ips = set(self.peer.netaddrs)
-        # todo
+        peer.connect(peers, current_ips)
 
     def __hash__(self):
         return hash(','.join([str(hash(self.__dict__.get('peer', 'none')))] + [str(conn) for conn in self.conns]
@@ -124,11 +125,20 @@ def listen(port=9276):
 
 
 def connect_to(addr, myaddrs=tuple(), peers=Peers()):
+    """
+    Create new HSock by address if not exists
+    :param addr: str, HODL wallet to connect to
+    :param myaddrs: list, my addresses
+    :param peers: Peers
+    :return: HSock
+    """
     for hsock in hsocks:
         if hsock.name == addr:
             return hsock
     else:
         hsock = HSock(addr=addr, myaddrs=myaddrs, peers=peers)
+        hsocks.append(hsock)
+        return hsock
 
 
 def listen_loop(port=9276):
@@ -137,12 +147,19 @@ def listen_loop(port=9276):
 
 
 def listen_thread(port=9276):
+    """
+    Start new thread for listening
+    :param port: int
+    """
     Thread(target=listen_loop, args=(port, )).start()
 
-def connect_to_all(peers):
+
+def connect_to_all(peers, myaddrs=[]):
     peers = list(peers)
     connected = [hsock.addr for hsock in hsocks]
     for peer in peers:
         if peer.addr in connected:
             hsock = hsocks[connected.index(peer.addr)]
-            hsock.extend(peer)
+            hsock.extend(peer, peers)
+        else:
+            hsocks.append(HSock(addr=peer.addr, myaddrs=myaddrs, peers=peers))

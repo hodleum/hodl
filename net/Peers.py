@@ -33,20 +33,21 @@ class Peer:
         self.addr = addr
         self.netaddrs = [ats(addr) for addr in netaddrs]
 
-    def connect(self, peers):
+    def connect(self, peers, exc=tuple()):
         """Generate sockets to all IP addresses for this peer"""
         log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(
                 self.addr))
         sockets = []
         for addr in self.netaddrs:
-            log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr))
-            try:
-                sock = socket()
-                sock.connect(afs(addr))
-                sockets.append(sock)
-                log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
-            except Exception as e:
-                log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
+            if addr not in exc:
+                log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr))
+                try:
+                    sock = socket()
+                    sock.connect(afs(addr))
+                    sockets.append(sock)
+                    log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
+                except Exception as e:
+                    log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
         sockets.append(peers.white_conn_to(self.addr))
         return sockets
 
