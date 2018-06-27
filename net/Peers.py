@@ -169,3 +169,11 @@ class Peers(set):
                 for j in range(len(other)):
                     peers[i] += other[j]
             return Peers.from_list(peers)
+
+    def hash_list(self):
+        return [hash(peer) for peer in list(self)]
+
+    def peer_by_hash(self, h):
+        for peer in list(self):
+            if hash(peer) == h:
+                return peer
