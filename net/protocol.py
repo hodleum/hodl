@@ -4,24 +4,31 @@ HODL transport protocol
 
 import base64
 import logging as log
-import os
 import platform
-import random
-from contextlib import closing
-from zipfile import ZipFile, ZIP_DEFLATED
+import zlib
+
 import json5
+
 from net import info
 
 
-def zipdir(basedir, archivename):
-    assert os.path.isdir(basedir)
-    with closing(ZipFile(archivename, "w", ZIP_DEFLATED)) as z:
-        for root, dirs, files in os.walk(basedir):
-            #NOTE: ignore empty directories
-            for fn in files:
-                absfn = os.path.join(root, fn)
-                zfn = absfn[len(basedir)+len(os.sep):] #XXX: relative path
-                z.write(absfn, zfn)
+def compress_b64(d2c, cspeed=-1):
+    """
+    Compressing message for hsock
+    :param d2c: string
+    :param cspeed: int
+    :return: string
+    """
+    log.debug("COMPRESSION STARTED")
+
+    d2c = base64.urlsafe_b64encode(d2c).encode("utf8")
+
+    log.debug("PREVIOUS B64:", d2c)
+
+    d2c = zlib.compress(d2c, level=cspeed)
+    return base64.standard_b64encode(d2c)
+
+
 
 
 def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text", ctype="desktop", length="full",
@@ -102,6 +109,7 @@ def handle(answer, adr, mypeers=set()):
 
 
 if __name__ == "__main__":
+    from net.Peers import Peers
     log.basicConfig(level=log.DEBUG)
     print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest", peers=Peers()), "0xEXAMPLE",
                  mypeers=set()))
