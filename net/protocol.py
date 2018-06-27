@@ -10,9 +10,8 @@ import platform
 import random
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
-
 import json5
-
+from net.Peers import Peers
 import net.info as info
 
 
@@ -25,6 +24,7 @@ def zipdir(basedir, archivename):
                 absfn = os.path.join(root, fn)
                 zfn = absfn[len(basedir)+len(os.sep):] #XXX: relative path
                 z.write(absfn, zfn)
+
 
 def generate(message="", type="", peers=tuple(), pubkeys=[], encoding="text", ctype="desktop", length="full", endaddr=None, DISABLE_TEST=False):
     res = {}
@@ -64,8 +64,14 @@ def generate(message="", type="", peers=tuple(), pubkeys=[], encoding="text", ct
     return json5.dumps(res, indent=5)
 
 
-
-def handle(answer, adr):
+def handle(answer, adr, mypeers):
+    """
+    Handle message answer from adr
+    :param answer: str, message
+    :param adr: str, sender's address
+    :param mypeers: Peers
+    :return: newpeers: Peers, synced peers
+    """
     z = None
     answer = json5.loads(answer)
     print(answer)
@@ -78,23 +84,12 @@ def handle(answer, adr):
 
     if rlength != "short":
         try:
-            os.mkdir("peers_dump")
-        except Exception as ex:
-            log.debug("  Directory already exists or something went wrong. Exception here: ")
-            log.warning(ex)
-        with open("peers_dump/peers_a{adr}_{r}.json".format(adr=adr, r=random.randint(0, 1000000)), "w") as f:
-            json5.dump(fp=f, obj={"peers":answer.get("peers")})
-            f.close()
-    if answer.get("message").get("type") == "PRequest":
-        zipdir("peers_dump", "tdmp.zip")
-        with closing(open("tdmp.zip", "rb")) as f:
-            b = f.read()
-        z = base64.b64encode(b)
-        z = str(z)
-        os.remove("tdmp.zip")
-        z = generate(z, type="PReturn", encoding="base64", length="short")
-    if z is not None:
-        return z
+            newpeers = Peers.from_json(answer.get('peers')) + mypeers
+        except:
+            newpeers = mypeers
+    else:
+        newpeers = mypeers
+    return newpeers
 
 
 if __name__ == "__main__":
