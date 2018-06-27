@@ -97,6 +97,9 @@ class HSock(Thread):
         return hash(','.join([str(hash(self.__dict__.get('peer', 'none')))] + [str(conn) for conn in self.conns]
                              + [str(sock) for sock in self.socks]))
 
+    def __repr__(self):
+        return '<HSock socks=' + str([str(sock) for sock in self.socks]) + ' peer=' + str(self.__dict__.get('peer'))+'>'
+
 
 class BetweenSock:
     def __init__(self, conn, sock):
@@ -155,9 +158,8 @@ def listen_thread(port=9276):
 
 
 def connect_to_all(peers, myaddrs=tuple()):
-    peers = list(peers)
-    connected = [hsock.addr for hsock in hsocks]
-    for peer in peers:
+    connected = [hsock.peer.addr if 'peer' in hsock.__dict__.keys() else None for hsock in hsocks]
+    for peer in list(peers):
         if peer.addr in connected:
             hsock = hsocks[connected.index(peer.addr)]
             hsock.extend(peer, peers)

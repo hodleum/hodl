@@ -10,7 +10,6 @@ import random
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 import json5
-from net.Peers import Peers
 from net import info
 
 
@@ -25,7 +24,7 @@ def zipdir(basedir, archivename):
                 z.write(absfn, zfn)
 
 
-def generate(message="", type="", peers=Peers(), pubkeys=tuple(), encoding="text", ctype="desktop", length="full",
+def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text", ctype="desktop", length="full",
              endaddr=None, DISABLE_TEST=False):
     """
     Generate message for HSock
@@ -77,7 +76,7 @@ def generate(message="", type="", peers=Peers(), pubkeys=tuple(), encoding="text
     return json5.dumps(res, indent=5)
 
 
-def handle(answer, adr, mypeers=Peers()):
+def handle(answer, adr, mypeers=set()):
     """
     Handle message answer from adr
     :param answer: str, message
@@ -105,4 +104,4 @@ def handle(answer, adr, mypeers=Peers()):
 if __name__ == "__main__":
     log.basicConfig(level=log.DEBUG)
     print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest", peers=Peers()), "0xEXAMPLE",
-                 mypeers=Peers()))
+                 mypeers=set()))
