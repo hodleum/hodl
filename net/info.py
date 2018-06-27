@@ -10,7 +10,8 @@ SUPPORTED_TYPES = [
     "getblocks",
     "getSCmem",
     "AvailabilityPing",
-    "reconnect"
+    "reconnect",
+    "peer_by_hash"
 ]
 
 SUPPORTED_ENCODINGS = [

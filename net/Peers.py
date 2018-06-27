@@ -171,9 +171,23 @@ class Peers(set):
             return Peers.from_list(peers)
 
     def hash_list(self):
+        """
+        List of peers' hashes
+        :return: list
+        """
         return [hash(peer) for peer in list(self)]
 
     def peer_by_hash(self, h):
+        """
+        Find peer with hash h
+        :param h: int, hash
+        :return: Peer
+        """
         for peer in list(self):
             if hash(peer) == h:
                 return peer
+
+    def needed_peers(self, another_hashes):
+        my_hashes = set(self.hash_list())
+        another_hashes = set(another_hashes)
+        return another_hashes.difference(my_hashes)

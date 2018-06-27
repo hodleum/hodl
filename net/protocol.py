@@ -58,7 +58,7 @@ def generate(message="", type="", peers=Peers(), pubkeys=tuple(), encoding="text
         cd["CType"] = ctype
         res["client_details"] = cd
     if length != "short":
-        res["peers"] = str(peers)
+        res["peers"] = peers.hash_list()
         res["pubkeys"] = pubkeys
 
     # Message generation
@@ -83,7 +83,7 @@ def handle(answer, adr, mypeers=Peers()):
     :param answer: str, message
     :param adr: str, sender's address
     :param mypeers: Peers
-    :return: newpeers: Peers, synced peers
+    :return: request_peers: list, list of peers' hashes to request
     """
     z = None
     answer = json5.loads(answer)
@@ -96,13 +96,10 @@ def handle(answer, adr, mypeers=Peers()):
         rprotocol = None
 
     if rlength != "short":
-        try:
-            newpeers = Peers.from_json(answer.get('peers')) + mypeers
-        except:
-            newpeers = mypeers
+        request_peers = mypeers.needed_peers(answer.get('peers'))
     else:
-        newpeers = mypeers
-    return newpeers
+        request_peers = []
+    return request_peers
 
 
 if __name__ == "__main__":
