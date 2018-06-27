@@ -1,6 +1,5 @@
 """
-HODL Socket protocol
-Main transport protocol
+HODL transport protocol
 """
 
 import base64
@@ -12,7 +11,7 @@ from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 import json5
 from net.Peers import Peers
-import net.info as info
+from net import info
 
 
 def zipdir(basedir, archivename):
@@ -26,7 +25,21 @@ def zipdir(basedir, archivename):
                 z.write(absfn, zfn)
 
 
-def generate(message="", type="", peers=tuple(), pubkeys=[], encoding="text", ctype="desktop", length="full", endaddr=None, DISABLE_TEST=False):
+def generate(message="", type="", peers=Peers(), pubkeys=tuple(), encoding="text", ctype="desktop", length="full",
+             endaddr=None, DISABLE_TEST=False):
+    """
+    Generate message for HSock
+    :param message: str
+    :param type: str, type of message
+    :param peers: Peers, my peers
+    :param pubkeys: list, my pubkeys
+    :param encoding: str, encoding for message
+    :param ctype: str, platform type
+    :param length: str, full or short
+    :param endaddr: str, address for encoding
+    :param DISABLE_TEST: bool
+    :return: message: str
+    """
     res = {}
     res["length"]=length
     csys = platform.system()
@@ -46,7 +59,7 @@ def generate(message="", type="", peers=tuple(), pubkeys=[], encoding="text", ct
         res["client_details"] = cd
     if length != "short":
         res["peers"] = str(peers)
-    res["pubkeys"] = pubkeys
+        res["pubkeys"] = pubkeys
 
     # Message generation
 
@@ -64,7 +77,7 @@ def generate(message="", type="", peers=tuple(), pubkeys=[], encoding="text", ct
     return json5.dumps(res, indent=5)
 
 
-def handle(answer, adr, mypeers):
+def handle(answer, adr, mypeers=Peers()):
     """
     Handle message answer from adr
     :param answer: str, message
@@ -94,5 +107,5 @@ def handle(answer, adr, mypeers):
 
 if __name__ == "__main__":
     log.basicConfig(level=log.DEBUG)
-    peer = ["peers", "here"]
-    print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest" ,peers=tuple(peer)), "0xEXAMPLE"))
+    print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest", peers=Peers()), "0xEXAMPLE",
+                 mypeers=Peers()))

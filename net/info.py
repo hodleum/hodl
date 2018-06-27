@@ -1,17 +1,19 @@
 """ INFORMATION ABOUT HODL NETWORKING """
 
-PNAME="HODL"
-VERSION="v0.1-alpha"
-SUPPORTED_TYPES=[
+
+PNAME = "HODL"
+VERSION = "v0.1-alpha"
+SUPPORTED_TYPES = [
     "sync",
     "PRequest",
     "PReturn",
-    "E2E-SmartContract",
+    "getblocks",
+    "getSCmem",
     "AvailabilityPing",
     "reconnect"
 ]
 
-SUPPORTED_ENCODINGS=[
+SUPPORTED_ENCODINGS = [
     "json",
     "base64",
     "b+gzip",
