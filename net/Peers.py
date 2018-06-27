@@ -48,7 +48,7 @@ class Peer:
                     log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
                 except Exception as e:
                     log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
-        sockets.append(peers.white_conn_to(self.addr))
+        sockets += peers.white_conn_to(self.addr)
         return sockets
 
     def connect_white(self):
@@ -139,16 +139,19 @@ class Peers(set):
                 return True, p
         return False, None
 
-    def white_conn_to(self, to):
+    def white_conn_to(self, to, n=3):
+        socks = []
         for peer in self:
             socks = peer.connect_white()
             if socks:
                 for sock in socks:
                     try:
                         send(sock, json.dumps(generate(type="between", message=to)))
-                        return sock
+                        socks.append(sock)
                     except:
                         pass
+                    if len(socks) == n:
+                        return socks
 
     @classmethod
     def from_list(cls, l):
