@@ -14,27 +14,19 @@ with open('tests/keys', 'r') as f:
 my_keys = keys[name]
 
 
-def white(peer):
-    return peer
-
-
 if name == 'Alice':
-    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
-                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
-                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
+    peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)])])
     time.sleep(2)
 if name == 'Bob':
-    peers = Peers([white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)])),
-                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
-                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
+    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 if name == 'Chuck':
-    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
-                   white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)])),
-                   white(Peer(keys['Dave'][1], [('192.19.0.5', 9276)]))])
+    peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
+                   Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
+                   Peer(keys['Dave'][1], [('192.19.0.5', 9276)])])
 if name == 'Dave':
-    peers = Peers([white(Peer(keys['Bob'][1], [('192.19.0.3', 9276)])),
-                   white(Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])),
-                   white(Peer(keys['Alice'][1], [('192.19.0.2', 9276)]))])
+    peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
+                   Peer(keys['Chuck'][1], [('192.19.0.4', 9276)]),
+                   Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 if name == 'Bob':
     log.debug('Bob listen')
     hsock.listen_thread()
@@ -55,3 +47,7 @@ elif name == 'Alice':
 else:
     hsock.listen_thread()
 time.sleep(4)
+log.debug('hsock.connect_to_all. time: ' + str(time.time()))
+hsock.connect_to_all(peers, keys['Alice'])
+time.sleep(1)
+log.debug('Peers: len(peers): ' + str(len(peers)) + ',\n\n' + str(peers))

@@ -154,7 +154,7 @@ def listen_thread(port=9276):
     Thread(target=listen_loop, args=(port, )).start()
 
 
-def connect_to_all(peers, myaddrs=[]):
+def connect_to_all(peers, myaddrs=tuple()):
     peers = list(peers)
     connected = [hsock.addr for hsock in hsocks]
     for peer in peers:
