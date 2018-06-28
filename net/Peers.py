@@ -49,7 +49,6 @@ class Peer:
                 except Exception as e:
                     log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
         white_conns = peers.white_conn_to(self.addr, n)
-        print('52\n\n\n', sockets, '\n', white_conns)
         sockets += white_conns
         return sockets
 

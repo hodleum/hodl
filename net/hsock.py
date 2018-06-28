@@ -5,7 +5,6 @@ from net.Peers import Peers
 import logging as log
 from .proto import recv, send, sock_to
 from .protocol import generate, handle
-import json5 as json
 
 
 hsocks = []
