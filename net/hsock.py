@@ -57,7 +57,7 @@ class HSock(Thread):
                 peers = Peers()
         # todo: encode data using RSA
         # todo: generate message by protocol.generate
-        for sock in self.socks:
+        for sock in self.conns:
             if sock:
                 log.debug('HSock.send: send by sock ' + str(sock))
                 send(sock, generate(message=data, peers=peers, ans=ans, pubkeys=[addr[1] for addr in self.myaddrs],
@@ -76,7 +76,7 @@ class HSock(Thread):
                 if conn:
                     Thread(target=self.recv_by_sock, args=(conn,)).start()
         else:
-            for sock in self.socks:
+            for sock in self.conns:
                 if sock:
                     Thread(target=self.recv_by_sock, args=(sock, )).start()
 
@@ -91,7 +91,8 @@ class HSock(Thread):
     def recv_by_sock(self, sock):
         self.in_msgs.append(recv(sock))
         hand = handle(self.in_msgs[-1], self.name, self.peers, alternative_message_handlers=self.amh)
-        self.send(*(hand[1]+[self.peers]))
+        if hand[0]:
+            self.send(*(hand[1]+[self.peers]))
 
     def listen_msg(self, delt=0.05):
         """
@@ -128,9 +129,13 @@ def listen(port=9276):
     :return: sock: HSock
     """
     log.debug('hsock.listen')
-    sock = socket()
-    sock.bind(('', port))
-    sock.listen(1)
+    global sock
+    try:
+        sock
+    except:
+        sock = socket()
+        sock.bind(('', port))
+        sock.listen()
     conn, addr = sock.accept()
     log.debug('hsock.listen: input connection')
     hsock = HSock.input(sock, conn)
