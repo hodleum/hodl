@@ -5,7 +5,7 @@ from net.hsock import HSock, listen
 from net.Peers import Peers, Peer
 
 
-log.basicConfig(filename='hsock-listen.log', level=log.DEBUG)
+log.basicConfig(level=log.DEBUG)
 log.debug('----------hsock-listen----------')
 peer2 = Peer('2', [('127.0.0.1', 1222)])
 peers1 = Peers([peer2])

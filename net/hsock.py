@@ -59,11 +59,9 @@ class HSock(Thread):
         # todo: generate message by protocol.generate
         for sock in self.conns:
             if sock:
-                log.debug('HSock.send: send by sock ' + str(sock))
                 send(sock, generate(message=data, peers=peers, ans=ans, pubkeys=[addr[1] for addr in self.myaddrs],
                                     requests=requests,
                                     encoding="text", full=full, endaddr=self.addr))
-                log.debug('HSock.send: sent by sock ' + str(sock))
 
     def listen(self):
         """
@@ -90,7 +88,7 @@ class HSock(Thread):
 
     def recv_by_sock(self, sock):
         self.in_msgs.append(recv(sock))
-        log.debug('New input message: ' + str(self.in_msgs[-1]))
+        log.debug('New input message: ' + str(self.in_msgs[-1]) + '. All messages: ' + str(self.in_msgs))
         hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
         if hand[0]:
             self.send(*(hand[1]+[self.peers]))

@@ -49,7 +49,6 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=t
     csys = platform.system()
     if DISABLE_TEST:
         log.warning("DISABLE_TEST is enabled! This is UNSECURE!")
-    log.debug(" Platform is "+str(csys))
     if full:
         pj = {}
         pj["Name"] = info.PNAME
@@ -68,7 +67,7 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=t
 
     mes = {}
     mes['answers'] = ans
-    mes['requests'] = requests
+    res['requests'] = requests
     if endaddr is not None:
         mes["address"] = endaddr
     mes["encoding"] = encoding
