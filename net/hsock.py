@@ -29,8 +29,8 @@ class HSock(Thread):
         log.debug('HSock.__init__: self.socks, self.conns created. self.socks:' + str([str(sock) for sock in self.socks]))
         self.in_msgs = []
         self.myaddrs = myaddrs
-        super().__init__(self.listen())
-        self.name = addr
+        super().__init__(target=self.listen)
+        self.addr = addr
         self.amh = []
         self.start()
         log.debug('HSock.__init__ self.start finished')
@@ -62,7 +62,7 @@ class HSock(Thread):
                 log.debug('HSock.send: send by sock ' + str(sock))
                 send(sock, generate(message=data, peers=peers, ans=ans, pubkeys=[addr[1] for addr in self.myaddrs],
                                     requests=requests,
-                                    encoding="text", full=full, endaddr=self.name))
+                                    encoding="text", full=full, endaddr=self.addr))
                 log.debug('HSock.send: sent by sock ' + str(sock))
 
     def listen(self):
@@ -90,7 +90,7 @@ class HSock(Thread):
 
     def recv_by_sock(self, sock):
         self.in_msgs.append(recv(sock))
-        hand = handle(self.in_msgs[-1], self.name, self.peers, alternative_message_handlers=self.amh)
+        hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
         if hand[0]:
             self.send(*(hand[1]+[self.peers]))
 

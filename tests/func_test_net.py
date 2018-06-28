@@ -33,10 +33,10 @@ if name == 'Bob':
     while len(hsock.hsocks) == 0:
         pass
     s = hsock.hsocks[0]
-    log.debug(str(time.time()) + 'Bob caught a connection. Listening for a message. List of messages in HSock '
-                                 'now: ' + str(s.in_msgs))
+    log.debug('\n---------Bob caught a connection. Listening for a message. List of messages in HSock '
+                                 'now: ' + str(s.in_msgs) + '-----------\n')
     if len(s.in_msgs) == 0:
-        log.debug('Message: ' + str(s.listen_msg()))
+        log.debug('\n\nMessage: ' + str(s.listen_msg()) + '\n\n')
     else:
         log.debug('Message was already caught: ' + str(s.in_msgs[0]))
 elif name == 'Alice':

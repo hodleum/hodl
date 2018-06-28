@@ -106,10 +106,10 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
     """
     # todo: process sender's pubkeys
     z = None
-    log.debug('protocol.handle: answer: ' + answer)
-    if answer == '':
+    log.debug('protocol.handle: answer: ' + str(answer))
+    if not answer:
         log.debug("Empty message in handle")
-        return False
+        return [False]
     answer = json5.loads(answer)
     print(answer)
     rlength = answer.get("length")
