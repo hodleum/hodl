@@ -30,7 +30,7 @@ def compress_b64(d2c, cspeed=-1):
 
 
 def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=tuple(), encoding="text", full=True,
-             endaddr="", DISABLE_TEST=False):
+             endaddr="", mtype="AvailabilityPing", DISABLE_TEST=False):
     """
     Generate message for HSock
     :param message: str
@@ -64,15 +64,19 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=t
         res["pubkeys"] = pubkeys
     if encoding not in info.SUPPORTED_ENCODINGS and not DISABLE_TEST:
         raise Exception("Not Supported Encoding. To disable test set DISABLE_TEST to True")
+    if mtype not in info.SUPPORTED_TYPES and not DISABLE_TEST:
+        raise Exception("Not Supported Type. To disable test set DISABLE_TEST to True")
 
     mes = {}
     mes['answers'] = ans
     res['requests'] = requests
     if endaddr is not None:
         mes["address"] = endaddr
+    mes["type"] = mtype
     mes["encoding"] = encoding
     mes["body"] = message
     res["message"] = mes
+    log.debug("RESULT: ", json5.dumps(res, indent=5))
     return json5.dumps(res, indent=5)
 
 
@@ -134,5 +138,5 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
 if __name__ == "__main__":
     from net.Peers import Peers
     log.basicConfig(level=log.DEBUG)
-    print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest", peers=Peers()), "0xEXAMPLE",
+    print(handle(generate(message="Hello World!", pubkeys=[], mtype="PRequest", peers=Peers()), "0xEXAMPLE",
                  mypeers=set()))
