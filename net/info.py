@@ -11,7 +11,8 @@ SUPPORTED_TYPES = [
     "getSCmem",
     "AvailabilityPing",
     "reconnect",
-    "peer_by_hash"
+    "peer_by_hash",
+    ""
 ]
 
 SUPPORTED_ENCODINGS = [

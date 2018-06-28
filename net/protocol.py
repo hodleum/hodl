@@ -29,14 +29,15 @@ def compress_b64(d2c, cspeed=-1):
     return base64.standard_b64encode(d2c)
 
 
-def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text", full=True,
+def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=set(), encoding="text", full=True,
              endaddr="", DISABLE_TEST=False):
     """
     Generate message for HSock
     :param message: str
-    :param type: str, type of message
+    :param t: str, type of message
     :param peers: Peers, my peers
     :param pubkeys: list, my pubkeys
+    :param requests: list, requests
     :param encoding: str, encoding for message
     :param length: str, full or short
     :param endaddr: str, address for encoding
@@ -62,15 +63,11 @@ def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text",
     if full:
         res["peers"] = peers.hash_list()
         res["pubkeys"] = pubkeys
-
-    # Message generation
-
-    if type not in info.SUPPORTED_TYPES and not DISABLE_TEST:
-        raise Exception("Not Supported Type. To disable test set DISABLE_TEST to True")
     if encoding not in info.SUPPORTED_ENCODINGS and not DISABLE_TEST:
         raise Exception("Not Supported Encoding. To disable test set DISABLE_TEST to True")
+
     mes = {}
-    mes["type"] = type
+    mes['answers'] = ans
     if endaddr is not None:
         mes["address"] = endaddr
     mes["encoding"] = encoding
@@ -79,13 +76,32 @@ def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text",
     return json5.dumps(res, indent=5)
 
 
-def handle(answer, adr, mypeers=set()):
+def handle_request(request):
+    pass # todo
+
+
+def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
     """
     Handle message answer from adr
     :param answer: str, message
     :param adr: str, sender's address
     :param mypeers: Peers
-    :return: request_peers: list, list of peers' hashes to request
+    :param alternative_message_handlers: list of functions
+    :return:
+    [
+        new peers,
+
+        mes, list of args for generating answer message:
+        [
+            '',
+            requests=[{request: 'request_peers', body: request_peers: list, list of peers' hashes to request}
+                ]
+            ans=[
+                    answers
+                ]
+            full
+        ]
+    ]
     """
     z = None
     answer = json5.loads(answer)
@@ -96,12 +112,18 @@ def handle(answer, adr, mypeers=set()):
         log.debug("HProto version is "+rprotocol.get("Version"))
     else:
         rprotocol = None
-
+    requests = []
     if rlength:
         request_peers = mypeers.needed_peers(answer.get('peers'))
-    else:
-        request_peers = []
-    return request_peers
+        requests.append({'request': 'request_peers', 'body': request_peers})
+    answers = []
+    for request in answer["requests"]:
+        for amh in alternative_message_handlers:
+            a = amh(request)
+            if a:
+                continue
+        answers.append(handle_request(request))
+    return ['', requests, answers, False]
 
 
 if __name__ == "__main__":
