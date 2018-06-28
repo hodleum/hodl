@@ -32,7 +32,7 @@ def send(sock, data):
     :type sock: socket
 
     :param data: data to send
-    :type data: bytes
+    :type data: bytes, str
 
     :return: None
     """

@@ -90,7 +90,7 @@ def sign_tnx(self, sign, privkey, t):
         self.sign = cg.sign(self.hash, privkey)
     else:
         self.sign = sign
-    return self.sign
+    return self.sign  # TODO: timestamp
 
 
 class Transaction:
@@ -98,6 +98,17 @@ class Transaction:
     To create new transaction, use:
     tnx=Transaction()
     tnx.gen(parameters)"""
+
+    def __init__(self):
+        self.froms = None
+        self.outs = None
+        self.outns = None
+        self.author = None
+        self.index = None
+        self.timestamp = None
+        self.sign = None
+        self.hash = None
+
     def __str__(self):
         """Encodes transaction to str using JSON"""
         return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,

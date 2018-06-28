@@ -12,7 +12,7 @@ SUPPORTED_TYPES = [
     "AvailabilityPing",
     "reconnect",
     "peer_by_hash",
-    ""
+    "E2E-SmartContract"
 ]
 
 SUPPORTED_ENCODINGS = [

@@ -34,7 +34,7 @@ class SimpleSC(Smart_contract):
                         return False
         return True
 
-    def execute(self, func='', args=[], is_task=False):
+    def execute(self, func='', args=(), is_task=False):
         exec(self.code)
         func = exec(func)
         func(*args)

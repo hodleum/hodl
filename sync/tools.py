@@ -28,7 +28,7 @@ def listen_loop(keys):
         conns.append(InputConnection(sock, keys))
 
 
-def send_loop(keys, log=None):
+def send_loop(keys):
     while True:
         log.debug('net.send_loop')
         for peer in list(peers):
@@ -42,5 +42,5 @@ def loop(keys, port=default_port):
     log.debug('net.loop')
     start_new_thread(listen_loop, args=(keys, log))
     log.debug('net.loop: started listen_loop')
-    send_loop(keys, log=log)
+    send_loop(keys)
     log.debug('net.loop: started send_loop')

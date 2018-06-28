@@ -61,6 +61,7 @@ class Connection(Thread):
             h = cg.h(json.dumps(hdata))
             data = json.loads(data)
             pubkeys = data['pubkeys']
+            b = None
             for pubkey, sign in pubkeys:
                 if not cg.verify_sign(sign, h, pubkey):
                     pubkeys.remove([pubkey, sign])
@@ -75,6 +76,10 @@ class Connection(Thread):
                         bch.append(b)
                     get_many_blocks(data['delta'], -1000)
             lb = data['lb']
+
+            if not b:
+                raise Exception("data['blocks'][1:] has len 0")
+
             if len(lb.txs) > len(bch[-1].txs) and lb.is_valid(bch):
                 b.txs = lb.txs
             b.powminers = set(b.powminers) | set(lb.powminers)
