@@ -29,7 +29,7 @@ def compress_b64(d2c, cspeed=-1):
     return base64.standard_b64encode(d2c)
 
 
-def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=set(), encoding="text", full=True,
+def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=tuple(), encoding="text", full=True,
              endaddr="", DISABLE_TEST=False):
     """
     Generate message for HSock
@@ -68,6 +68,7 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=s
 
     mes = {}
     mes['answers'] = ans
+    mes['requests'] = requests
     if endaddr is not None:
         mes["address"] = endaddr
     mes["encoding"] = encoding
@@ -77,7 +78,7 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=s
 
 
 def handle_request(request):
-    pass # todo
+    pass  # todo
 
 
 def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):

@@ -16,11 +16,11 @@ class HSock(Thread):
     HODL Socket:
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
-    def __init__(self, sock=None, conn=None, addr='', myaddrs=tuple(), peers=Peers()):
+    def __init__(self, sock=None, conn=None, addr='', myaddrs=tuple(), peers=Peers(), n=3):
         if not (sock and conn):
             log.debug('HSock.__init__: creating HSock by connecting by address')
             self.peer = peers.srchbyaddr(addr)[1]
-            self.socks = self.peer.connect(peers)
+            self.socks = self.peer.connect(peers, n=n)
             self.conns = []
         else:
             log.debug('HSock.__init__: creating input HSock by conn and sock')

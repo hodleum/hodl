@@ -40,8 +40,10 @@ if name == 'Bob':
     else:
         log.debug('Message was already caught: ' + str(s.in_msgs[0]))
 elif name == 'Alice':
+    hsock.connect_to_all(peers, keys['Alice'])
     log.debug(str(time.time()) + ': creating HSock to send')
-    s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
+    #s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
+    s = hsock.connect_to(keys['Bob'][1], keys['Alice'], peers)
     s.send('hi i am alice')
     hsock.listen_thread()
 else:

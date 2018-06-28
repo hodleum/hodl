@@ -33,7 +33,7 @@ class Peer:
         self.addr = addr
         self.netaddrs = [ats(addr) for addr in netaddrs]
 
-    def connect(self, peers, exc=tuple()):
+    def connect(self, peers, exc=tuple(), n=3):
         """Generate sockets to all IP addresses for this peer"""
         log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(
                 self.addr))
@@ -48,7 +48,9 @@ class Peer:
                     log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
                 except Exception as e:
                     log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
-        sockets += peers.white_conn_to(self.addr)
+        white_conns = peers.white_conn_to(self.addr, n)
+        print('52\n\n\n', sockets, '\n', white_conns)
+        sockets += white_conns
         return sockets
 
     def connect_white(self):
@@ -152,6 +154,7 @@ class Peers(set):
                         pass
                     if len(socks) == n:
                         return socks
+        return socks
 
     @classmethod
     def from_list(cls, l):
