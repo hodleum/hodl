@@ -18,7 +18,8 @@ if name == 'Alice':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)])])
     time.sleep(2)
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
+    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
+                   Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])])
 if name == 'Chuck':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
@@ -35,7 +36,9 @@ if name == 'Bob':
     s = hsock.hsocks[0]
     log.debug('\n---------Bob caught a connection. Listening for a message. List of messages in HSock '
                                  'now: ' + str(s.in_msgs) + '-----------\n')
-    if len(s.in_msgs) == 0:
+    time.sleep(0.05)
+    log.debug(str(s.in_msgs))
+    if len(s.in_msgs) < 2:
         log.debug('\n\nMessage: ' + str(s.listen_msg()) + '\n\n')
     else:
         log.debug('Message was already caught: ' + str(s.in_msgs[0]))
@@ -44,7 +47,7 @@ elif name == 'Alice':
     log.debug(str(time.time()) + ': creating HSock to send')
     #s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
     s = hsock.connect_to(keys['Bob'][1], keys['Alice'], peers)
-    s.send('hi i am alice')
+    s.send(data='im alice')
     hsock.listen_thread()
 else:
     hsock.listen_thread()
