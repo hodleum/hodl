@@ -147,7 +147,7 @@ class Peers(set):
             if socks:
                 for sock in socks:
                     try:
-                        send(sock, json.dumps(generate(type="between", message=to)))
+                        send(sock, json.dumps(generate(requests=[{'type': "between"}], message=to)))
                         socks.append(sock)
                     except:
                         pass
