@@ -14,11 +14,11 @@ def get_timestamp(t):
 
 def get_prevhash(bch, creators):
     try:
-        if creators:
+        if creators and bch[-1].h:
             return bch[-1].h
         else:
             return '0'
-    except:
+    except AttributeError:
         return '0'
 
 
@@ -26,20 +26,25 @@ class Block:
     """Class for blocks.
     To convert block to string, use str(block)
     To convert string to block, use Block.from_json(string)"""
-    def __init__(self, n=0, creators=[], bch=[], txs=[], contracts=[], pow_timestamp='now', t='now'):
+
+    def __init__(self, n=0, creators=(), bch=(), txs=(), contracts=(), pow_timestamp='now', t='now'):
         self.n = n
         self.prevhash = get_prevhash(bch, creators)
         self.timestamp = get_timestamp(t)
         self.pow_timestamp = pow_timestamp
         self.is_unfilled = False
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), b'mining', '', self.pow_timestamp)
-        self.txs = [tnx0] + txs
+        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), b'mining', '',
+                 self.pow_timestamp)
+        self.txs = [tnx0] + list(txs)
         self.contracts = contracts
         self.creators = creators
         self.powminers = []
         self.powhash = 0
         self.powhash = self.calc_pow_hash()
+
+        self.h = None
+
         self.update()
 
     def __str__(self):
@@ -66,8 +71,8 @@ class Block:
         for c in s[5]:
             sc = Smart_contract.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = s[1], s[2], s[3], \
-                                                                                                   s[4], s[6], s[7]
+        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = (s[1], s[2],  s[3],
+                                                                                                    s[4], s[6], s[7])
         self.powhash = self.calc_pow_hash()
         self.update()
         return self
@@ -151,7 +156,7 @@ class Block:
         for i in range(len(self.txs)):
             self.txs[i].index[1] = i
 
-    def make_unfilled(self, important_wallets=[]):
+    def make_unfilled(self, important_wallets=()):
         txs = [self.txs[0]]
         for tnx in self.txs:
             if tnx.author in important_wallets or not set(important_wallets).isdisjoint(set(tnx.outs)):

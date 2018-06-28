@@ -13,7 +13,6 @@ with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]
 
-
 if name == 'Alice':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)])])
     time.sleep(2)
@@ -35,7 +34,7 @@ if name == 'Bob':
         pass
     s = hsock.hsocks[0]
     log.debug('\n---------Bob caught a connection. Listening for a message. List of messages in HSock '
-                                 'now: ' + str(s.in_msgs) + '-----------\n')
+              'now: ' + str(s.in_msgs) + '-----------\n')
     time.sleep(0.05)
     log.debug(str(s.in_msgs))
     if len(s.in_msgs) < 2:
@@ -45,7 +44,7 @@ if name == 'Bob':
 elif name == 'Alice':
     hsock.connect_to_all(peers, keys['Alice'])
     log.debug(str(time.time()) + ': creating HSock to send')
-    #s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
+    # s = hsock.HSock(addr=keys['Bob'][1], myaddrs=[keys['Alice']], peers=peers)
     s = hsock.connect_to(keys['Bob'][1], keys['Alice'], peers)
     s.send(data='im alice')
     hsock.listen_thread()

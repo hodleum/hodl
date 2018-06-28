@@ -29,8 +29,8 @@ def compress_b64(d2c, cspeed=-1):
     return base64.standard_b64encode(d2c)
 
 
-def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=tuple(), encoding="text", full=True,
-             endaddr="", DISABLE_TEST=False):
+def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="text", full=True,
+             endaddr="", disable_test=False):
     """
     Generate message for HSock
     :param message: str
@@ -41,37 +41,43 @@ def generate(message="", peers=tuple(), ans=tuple(), pubkeys=tuple(), requests=t
     :param encoding: str, encoding for message
     :param length: str, full or short
     :param endaddr: str, address for encoding
-    :param DISABLE_TEST: bool
+    :param disable_test: bool
     :return: message: str
     """
-    res = {}
-    res["length"] = full
+    res = {
+        'length': full
+    }
     csys = platform.system()
-    if DISABLE_TEST:
+    if disable_test:
         log.warning("DISABLE_TEST is enabled! This is UNSECURE!")
     if full:
-        pj = {}
-        pj["Name"] = info.PNAME
-        pj["Version"] = info.VERSION
-        pj["STypes"] = info.SUPPORTED_TYPES
-        pj["SEncodings"] = info.SUPPORTED_ENCODINGS
+
+        pj = {
+            'Name': info.PNAME,
+            'Version': info.VERSION,
+            'STypes': info.SUPPORTED_TYPES,
+            'SEncodings': info.SUPPORTED_ENCODINGS
+        }
+
         res["protocol"] = pj
-        cd = {}
-        cd["CSys"] = csys
+
+        cd = {
+            'CSys': csys
+        }
         res["client_details"] = cd
-    if full:
         res["peers"] = peers.hash_list()
         res["pubkeys"] = pubkeys
-    if encoding not in info.SUPPORTED_ENCODINGS and not DISABLE_TEST:
+
+    if encoding not in info.SUPPORTED_ENCODINGS and not disable_test:
         raise Exception("Not Supported Encoding. To disable test set DISABLE_TEST to True")
 
-    mes = {}
-    mes['answers'] = ans
-    res['requests'] = requests
-    if endaddr is not None:
-        mes["address"] = endaddr
-    mes["encoding"] = encoding
-    mes["body"] = message
+    mes = {
+        'answers': ans,
+        'requests': requests,
+        'address': endaddr if endaddr is not None else None,
+        'encoding': encoding,
+        'body': message,
+    }
     res["message"] = mes
     return json5.dumps(res, indent=5)
 
@@ -80,7 +86,7 @@ def handle_request(request):
     pass  # todo
 
 
-def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
+def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
     """
     Handle message answer from adr
     :param answer: str, message
@@ -114,7 +120,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
     rlength = answer.get("length")
     if rlength:
         rprotocol = answer.get("protocol")
-        log.debug("HProto version is "+rprotocol.get("Version"))
+        log.debug("HProto version is " + rprotocol.get("Version"))
     else:
         rprotocol = None
     requests = []
@@ -133,6 +139,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=tuple()):
 
 if __name__ == "__main__":
     from net.Peers import Peers
+
     log.basicConfig(level=log.DEBUG)
     print(handle(generate(message="Hello World!", pubkeys=[], type="PRequest", peers=Peers()), "0xEXAMPLE",
                  mypeers=set()))

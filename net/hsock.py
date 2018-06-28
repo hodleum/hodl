@@ -6,15 +6,15 @@ import logging as log
 from .proto import recv, send, sock_to
 from .protocol import generate, handle
 
-
 hsocks = []
 
 
 class HSock(Thread):
     """
-    HODL Socket:
+    HODL Socket:11
     Helps to connect any device connected to HODL network (including devices behind NAT)
     """
+
     def __init__(self, sock=None, conn=None, addr='', myaddrs=tuple(), peers=Peers(), n=3):
         if not (sock and conn):
             log.debug('HSock.__init__: creating HSock by connecting by address')
@@ -26,7 +26,8 @@ class HSock(Thread):
             self.socks = [sock]
             self.conns = [conn]
         self.peers = peers
-        log.debug('HSock.__init__: self.socks, self.conns created. self.socks:' + str([str(sock) for sock in self.socks]))
+        log.debug(
+            'HSock.__init__: self.socks, self.conns created. self.socks:' + str([str(sock) for sock in self.socks]))
         self.in_msgs = []
         self.myaddrs = myaddrs
         super().__init__(target=self.listen)
@@ -76,7 +77,7 @@ class HSock(Thread):
         else:
             for sock in self.conns:
                 if sock:
-                    Thread(target=self.recv_by_sock, args=(sock, )).start()
+                    Thread(target=self.recv_by_sock, args=(sock,)).start()
 
     def close(self):
         """
@@ -91,7 +92,7 @@ class HSock(Thread):
         log.debug('New input message: ' + str(self.in_msgs[-1]) + '. All messages: ' + str(self.in_msgs))
         hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
         if hand[0]:
-            self.send(*(hand[1]+[self.peers]))
+            self.send(*(hand[1] + [self.peers]))
 
     def listen_msg(self, delt=0.05):
         """
@@ -119,7 +120,8 @@ class HSock(Thread):
                              + [str(sock) for sock in self.socks]))
 
     def __repr__(self):
-        return '<HSock socks=' + str([str(sock) for sock in self.socks]) + ' peer=' + str(self.__dict__.get('peer'))+'>'
+        return '<HSock socks=' + str([str(sock) for sock in self.socks]) + ' peer=' + str(
+            self.__dict__.get('peer')) + '>'
 
 
 def listen(port=9276):
@@ -169,7 +171,7 @@ def listen_thread(port=9276):
     Start new thread for listening
     :param port: int
     """
-    Thread(target=listen_loop, args=(port, )).start()
+    Thread(target=listen_loop, args=(port,)).start()
 
 
 def connect_to_all(peers, myaddrs=tuple()):
