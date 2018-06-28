@@ -29,10 +29,8 @@ def compress_b64(d2c, cspeed=-1):
     return base64.standard_b64encode(d2c)
 
 
-
-
-def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text", ctype="desktop", length="full",
-             endaddr=None, DISABLE_TEST=False):
+def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text", full=True,
+             endaddr="", DISABLE_TEST=False):
     """
     Generate message for HSock
     :param message: str
@@ -40,19 +38,18 @@ def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text",
     :param peers: Peers, my peers
     :param pubkeys: list, my pubkeys
     :param encoding: str, encoding for message
-    :param ctype: str, platform type
     :param length: str, full or short
     :param endaddr: str, address for encoding
     :param DISABLE_TEST: bool
     :return: message: str
     """
     res = {}
-    res["length"]=length
+    res["length"] = full
     csys = platform.system()
     if DISABLE_TEST:
         log.warning("DISABLE_TEST is enabled! This is UNSECURE!")
     log.debug(" Platform is "+str(csys))
-    if length == "full":
+    if full:
         pj = {}
         pj["Name"] = info.PNAME
         pj["Version"] = info.VERSION
@@ -61,9 +58,8 @@ def generate(message="", type="", peers=set(), pubkeys=tuple(), encoding="text",
         res["protocol"] = pj
         cd = {}
         cd["CSys"] = csys
-        cd["CType"] = ctype
         res["client_details"] = cd
-    if length != "short":
+    if full:
         res["peers"] = peers.hash_list()
         res["pubkeys"] = pubkeys
 
@@ -95,13 +91,13 @@ def handle(answer, adr, mypeers=set()):
     answer = json5.loads(answer)
     print(answer)
     rlength = answer.get("length")
-    if rlength == "full":
+    if rlength:
         rprotocol = answer.get("protocol")
         log.debug("HProto version is "+rprotocol.get("Version"))
     else:
         rprotocol = None
 
-    if rlength != "short":
+    if rlength:
         request_peers = mypeers.needed_peers(answer.get('peers'))
     else:
         request_peers = []
