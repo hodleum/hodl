@@ -17,6 +17,7 @@ def sendertester():
     time.sleep(1)
     s = HSock(addr='1', myaddrs=('2', ), peers=peers2)
     s.send('abc')
+    log.debug(str(time.time()))
 
 
 def listentester():
@@ -25,5 +26,5 @@ def listentester():
     print(s.listen_msg())
 
 
-Thread(target=sendertester).start()
+Thread(target=sendertester, name="sender").start()
 listentester()

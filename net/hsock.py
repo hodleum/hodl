@@ -1,6 +1,7 @@
 from socket import socket
 from threading import Thread
 import time
+import traceback
 from net.Peers import Peers
 import logging as log
 from .proto import recv, send, sock_to
@@ -9,7 +10,7 @@ from .protocol import generate, handle
 hsocks = []
 
 
-class HSock(Thread):
+class HSock:
     """
     HODL Socket:11
     Helps to connect any device connected to HODL network (including devices behind NAT)
@@ -29,10 +30,9 @@ class HSock(Thread):
         self.peers = peers
         self.in_msgs = []
         self.myaddrs = myaddrs
-        super().__init__(target=self.listen)
+        self.listen()
         self.addr = addr
         self.amh = []
-        self.start()
         self.send(generate('hw', peers, [], myaddrs, [], 'text', True, self.addr))
 
     @classmethod
@@ -72,7 +72,8 @@ class HSock(Thread):
         if self.conns:
             for conn in self.conns:
                 if conn:
-                    Thread(target=self.recv_by_sock, args=(conn,)).start()
+                    Thread(target=self.recv_by_sock, args=(conn,), name="recv_by_sock " + str(conn)
+                                                                        + str(hash(self))).start()
         else:
             for sock in self.conns:
                 if sock:
@@ -87,11 +88,15 @@ class HSock(Thread):
             conn.close()
 
     def recv_by_sock(self, sock):
-        self.in_msgs.append(recv(sock))
-        log.debug(str(time.time()) + 'New input message: ' + str(self.in_msgs[-1]) + '. All messages: ' + str(self.in_msgs))
-        hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
-        if hand[0]:
-            self.send(*(hand[1] + [self.peers]))
+        while True:
+            try:
+                self.in_msgs.append(recv(sock))
+                log.debug(str(time.time()) + 'New input message: ' + str(self.in_msgs[-1]) + '. All messages: ' + str(self.in_msgs))
+                hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
+                if hand[0]:
+                    self.send(*(hand[1] + [self.peers]))
+            except Exception as e:
+                log.debug(str(time.time()) + ':exception: ' + traceback.format_exc())
 
     def listen_msg(self, delt=0.05):
         """

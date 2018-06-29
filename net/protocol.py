@@ -138,7 +138,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
             if a:
                 continue
         answers.append(handle_request(request))
-    return True, ['', requests, answers, False]
+    return True if len(answers) > 0 or len(requests) > 0 else False, ['', requests, answers, False]
 
 
 if __name__ == "__main__":
