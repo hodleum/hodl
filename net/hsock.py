@@ -90,8 +90,9 @@ class HSock:
     def recv_by_sock(self, sock):
         while True:
             try:
-                self.in_msgs.append(recv(sock))
-                log.debug(str(time.time()) + 'New input message: ' + str(self.in_msgs[-1]) + '. All messages: ' + str(self.in_msgs))
+                recvmess = recv(sock)
+                self.in_msgs.append(recvmess)
+                log.debug(str(time.time()) + 'New input message: ' + str(recvmess) + '. All messages: ' + str(self.in_msgs))
                 hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))
