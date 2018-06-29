@@ -34,13 +34,14 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     """
     Generate message for HSock
     :param message: str
-    :param t: str, type of message
-    :param peers: Peers, my peers
-    :param pubkeys: list, my pubkeys
-    :param requests: list, requests
-    :param encoding: str, encoding for message
-    :param length: str, full or short
+    :param peers: peers object
+    :param ans: tuple
+    :param pubkeys: tuple, my pubkeys
+    :param requests: tuple, requests
+    :param encoding: str, encoding for message, default value is text
+    :param full: bool, full or short
     :param endaddr: str, address for encoding
+    :param mtype: str, type of message
     :param disable_test: bool
     :return: message: str
     """
