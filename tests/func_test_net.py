@@ -15,10 +15,8 @@ my_keys = keys[name]
 
 if name == 'Alice':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)])])
-    time.sleep(0.4)
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
-                   Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])])
+    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 if name == 'Chuck':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
@@ -29,15 +27,17 @@ if name == 'Dave':
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 
 hsock.listen_thread()
+log.debug(str(time.time()) + ': listen thread started')
+time.sleep(3)
 hsock.connect_to_all(peers, keys['Alice'])
-log.debug('\n----------\n\nHSock connected to all.\nHSocks: [' + '\n'.join([repr(s) for s in hsock.hsocks]) + ']\n\n--------------\n')
+log.debug('\n----------\n\n' + str(time.time()) + ':\nHSock connected to all.\nHSocks: [' + '\n'.join([repr(s) for s in hsock.hsocks]) + ']\n\n--------------\n')
 if name == 'Bob':
     log.debug('Bob listen')
     while len(hsock.hsocks) == 0:
         pass
     s = hsock.hsocks[0]
-    log.debug('\n---------Bob caught a connection. Listening for a message. List of messages in HSock '
-              'now: ' + str(s.in_msgs) + '-----------\n')
+    log.debug('\n' + str(time.time()) + '\n---------Bob has a connection. Listening for a message. List of messages'
+                                        ' in HSock now: ' + str(s.in_msgs) + '-----------\n')
     time.sleep(0.05)
     log.debug(str(s.in_msgs))
     if len(s.in_msgs) < 2:

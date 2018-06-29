@@ -35,8 +35,7 @@ class Peer:
 
     def connect(self, peers, exc=tuple(), n=3):
         """Generate sockets to all IP addresses for this peer"""
-        log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n self.addr' + str(
-                self.addr))
+        log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n')
         sockets = []
         for addr in self.netaddrs:
             if addr not in exc:
@@ -90,6 +89,9 @@ class Peer:
             return new
         else:
             return self
+
+    def __repr__(self):
+        return str(self.netaddrs)
 
 
 class Peers(set):
