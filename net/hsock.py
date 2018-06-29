@@ -17,24 +17,22 @@ class HSock(Thread):
 
     def __init__(self, sock=None, conn=None, addr='', myaddrs=tuple(), peers=Peers(), n=3):
         if not (sock and conn):
-            log.debug('HSock.__init__: creating HSock by connecting by address')
             self.peer = peers.srchbyaddr(addr)[1]
             self.socks = self.peer.connect(peers, n=n)
             self.conns = []
+            log.debug('HSock.__init__ by address: self.socks, self.conns created. self.socks:'
+                + str([str(sock) for sock in self.socks]))
         else:
             log.debug('HSock.__init__: creating input HSock by conn and sock')
             self.socks = [sock]
             self.conns = [conn]
         self.peers = peers
-        log.debug(
-            'HSock.__init__: self.socks, self.conns created. self.socks:' + str([str(sock) for sock in self.socks]))
         self.in_msgs = []
         self.myaddrs = myaddrs
         super().__init__(target=self.listen)
         self.addr = addr
         self.amh = []
         self.start()
-        log.debug('HSock.__init__ self.start finished')
         self.send(generate('', peers, [], myaddrs, [], 'text', True, self.addr))
 
     @classmethod
@@ -120,7 +118,7 @@ class HSock(Thread):
                              + [str(sock) for sock in self.socks]))
 
     def __repr__(self):
-        return '<HSock socks=' + str([str(sock) for sock in self.socks]) + ' peer=' + str(
+        return '<HSock socks=' + str(self.socks) + ' peer=' + str(
             self.__dict__.get('peer')) + '>'
 
 
@@ -129,7 +127,6 @@ def listen(port=9276):
     Listen for one connection
     :return: sock: HSock
     """
-    log.debug('hsock.listen')
     global sock
     try:
         sock

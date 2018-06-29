@@ -47,7 +47,7 @@ class Peer:
                     sockets.append(sock)
                     log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
                 except:
-                    log.debug('Peer.connect: exception while connecting: ' + traceback.format_exc())
+                    log.debug('Peer.connect: exception while connecting to ' + str(addr) +' : ' + traceback.format_exc())
         white_conns = peers.white_conn_to(self.addr, n)
         sockets += white_conns
         return sockets

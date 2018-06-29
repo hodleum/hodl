@@ -83,7 +83,6 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
         'type': mtype
     }
     res["message"] = mes
-    log.debug("RESULT: ", json5.dumps(res, indent=5))
     return json5.dumps(res, indent=5)
 
 
