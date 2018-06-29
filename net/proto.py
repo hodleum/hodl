@@ -18,7 +18,6 @@ def recv(sock):
     """
     chunk = sock.recv(4)
     if len(chunk) < 4:
-        log.debug('proto.recv: short chunk:'+str(chunk))
         return
     slen = struct.unpack('>L', chunk)[0]
     chunk = sock.recv(slen)
@@ -41,5 +40,4 @@ def send(sock, data):
     if type(data) == str:
         data = data.encode()
     data = struct.pack('>L', len(data)) + data
-    print(struct.pack('>L', len(data)))
     sock.sendall(data)

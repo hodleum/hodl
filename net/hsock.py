@@ -91,6 +91,9 @@ class HSock:
         while True:
             try:
                 recvmess = recv(sock)
+                if recvmess == None:
+                    time.sleep(0.05)
+                    continue
                 self.in_msgs.append(recvmess)
                 log.debug(str(time.time()) + 'New input message: ' + str(recvmess) + '. All messages: ' + str(self.in_msgs))
                 hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
