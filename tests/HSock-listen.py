@@ -24,7 +24,9 @@ def sendertester():
 def listentester():
     s = listen(1221)
     print('len(s.in_msgs)', len(s.in_msgs), s.in_msgs)
-    print(s.listen_msg())
+    for i in range(5):
+        time.sleep(0.5)
+        print('len(s.in_msgs)', len(s.in_msgs), s.in_msgs)
 
 
 Thread(target=listentester, name="listener").start()

@@ -1,4 +1,5 @@
 from socket import socket
+import time
 import logging as log
 import struct
 
@@ -19,6 +20,8 @@ def recv(sock):
     chunk = sock.recv(4)
     if len(chunk) < 4:
         return
+    if chunk != b'':
+        log.debug('proto.recv: getting message')
     slen = struct.unpack('>L', chunk)[0]
     chunk = sock.recv(slen)
     while len(chunk) < slen:

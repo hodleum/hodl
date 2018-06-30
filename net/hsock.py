@@ -31,6 +31,7 @@ class HSock:
         self.in_msgs = []
         self.myaddrs = myaddrs
         self.listen()
+        time.sleep(0.3)
         self.addr = addr
         self.amh = []
         self.send(generate('hw', peers, [], myaddrs, [], 'text', True, self.addr))
@@ -78,6 +79,7 @@ class HSock:
             for sock in self.conns:
                 if sock:
                     Thread(target=self.recv_by_sock, args=(sock,)).start()
+        log.debug(str(time.time()) + ': everything is listening')
 
     def close(self):
         """
