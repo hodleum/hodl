@@ -16,7 +16,8 @@ my_keys = keys[name]
 if name == 'Alice':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)])])
 if name == 'Bob':
-    peers = Peers([Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
+    peers = Peers([Peer(keys['Chuck'][1], [('192.19.0.4', 9276)]),
+                   Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 if name == 'Chuck':
     peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),

@@ -38,7 +38,6 @@ class HSock:
 
     @classmethod
     def input(cls, sock, conn, myaddrs=tuple()):
-        log.debug('hsock.HSock.input from sock and conn: ' + str(sock) + ', ' + str(conn))
         # todo: get sender's address
         return cls(sock=sock, conn=conn, myaddrs=myaddrs)
 
@@ -95,13 +94,12 @@ class HSock:
                     time.sleep(0.05)
                     continue
                 self.in_msgs.append(recvmess)
-                log.debug(str(time.time()) + 'New input message')
                 hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))
             except Exception as e:
                 if str(e) != 'timed out':
-                    log.debug(str(time.time()) + ':HSock.recv_by_sock:exception: ' + str(e))
+                    log.debug(str(time.time()) + ':HSock.recv_by_sock:exception: ' + traceback.format_exc())
 
     def listen_msg(self, delt=0.05):
         """
@@ -146,7 +144,6 @@ def listen(port=9276):
         sock.bind(('', port))
         sock.listen()
     conn, addr = sock.accept()
-    log.debug('hsock.listen: input connection')
     hsock = HSock.input(sock, conn)
     hsocks.append(hsock)
     return hsock
