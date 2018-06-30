@@ -86,8 +86,9 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     return json5.dumps(res, indent=5)
 
 
-def handle_request(request):
-    pass  # todo
+def handle_request(request, peers):
+    if request['request'] == 'peer_by_hash':
+        return [peers.peer_by_hash(h) for h in request['body']]
 
 
 def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
