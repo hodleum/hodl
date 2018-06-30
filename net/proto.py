@@ -40,7 +40,8 @@ def send(sock, data):
 
     :return: None
     """
+    log.debug('proto.send: sending message with len ' + str(len(data)) + ' with ' + str(sock))
     if type(data) == str:
         data = data.encode()
     data = struct.pack('>L', len(data)) + data
-    sock.sendall(data)
+    sock.send(data)
