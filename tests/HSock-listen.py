@@ -1,5 +1,6 @@
 from threading import Thread
 import time
+import json
 import logging as log
 from net.hsock import HSock, listen
 from net.Peers import Peers, Peer
@@ -24,9 +25,8 @@ def sendertester():
 def listentester():
     s = listen(1221)
     print('len(s.in_msgs)', len(s.in_msgs), s.in_msgs)
-    for i in range(5):
-        time.sleep(0.5)
-        print('len(s.in_msgs)', len(s.in_msgs), s.in_msgs)
+    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'], '\n----------------------------')
+    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'], '\n----------------------------')
 
 
 Thread(target=listentester, name="listener").start()
