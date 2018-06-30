@@ -31,10 +31,11 @@ class HSock:
         self.in_msgs = []
         self.myaddrs = myaddrs
         self.listen()
-        time.sleep(0.3)
         self.addr = addr
         self.amh = []
-        self.send(generate('hw', peers, [], myaddrs, [], 'text', True, self.addr))
+        if not (sock and conn):
+            time.sleep(0.3)
+            self.send(generate('hw', peers, [], myaddrs, [], 'text', True, self.addr))
 
     @classmethod
     def input(cls, sock, conn, myaddrs=tuple()):
@@ -58,7 +59,7 @@ class HSock:
         # todo: encode data using RSA
         # todo: generate message by protocol.generate
         log.debug(str(time.time()) + ':send')
-        for sock in self.conns:
+        for sock in self.socks:
             if sock:
                 send(sock, generate(message=data, peers=peers, ans=ans, pubkeys=[addr[1] for addr in self.myaddrs],
                                     requests=requests, encoding="text", full=full, endaddr=self.addr))
@@ -76,7 +77,7 @@ class HSock:
                     Thread(target=self.recv_by_sock, args=(conn,), name="recv_by_sock " + str(conn)
                                                                         + str(hash(self))).start()
         else:
-            for sock in self.conns:
+            for sock in self.socks:
                 if sock:
                     Thread(target=self.recv_by_sock, args=(sock,)).start()
         log.debug(str(time.time()) + ': everything is listening')
@@ -102,7 +103,7 @@ class HSock:
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))
             except Exception as e:
-                log.debug(str(time.time()) + ':exception: ' + traceback.format_exc())
+                log.debug(str(time.time()) + ':HSock.recv_by_sock:exception: ' + str(e))
 
     def listen_msg(self, delt=0.05):
         """

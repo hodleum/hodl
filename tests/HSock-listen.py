@@ -15,7 +15,7 @@ peers2 = Peers([peer1])
 
 def sendertester():
     log.debug('----' + str(time.time()))
-    sock = HSock(addr='1', myaddrs=('2', ), peers=peers2)
+    sock = HSock(addr='1', myaddrs=(['2priv', '2'], ), peers=peers2)
     time.sleep(0.6)
     sock.send('abc')
     log.debug(str(time.time()))
