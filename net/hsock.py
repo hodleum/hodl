@@ -98,7 +98,7 @@ class HSock:
                     time.sleep(0.05)
                     continue
                 self.in_msgs.append(recvmess)
-                log.debug(str(time.time()) + 'New input message: ' + str(recvmess) + '. All messages: ' + str(self.in_msgs))
+                log.debug(str(time.time()) + 'New input message')
                 hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))

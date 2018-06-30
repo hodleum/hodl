@@ -115,7 +115,6 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
     """
     # todo: process sender's pubkeys
     z = None
-    log.debug('protocol.handle: answer: ' + str(answer))
     if not answer:
         log.debug("Empty message in handle")
         return [False]

@@ -25,8 +25,10 @@ def sendertester():
 def listentester():
     s = listen(1221)
     print('len(s.in_msgs)', len(s.in_msgs), s.in_msgs)
-    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'], '\n----------------------------')
-    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'], '\n----------------------------')
+    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'],
+          '\n----------------------------')
+    print('\n------------------------------\n', json.loads(s.listen_msg())['message']['body'],
+          '\n----------------------------')
 
 
 Thread(target=listentester, name="listener").start()
