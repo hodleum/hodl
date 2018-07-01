@@ -78,7 +78,7 @@ class Peer:
         return self
 
     def __hash__(self):
-        return hash(str(self))
+        return cg.h(str(self))
 
     def __add__(self, other):
         if hash(self) == hash(other):
@@ -164,7 +164,7 @@ class Peers(set):
             self.add(peer)
 
     def __hash__(self):
-        return hash(str(self))
+        return cg.h(str(self))
 
     def __add__(self, other):
         if hash(self) == hash(other):
