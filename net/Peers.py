@@ -112,7 +112,7 @@ class Peers(set):
             f.write(str(self))
 
     def __str__(self):
-        return json.dumps([json.dumps(peer) for peer in list(self)])
+        return json.dumps([str(peer) for peer in list(self)])
 
     @classmethod
     def from_json(cls, s):

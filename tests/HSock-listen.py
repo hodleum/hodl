@@ -6,7 +6,7 @@ from net.hsock import HSock, listen
 from net.Peers import Peers, Peer
 
 
-log.basicConfig(level=log.DEBUG)
+log.basicConfig(level=log.DEBUG, format='[%(asctime)s]:%(message)s')
 log.debug('----------hsock-listen----------')
 peer2 = Peer('2', [('localhost', 1222)])
 peers1 = Peers([peer2])
