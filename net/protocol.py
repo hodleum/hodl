@@ -90,7 +90,9 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
 
 def handle_request(request, peers):
     if request['request'] == 'peer_by_hash':
-        return [peers.peer_by_hash(h) for h in request['body']]
+        ans = [peers.peer_by_hash(h) for h in request['body']]
+        log.debug('protocol.handle_request: answer: ' + str(ans) + 'for request ' + str(request))
+        return ans
 
 
 def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=False):
@@ -137,11 +139,13 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
         requests.append({'request': 'request_peers', 'body': request_peers})
     answers = []
     for request in answer["requests"]:
+        log.debug('handle request: ' + str(request))
         for amh in alternative_message_handlers:
             a = amh(request)
             if a:
                 continue
         answers.append(handle_request(request, mypeers))
+    log.debug('protocol.handle: answers: ' + str(answers))
     return True if len(answers) > 0 or len(requests) > 0 or first else False, ['', requests, answers, False]
 
 

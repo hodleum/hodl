@@ -7,6 +7,14 @@ from net import hsock
 from net.Peers import Peer, Peers
 
 
+def cat_peers():
+    while True:
+        time.sleep(8)
+        log.debug('\n\n--------------------------------------')
+        log.debug(
+            'Peers: len(peers): ' + str(len(peers)) + ',\n\n' + str(peers) + '\n\n------------------------------\n')
+
+
 name = str(os.getenv('HODL_NAME'))
 log.basicConfig(level=log.DEBUG, format='[%(asctime)s] {}:%(message)s'.format(name))
 log.debug(
@@ -29,6 +37,7 @@ if name == 'Dave':
                    Peer(keys['Chuck'][1], [('192.19.0.4', 9276)]),
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
 
+Thread(target=cat_peers).start()
 hsock.listen_thread()
 log.debug(str(time.time()) + ': listen thread started')
 time.sleep(3)
