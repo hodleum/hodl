@@ -56,7 +56,6 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
         pj = {
             'Name': info.PNAME,
             'Version': info.VERSION,
-            'STypes': info.SUPPORTED_TYPES,
             'SEncodings': info.SUPPORTED_ENCODINGS
         }
 
