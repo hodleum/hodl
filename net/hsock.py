@@ -22,7 +22,7 @@ class HSock:
             self.socks = self.peer.connect(peers, n=n)
             self.conns = []
             log.debug('HSock.__init__ by address: self.socks, self.conns created. self.socks:'
-                + str([str(sock) for sock in self.socks]))
+                      + str([str(sock) for sock in self.socks]))
         else:
             self.socks = [sock]
             self.conns = [conn]
@@ -138,9 +138,7 @@ def listen(port=9276):
     :return: sock: HSock
     """
     global sock
-    try:
-        sock
-    except:
+    if not 'sock' in globals():
         sock = socket()
         sock.bind(('', port))
         sock.listen()

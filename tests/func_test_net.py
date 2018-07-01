@@ -8,7 +8,7 @@ from net.Peers import Peer, Peers
 
 
 name = str(os.getenv('HODL_NAME'))
-log.basicConfig(level=log.DEBUG, format='{}:%(message)s'.format(name))
+log.basicConfig(level=log.DEBUG, format='[%(asctime)s] {}:%(message)s'.format(name))
 log.debug(
     '\n\n\n\n\n\n-------------------------------------\nstart\n-------------------------------------\n\n\n\n\n\n\n\n\n')
 with open('tests/keys', 'r') as f:
