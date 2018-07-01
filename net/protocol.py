@@ -141,7 +141,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
             a = amh(request)
             if a:
                 continue
-        answers.append(handle_request(request))
+        answers.append(handle_request(request, mypeers))
     return True if len(answers) > 0 or len(requests) > 0 or first else False, ['', requests, answers, False]
 
 
@@ -150,4 +150,4 @@ if __name__ == "__main__":
 
     log.basicConfig(level=log.DEBUG)
     print(handle(generate(message="Hello World!", pubkeys=[], mtype="PRequest", peers=Peers()), "0xEXAMPLE",
-                 mypeers=set()))
+                 mypeers=Peers()))
