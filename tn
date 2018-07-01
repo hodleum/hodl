@@ -1,7 +1,7 @@
 docker container logs Alice
 docker container logs Bob
 docker container logs Chuck
+docker container logs Dave
 docker stop Alice Bob Chuck Dave
 docker rm Alice Bob Chuck Dave
 docker network rm hodlnet
-rm -rf *.log

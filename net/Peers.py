@@ -197,4 +197,8 @@ class Peers(set):
     def needed_peers(self, another_hashes):
         my_hashes = set(self.hash_list())
         another_hashes = set(another_hashes)
-        return another_hashes.difference(my_hashes)
+        needed = another_hashes.difference(my_hashes)
+        return list(needed)
+
+    def __repr__(self):
+        return '{} peers: {}'.format(str(len(self)), str([len(p.netaddrs) for p in self]))

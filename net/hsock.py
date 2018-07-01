@@ -34,7 +34,7 @@ class HSock:
         self.amh = []
         if not (sock and conn):
             time.sleep(0.3)
-            self.send(generate('hw', peers, [], myaddrs, [], 'text', True, self.addr))
+            self.send(generate('', peers, [], myaddrs, [], 'text', True, self.addr))
 
     @classmethod
     def input(cls, sock, conn, myaddrs=tuple()):
@@ -94,7 +94,8 @@ class HSock:
                     time.sleep(0.05)
                     continue
                 self.in_msgs.append(recvmess)
-                hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh)
+                hand = handle(Peers, self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh,
+                              first=len(self.in_msgs) == 0)
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))
             except Exception as e:

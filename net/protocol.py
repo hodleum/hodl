@@ -45,6 +45,7 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     :param disable_test: bool
     :return: message: str
     """
+    full = True
     res = {
         'length': full
     }
@@ -65,7 +66,6 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
             'CSys': csys
         }
         res["client_details"] = cd
-        res["peers"] = peers.hash_list()
         res["pubkeys"] = pubkeys
 
     if encoding not in info.SUPPORTED_ENCODINGS and not disable_test:
@@ -79,8 +79,11 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
         'body': message,
         'type': mtype
     }
+    if full:
+        res["peers"] = peers.hash_list()
     res['answers'] = ans
     res['requests'] = requests
+    log.debug('protocol.generate requests: ' + str(requests))
     res["message"] = mes
     return json5.dumps(res, indent=5)
 
@@ -90,7 +93,7 @@ def handle_request(request, peers):
         return [peers.peer_by_hash(h) for h in request['body']]
 
 
-def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
+def handle(Peers_class, answer, adr, mypeers=set(), alternative_message_handlers=(), first=False):
     """
     Handle message answer from adr
     :param answer: str, message
@@ -119,8 +122,9 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
         log.debug("Empty message in handle")
         return [False]
     answer = json5.loads(answer)
-    print(answer)
     rlength = answer.get("length")
+    log.debug('protocol.handle requests: ' + str(answer['requests']) + ',\npeers: '+repr(answer.get('peers'))
+              + ',\nlength: ' + str(rlength) + ',\nkeys: ' + str(answer.keys()))
     if rlength:
         rprotocol = answer.get("protocol")
         log.debug("HProto version is " + rprotocol.get("Version"))
@@ -129,6 +133,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
     requests = []
     if rlength:
         request_peers = mypeers.needed_peers(answer.get('peers'))
+        log.debug('protocol.handle: requests appended by peer request')
         requests.append({'request': 'request_peers', 'body': request_peers})
     answers = []
     for request in answer["requests"]:
@@ -137,7 +142,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=()):
             if a:
                 continue
         answers.append(handle_request(request))
-    return True if len(answers) > 0 or len(requests) > 0 else False, ['', requests, answers, False]
+    return True if len(answers) > 0 or len(requests) > 0 or first else False, ['', requests, answers, False]
 
 
 if __name__ == "__main__":
