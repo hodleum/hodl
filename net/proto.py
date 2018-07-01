@@ -1,4 +1,5 @@
 from socket import socket
+import logging as log
 import struct
 
 
@@ -18,6 +19,7 @@ def recv(sock):
     chunk = sock.recv(4)
     if len(chunk) < 4:
         return
+    log.debug('proto.recv')
     slen = struct.unpack('>L', chunk)[0]
     chunk = sock.recv(slen)
     while len(chunk) < slen:
@@ -36,6 +38,7 @@ def send(sock, data):
 
     :return: None
     """
+    log.debug('proto.send')
     if type(data) == str:
         data = data.encode()
     data = struct.pack('>L', len(data)) + data

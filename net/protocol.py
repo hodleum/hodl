@@ -93,7 +93,7 @@ def handle_request(request, peers):
         return [peers.peer_by_hash(h) for h in request['body']]
 
 
-def handle(Peers_class, answer, adr, mypeers=set(), alternative_message_handlers=(), first=False):
+def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=False):
     """
     Handle message answer from adr
     :param answer: str, message
