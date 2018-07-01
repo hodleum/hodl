@@ -158,7 +158,7 @@ def connect_to(addr, myaddrs=tuple(), peers=Peers()):
     :return: HSock
     """
     for hsock in hsocks:
-        if hsock.name == addr:
+        if hsock.addr == addr:
             return hsock
     else:
         hsock = HSock(addr=addr, myaddrs=myaddrs, peers=peers)

@@ -1,1 +1,4 @@
-./net_test.sh; sleep 9;./tn
+#!/bin/bash
+./net_test.sh
+sleep 20
+./tn

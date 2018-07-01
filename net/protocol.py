@@ -75,13 +75,13 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
         raise Exception("Not Supported Type. To disable test set DISABLE_TEST to True")
 
     mes = {
-        'answers': ans,
-        'requests': requests,
         'address': endaddr if endaddr is not None else None,
         'encoding': encoding,
         'body': message,
         'type': mtype
     }
+    res['answers'] = ans
+    res['requests'] = requests
     res["message"] = mes
     return json5.dumps(res, indent=5)
 

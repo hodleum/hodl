@@ -2,8 +2,10 @@ import logging as log
 import os
 import json
 import time
+from threading import Thread
 from net import hsock
 from net.Peers import Peer, Peers
+
 
 name = str(os.getenv('HODL_NAME'))
 log.basicConfig(level=log.DEBUG, format='{}:%(message)s'.format(name))
@@ -31,7 +33,8 @@ hsock.listen_thread()
 log.debug(str(time.time()) + ': listen thread started')
 time.sleep(3)
 hsock.connect_to_all(peers, keys['Alice'])
-log.debug('\n----------\n\n' + str(time.time()) + ':\nHSock connected to all.\nHSocks: [' + '\n'.join([repr(s) for s in hsock.hsocks]) + ']\n\n--------------\n')
+log.debug('\n----------\n\n' + str(time.time()) + ':\nHSock connected to all.\nHSocks: [\n'
+          + '\n'.join([repr(s) for s in hsock.hsocks]) + ']\n\n--------------\n')
 if name == 'Bob':
     log.debug('Bob listen')
     while len(hsock.hsocks) == 0:
@@ -42,7 +45,7 @@ if name == 'Bob':
     time.sleep(0.05)
     log.debug(str(s.in_msgs))
     if len(s.in_msgs) < 2:
-        log.debug('\n\nMessage: ' + str(s.listen_msg()) + '\n\n')
+        Thread(target=lambda: log.debug('\n\nMessage: ' + str(s.listen_msg()) + '\n\n')).start()
     else:
         log.debug('Message was already caught: ' + str(s.in_msgs[0]))
 elif name == 'Alice':
