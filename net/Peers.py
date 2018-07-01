@@ -4,6 +4,7 @@ import traceback
 from socket import socket
 import random
 import cryptogr as cg
+import mmh3
 import logging as log
 from .proto import recv, send
 from .protocol import generate
@@ -46,7 +47,8 @@ class Peer:
                     sockets.append(sock)
                     log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
                 except:
-                    log.debug('Peer.connect: exception while connecting to ' + str(addr) +' : ' + traceback.format_exc())
+                    log.debug('Peer.connect: exception while connecting to ' + str(addr) +' : '
+                              + traceback.format_exc())
         white_conns = peers.white_conn_to(self.addr, n)
         sockets += white_conns
         return sockets
@@ -78,7 +80,7 @@ class Peer:
         return self
 
     def __hash__(self):
-        return cg.h(str(self))
+        return mmh3.hash(str(self))
 
     def __add__(self, other):
         if hash(self) == hash(other):
@@ -109,7 +111,7 @@ class Peers(set):
         with open(file, 'w') as f:
             f.write(str(self))
 
-    def __str(self):
+    def __str__(self):
         return json.dumps([json.dumps(peer) for peer in list(self)])
 
     @classmethod
@@ -164,7 +166,7 @@ class Peers(set):
             self.add(peer)
 
     def __hash__(self):
-        return cg.h(str(self))
+        return mmh3.hash(str(self))
 
     def __add__(self, other):
         if hash(self) == hash(other):
