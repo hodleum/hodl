@@ -33,9 +33,9 @@ if name == 'Chuck':
                    Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
                    Peer(keys['Dave'][1], [('192.19.0.5', 9276)])])
 if name == 'Dave':
-    peers = Peers([Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
-                   Peer(keys['Chuck'][1], [('192.19.0.4', 9276)]),
-                   Peer(keys['Alice'][1], [('192.19.0.2', 9276)])])
+    peers = Peers([#Peer(keys['Bob'][1], [('192.19.0.3', 9276)]),
+                   #Peer(keys['Alice'][1], [('192.19.0.2', 9276)]),
+                   Peer(keys['Chuck'][1], [('192.19.0.4', 9276)])])
 
 Thread(target=cat_peers).start()
 hsock.listen_thread()

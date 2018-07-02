@@ -7,6 +7,7 @@ import logging as log
 from .proto import recv, send, sock_to
 from .protocol import generate, handle
 
+
 hsocks = []
 
 
@@ -78,6 +79,13 @@ class HSock:
                 if sock:
                     Thread(target=self.recv_by_sock, args=(sock,)).start()
 
+    def handmess(self, msg):
+        hand = handle(msg, self.addr, self.peers, alternative_message_handlers=self.amh,
+                      first=len(self.in_msgs) == 1)
+        log.debug('HSock.recv_by_sock: message received and handled. hand[0]: ' + str(hand[0]))
+        if hand[0]:
+            self.send(*(hand[1] + [self.peers]))
+
     def close(self):
         """
         Close socket.
@@ -89,18 +97,12 @@ class HSock:
     def recv_by_sock(self, sock):
         while True:
             try:
-                recvmess = recv(sock)
-                if recvmess is None:
-                    time.sleep(0.05)
+                msg = recv(sock)
+                if msg is None:
                     continue
-                self.in_msgs.append(recvmess)
+                self.in_msgs.append(msg)
                 log.debug('HSock.recv_by_sock: message received')
-                hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh,
-                              first=len(self.in_msgs) == 0)
-                log.debug('HSock.recv_by_sock: message received and handled. hand[0]: ' + str(hand[0]) + ', requests: '
-                          + str(hand[1][4]) + ', answers: ' + str(hand[1][1]))
-                if hand[0]:
-                    self.send(*(hand[1] + [self.peers]))
+                Thread(target=self.handmess, args=(msg, )).start()
             except Exception as e:
                 if str(e) != 'timed out':
                     log.debug('HSock.recv_by_sock:exception: ' + traceback.format_exc())

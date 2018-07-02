@@ -6,6 +6,7 @@ import base64
 import logging as log
 import platform
 import zlib
+import random
 
 import json5
 
@@ -81,9 +82,10 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     }
     if full:
         res["peers"] = peers.hash_list()
+    res['n'] = random.randint(0, 1000)
     res['answers'] = ans
     res['requests'] = requests
-    log.debug('protocol.generate requests: ' + str(requests))
+    log.debug('protocol.generate n: ' + str(res['n']) + ' requests: ' + str(requests))
     res["message"] = mes
     return json5.dumps(res, indent=5)
 
@@ -125,7 +127,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
         return [False]
     answer = json5.loads(answer)
     rlength = answer.get("length")
-    log.debug('protocol.handle requests: ' + str(answer['requests']) + ',\npeers: '+repr(answer.get('peers'))
+    log.debug('protocol.handle n: ' + str(answer['n']) + ' requests: ' + str(answer['requests']) + ',\npeers: '+repr(answer.get('peers'))
               + ',\nlength: ' + str(rlength) + ',\nkeys: ' + str(answer.keys()))
     if rlength:
         rprotocol = answer.get("protocol")
@@ -145,7 +147,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
                 continue
         answers.append(handle_request(request, mypeers))
     log.debug('protocol.handle: answers: ' + str(answers))
-    return True if len(answers) > 0 or len(requests) > 0 or first else False, ['', requests, answers, False]
+    return answers or requests or first, ['', requests, answers, False]
 
 
 if __name__ == "__main__":
