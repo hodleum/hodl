@@ -90,17 +90,20 @@ class HSock:
         while True:
             try:
                 recvmess = recv(sock)
-                if recvmess == None:
+                if recvmess is None:
                     time.sleep(0.05)
                     continue
                 self.in_msgs.append(recvmess)
+                log.debug('HSock.recv_by_sock: message received')
                 hand = handle(self.in_msgs[-1], self.addr, self.peers, alternative_message_handlers=self.amh,
                               first=len(self.in_msgs) == 0)
+                log.debug('HSock.recv_by_sock: message received and handled. hand[0]: ' + str(hand[0]) + ', requests: '
+                          + str(hand[1][4]) + ', answers: ' + str(hand[1][1]))
                 if hand[0]:
                     self.send(*(hand[1] + [self.peers]))
             except Exception as e:
                 if str(e) != 'timed out':
-                    log.debug(str(time.time()) + ':HSock.recv_by_sock:exception: ' + traceback.format_exc())
+                    log.debug('HSock.recv_by_sock:exception: ' + traceback.format_exc())
 
     def listen_msg(self, delt=0.05):
         """

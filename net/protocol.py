@@ -129,7 +129,6 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
               + ',\nlength: ' + str(rlength) + ',\nkeys: ' + str(answer.keys()))
     if rlength:
         rprotocol = answer.get("protocol")
-        log.debug("HProto version is " + rprotocol.get("Version"))
     else:
         rprotocol = None
     requests = []
