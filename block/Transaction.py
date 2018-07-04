@@ -186,7 +186,7 @@ class Transaction:
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs[1:]:
                 if tuple(self.index) in [tuple(from_ind) for from_ind in tnx.froms] and tnx.index not in exc and \
-                        self.author in tnx.outs:
+                        tnx.author in outs:
                     spent[outs.index(tnx.author)] = True
         return spent
 
