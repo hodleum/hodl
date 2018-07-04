@@ -11,7 +11,7 @@ class TestFunc(unittest.TestCase):
             my_keys = json.loads(f.read())
         my_wallet = wallet.Wallet(my_keys)
         with open('tests/your_key', 'r') as f:
-            your_pub_key = json.loads(f.read())
+            your_pub_key = json.loads(f.read())[0]
         wallet.bch.clean()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())

@@ -31,11 +31,10 @@ class Wallet:
             for tnx in bch[i].txs:
                 if self.pubkey in [bch.pubkey_by_nick(out) for out in tnx.outs] and 'mining' not in tnx.outs:
                     if not tnx.spent(bch)[block.rm_dubl_from_outs(tnx.outs, tnx.outns)[0].index(self.pubkey)]:
-                        o += block.rm_dubl_from_outs(
+                        clean_outs = block.rm_dubl_from_outs(
                             [bch.pubkey_by_nick(out) for out in tnx.outs],
-                            tnx.outns)[1][
-                            block.rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)[0].index(
-                                self.pubkey)]
+                            tnx.outns)
+                        o += clean_outs[1][clean_outs[0].index(self.pubkey)]
                         froms.append(tnx.index)
                         if o >= out:
                             break
