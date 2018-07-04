@@ -81,7 +81,7 @@ class TestFunc(unittest.TestCase):
         wallet.bch.append(block.mining.mine(wallet.bch))
         # tests of SC tasks distribution and mining
         print('my money', wallet.bch.money(my_keys[1]))
-        self.assertEqual(wallet.bch.money(my_keys[1]), 211.35)
+        self.assertEqual(wallet.bch.money(my_keys[1]), 205.2)
         print('your money', wallet.bch.money(your_pub_key))
         self.assertEqual(wallet.bch.money(your_pub_key), 0.5)
         print('Passed!')

@@ -57,12 +57,12 @@ def is_tnx_money_valid(self, bch):
             if not tnx.is_valid and not is_first:
                 print(self.index, 'is not valid: from(', tnx.index, ') is not valid')
                 return False
-            if 'mining' in tnx.outs:
+            if self.author not in tnx.outs:
                 return False
             if tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
                 print(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
                 return False
-            inp = inp + clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
+            inp += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
         except Exception as e:
             print(self.index, 'is not valid: exception:', e)
             return False
@@ -185,7 +185,8 @@ class Transaction:
         spent = [False] * len(outs)
         for block in bch:  # перебираем все транзакции в каждом блоке
             for tnx in block.txs[1:]:
-                if list(self.index) in list(tnx.froms) and 'mining' not in tnx.outs and tnx.index not in exc:
+                if tuple(self.index) in [tuple(from_ind) for from_ind in tnx.froms] and tnx.index not in exc and \
+                        self.author in tnx.outs:
                     spent[outs.index(tnx.author)] = True
         return spent
 

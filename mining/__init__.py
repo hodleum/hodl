@@ -14,10 +14,9 @@ import cryptogr as cg
 
 
 pow_max = 1000000000000000000000000000000000000
-pos_min = 0.05
 pok_total = 10000
 poc_total = 10000
-miningprice = [100, 5]
+miningprice = [100]
 
 
 class TooLessTxsError(Exception):
@@ -58,7 +57,7 @@ def pow_mining(bch, b):
             if i == i1:
                 raise NoValidMinersError
             if i == len(bch):
-                 i = i - len(bch) + 1
+                i = i - len(bch) + 1
     b.n = miners[i][1]
     b.pow_timestamp = miners[i][3]
     b.timestamp = int(time.time())
@@ -91,55 +90,6 @@ def pow_validate(bch, num):
         print('block pow mining wrong.', not miners[i][2] == bch[num].creators[0], not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
     return True
-
-
-def pos_mining(b, bch):
-    """Proof-of-stake new block processing"""
-    miners = []
-    for tnx in bch[-1].txs:
-        if 'mining' in tnx.outs:
-            miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
-    miners.sort(reverse=True)
-    if len(miners) == 0:
-        raise NoValidMinersError
-    try:
-        i = ((int(bch[-1].txs[-1].hash) + int(bch[-1].txs[-4].hash)) % int(len(miners) ** 0.5)) ** 2
-    except IndexError:
-        raise TooLessTxsError
-    if miners[i][0] >= pos_min:
-        b.creators.append(miners[i][1])
-    else:
-        if miners[0][0] >= pos_min:
-            b.creators.append(miners[i][1])
-        else:
-            raise NoValidMinersError
-    b.txs[0].outs.append(miners[i][1])
-    b.update()
-    return b
-
-
-def pos_validate(bch, i):
-    b = bch[i]
-    miners = []
-    for tnx in bch[i-1].txs:
-        if 'mining' in tnx.outs:
-            miners.append([tnx.outns[tnx.outs.index('mining')], tnx.author])
-    miners.sort()
-    if len(miners) == 0:
-        raise NoValidMinersError
-    try:
-        i = ((int(bch[i-1].txs[-1].hash) + int(bch[i-1].txs[-4].hash)) % int(len(miners) ** 0.5)) ** 2
-    except IndexError:
-        raise TooLessTxsError
-    if miners[i][0] >= pos_min:
-        if miners[i][1] == b.creators[1]:
-            return True
-    else:
-        if miners[0][0] >= pos_min:
-            if miners[0][1] == b.creators[1]:
-                return True
-        else:
-            raise NoValidMinersError
 
 
 def pok_mining(b, bch):
@@ -201,11 +151,10 @@ def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
     powv = pow_validate(bch, i)
-    posv = pos_validate(bch, i)
     pokv = pok_validate(bch, i)
     pocv = poc_validate(bch, i)
-    print(powv, posv, pokv, pocv)
-    return all([powv, posv, pokv, pocv])
+    print(powv, pokv, pocv)
+    return all([powv, pokv, pocv])
 
 
 def mine(bch):
@@ -214,7 +163,6 @@ def mine(bch):
     b.txs[0] = block.Transaction()
     b.txs[0].gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
     b = pow_mining(bch, b)
-    b = pos_mining(b, bch)
     b = pok_mining(b, bch)
     b = poc_mining(b, bch)
     b.prevhash = bch[-1].h
