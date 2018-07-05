@@ -80,7 +80,7 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
         # tests of SC tasks distribution and mining
         print('my money', wallet.bch.money(my_keys[1]))
-        self.assertEqual(wallet.bch.money(my_keys[1]), 199.93)
+        self.assertEqual(wallet.bch.money(my_keys[1]), 201.88)
         print('your money', wallet.bch.money(your_pub_key))
         self.assertEqual(wallet.bch.money(your_pub_key), 0.5)
         print('Passed!')
