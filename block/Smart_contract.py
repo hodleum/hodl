@@ -165,7 +165,7 @@ class Smart_contract:
             if cp < 0:
                 cp = 0
             pr += mp + cp
-        payed = bch.money('sc' + str(list(self.index)) + 'payment')
+        payed = bch.money('sc' + str(list(self.index)))
         if payed < pr:
             log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))
             return False

@@ -39,9 +39,7 @@ class TestFunc(unittest.TestCase):
         # 0 7
         my_wallet.new_transaction(['mining', my_keys[1]], [0.05, 0.95])
         # 0 8
-        my_wallet.new_transaction(['sc[1, 0]'+'payment'], [1])
-        # 0 9
-        my_wallet.new_transaction(['sc[1, 0]'], [0.1])
+        my_wallet.new_transaction(['sc[1, 0]'], [0.52])
         # 1 0, 1 1
         wallet.bch.append(block.mining.mine(wallet.bch))
         # todo: processing txs with the same address several times in outs
