@@ -1,7 +1,8 @@
 import json
 import time
-import cryptogr as cg
 import os
+import logging as log
+import cryptogr as cg
 
 
 sc_base_mem = 10000000
@@ -164,13 +165,13 @@ class Smart_contract:
             if cp < 0:
                 cp = 0
             pr += mp + cp
-        payed = bch.money('sc' + str(self.index) + 'payment')
-        if not payed >= pr:
-            print('sc not payed. payed:', payed, 'needed:', pr)
+        payed = bch.money('sc' + str(list(self.index)) + 'payment')
+        if payed < pr:
+            log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))
             return False
         if not cg.verify_sign(self.sign, json.dumps((self.code, str(self.author), self.index, self.computing, self.calc_repeats, self.memory.size,
                            self.codesize, self.timestamp)), self.author):
-            print('not valid sign in sc')
+            log.debug('not valid sign in sc')
             return False
         return True
 

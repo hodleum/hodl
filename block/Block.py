@@ -1,5 +1,6 @@
 import time
 import json
+import logging as log
 from block.Transaction import Transaction
 from block.Smart_contract import Smart_contract
 import cryptogr as cg
@@ -103,25 +104,25 @@ class Block:
         if i != 0:
             if self.txs[0].froms != 'mining' or self.txs[0].author != 'mining' \
                     or self.txs[0].outs != self.creators:
-                print('invalid first tnx')
+                log.debug('invalid first tnx')
                 return False
             n = 0
             for o in self.txs[0].outns:
                 n += o
             if self.txs[0].outns != mining.miningprice:
-                print('not all money in first tnx')
+                log.debug('not all money in first tnx')
                 return False
             for t in self.txs[2:]:
                 if not t.is_valid(bch):
-                    print('tnx isnt valid')
+                    log.debug('tnx isnt valid')
                     return False
             if i != 0:
                 if not mining.validate(bch, i):
-                    print('not valid mined block. i:', i)
+                    log.debug('not valid mined block. i:', i)
                     return False
             if i != 0:
                 if self.prevhash != bch[i - 1].h:
-                    print('prevhash not valid. i:', i)
+                    log.debug('prevhash not valid. i:', i)
                     return False
             else:
                 pass

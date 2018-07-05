@@ -8,8 +8,9 @@ pok_mining: miner stores smart contracts' data there is not only one miner, ever
 poc_mining: miner calculates what smart contracts need (proofs-of-calcing). It is the base for dezentralized computing
 in HODL.
 """
-import block
 import time
+import logging as log
+import block
 import cryptogr as cg
 
 
@@ -50,7 +51,6 @@ def pow_mining(bch, b):
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])
         if int(bl.calc_pow_hash()) == miners[i][0] <= pow_max:
-            print('i37', i)
             break
         else:
             miners.remove(miners[i])
@@ -87,7 +87,7 @@ def pow_validate(bch, num):
             if i == len(bch):
                 i = i - len(bch) + 1
     if not miners[i][2] == bch[num].creators[0] or not bch[num].pow_timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
-        print('block pow mining wrong.', not miners[i][2] == bch[num].creators[0], not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
+        log.debug('block pow mining wrong.', not miners[i][2] == bch[num].creators[0], not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
     return True
 
@@ -123,15 +123,15 @@ def pok_validate(bch, n):
                 if bch[n].timestamp > sc.awards[w][1] > bch[n - 1].timestamp:
                     outs.append(w)
                     outns.append(sc.awards[w][0])
-    print('pok_validate. outns:', outns)
+    log.debug('pok_validate. outns: ' + str(outns))
     s = 0
     for n in outns:
         s += n
     for i in range(len(outns)):
         outns[i] = outns[i] * s / pok_total
-    print('pok_validate. total outns:', outns)
+    log.debug('pok_validate. total outns: ' + str(outns))
     if not (outs == bch[n].txs[1].outs and outns == bch[n].txs[1].outns):
-        print('block pok mining wrong.', outns, bch[n].txs[1].outns, outs == bch[n].txs[1].outs)
+        log.debug('block pok mining wrong.')
         return False
     return True
 
@@ -153,7 +153,7 @@ def validate(bch, i=-1):
     powv = pow_validate(bch, i)
     pokv = pok_validate(bch, i)
     pocv = poc_validate(bch, i)
-    print(powv, pokv, pocv)
+    log.debug(str((powv, pokv, pocv)))
     return all([powv, pokv, pocv])
 
 

@@ -1,8 +1,9 @@
 import json
-import cryptogr as cg
+import logging as log
 from itertools import chain
 import time
 from collections import Counter
+import cryptogr as cg
 
 
 def indexmany(a, k):
@@ -55,16 +56,16 @@ def is_tnx_money_valid(self, bch):
             clean_outs = rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)
             is_first = t[0] == 0 and t[1] == 0
             if not tnx.is_valid and not is_first:
-                print(self.index, 'is not valid: from(', tnx.index, ') is not valid')
+                log.debug(self.index, 'is not valid: from(', tnx.index, ') is not valid')
                 return False
             if self.author not in tnx.outs:
                 return False
             if tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
-                print(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
+                log.debug(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
                 return False
             inp += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
         except Exception as e:
-            print(self.index, 'is not valid: exception:', e)
+            log.debug(self.index, 'is not valid: exception:', e)
             return False
     o = 0
     for n in self.outns:  # all money must be spent
@@ -72,7 +73,7 @@ def is_tnx_money_valid(self, bch):
             return False
         o = o + n
     if not o == inp:
-        print(self.index, 'is not valid: not all money')
+        log.debug(self.index, 'is not valid: not all money')
         return False
     return True
 
@@ -150,14 +151,12 @@ class Transaction:
             if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
                 return False
         elif not self.author[0:2] == 'sc':
-            print("Log TypeSign: \nSign: {}. \nHash: {}. \nAuthor: {}.".format(type(self.sign), type(self.hash),
-                                                                               type(self.author)))
             try:
                 if not cg.verify_sign(self.sign, self.hash, self.author):
-                    print(self.index, 'is not valid: sign is wrong')
+                    log.debug(str(self.index) + ' is not valid: sign is wrong')
                     return False
             except Exception as e:
-                print(self.index, 'is not valid: exception while checking sign:', e)
+                log.debug(str(self.index) + ' is not valid: exception while checking sign:', e)
                 return False
         else:
             scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]

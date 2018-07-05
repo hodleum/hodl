@@ -1,8 +1,12 @@
 import unittest
-import block
-import cryptogr as cg
+import logging as log
 import json
+import cryptogr as cg
+import block
 import wallet
+
+
+log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 
 
 class TestFunc(unittest.TestCase):
