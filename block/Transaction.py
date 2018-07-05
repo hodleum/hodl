@@ -156,7 +156,7 @@ class Transaction:
                     log.debug(str(self.index) + ' is not valid: sign is wrong')
                     return False
             except Exception as e:
-                log.debug(str(self.index) + ' is not valid: exception while checking sign:', e)
+                log.debug(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
                 return False
         else:
             scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
