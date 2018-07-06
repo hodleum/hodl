@@ -1,15 +1,12 @@
 import json
-import time
-import traceback
 from socket import socket
-import random
-import cryptogr as cg
 import mmh3
-import logging as log
+import logging
 from .proto import recv, send
 from .protocol import generate
 
 
+log = logging.getLogger(__name__)
 meta = """HODL_NetP v1"""
 
 
@@ -36,19 +33,18 @@ class Peer:
 
     def connect(self, peers, exc=tuple(), n=3):
         """Generate sockets to all IP addresses for this peer"""
-        log.debug('Peer.connect: Connecting to peer. self.netaddrs: ' + str(self.netaddrs) + '\n')
+        log.debug('Connecting to peer. self.netaddrs: %s' % self.netaddrs)
         sockets = []
         for addr in self.netaddrs:
             if addr not in exc:
-                log.debug(str(time.time()) + ':Peer.connect: connecting to ' + str(addr))
+                log.debug('Connecting to %s' % addr)
                 try:
                     sock = socket()
                     sock.connect(afs(addr))
                     sockets.append(sock)
-                    log.debug('Peer.connect: new socket to white address ' + str(addr) + ': ' + str(sock))
+                    log.debug('New socket to white address %s: %s' % (addr, sock))
                 except:
-                    log.debug('Peer.connect: exception while connecting to ' + str(addr) +' : '
-                              + traceback.format_exc())
+                    log.exception('exception while connecting to %s' % addr)
         white_conns = peers.white_conn_to(self.addr, n)
         sockets += white_conns
         return sockets
@@ -61,7 +57,7 @@ class Peer:
                 sock.settimeout(2)
                 sock.connect(afs(addr))
                 sockets.append(sock)
-            except:
+            except socket.timeout:
                 pass
         return sockets
 
@@ -154,7 +150,7 @@ class Peers(set):
                         send(sock, json.dumps(generate(requests=[{'type': "between"}], message=to)))
                         socks.append(sock)
                     except:
-                        pass
+                        log.exception('Exception, while send')
                     if len(socks) == n:
                         return socks
         return socks

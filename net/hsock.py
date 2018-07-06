@@ -1,12 +1,12 @@
 from socket import socket
 from threading import Thread
 import time
-import traceback
-from net.Peers import Peers
-import logging as log
+from net.peers import Peers
 from .proto import recv, send, sock_to
 from .protocol import generate, handle
 
+import logging
+log = logging.getLogger(__name__)
 
 hsocks = []
 
@@ -22,8 +22,8 @@ class HSock:
             self.peer = peers.srchbyaddr(addr)[1]
             self.socks = self.peer.connect(peers, n=n)
             self.conns = []
-            log.debug('HSock.__init__ by address: self.socks, self.conns created. self.socks:'
-                      + str([str(sock) for sock in self.socks]))
+            log.debug('init by address: self.socks, self.conns created. self.socks: %s' %
+                      [str(sock) for sock in self.socks])
         else:
             self.socks = [sock]
             self.conns = [conn]
@@ -34,7 +34,6 @@ class HSock:
         self.addr = addr
         self.amh = []
         if not (sock and conn):
-            time.sleep(0.3)
             self.send(generate('', peers, [], myaddrs, [], 'text', True, self.addr))
 
     @classmethod
@@ -42,7 +41,7 @@ class HSock:
         # todo: get sender's address
         return cls(sock=sock, conn=conn, myaddrs=myaddrs)
 
-    def send(self, data='', requests=tuple(), ans=tuple(), full=False, peers='from_HSock'):
+    def send(self, data='', requests=tuple(), ans=tuple(), full=False, peers='from_HSock'):  # TODO: docstrings, pls
         """
 
         Send data with all sockets in this HSock
@@ -57,7 +56,7 @@ class HSock:
                 peers = Peers()
         # todo: encode data using RSA
         # todo: generate message by protocol.generate
-        log.debug('send')
+        log.debug('send %s' % data)
         for sock in self.socks:
             if sock:
                 send(sock, generate(message=data, peers=peers, ans=ans, pubkeys=[addr[1] for addr in self.myaddrs],
@@ -82,7 +81,7 @@ class HSock:
     def handmess(self, msg):
         hand = handle(msg, self.addr, self.peers, alternative_message_handlers=self.amh,
                       first=len(self.in_msgs) == 1)
-        log.debug('HSock.recv_by_sock: message received and handled. hand[0]: ' + str(hand[0]))
+        log.debug('Message received and handled. hand[0]: %s' % hand[0])
         if hand[0]:
             self.send(*(hand[1] + [self.peers]))
 
@@ -101,11 +100,11 @@ class HSock:
                 if msg is None:
                     continue
                 self.in_msgs.append(msg)
-                log.debug('HSock.recv_by_sock: message received')
+                log.debug('Message received')
                 Thread(target=self.handmess, args=(msg, )).start()
             except Exception as e:
                 if str(e) != 'timed out':
-                    log.debug('HSock.recv_by_sock:exception: ' + traceback.format_exc())
+                    log.exception('exception')
 
     def listen_msg(self, delt=0.05):
         """
@@ -164,10 +163,9 @@ def connect_to(addr, myaddrs=tuple(), peers=Peers()):
     for hsock in hsocks:
         if hsock.addr == addr:
             return hsock
-    else:
-        hsock = HSock(addr=addr, myaddrs=myaddrs, peers=peers)
-        hsocks.append(hsock)
-        return hsock
+    hsock = HSock(addr=addr, myaddrs=myaddrs, peers=peers)
+    hsocks.append(hsock)
+    return hsock
 
 
 def listen_loop(port=9276):

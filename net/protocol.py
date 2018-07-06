@@ -3,14 +3,14 @@ HODL transport protocol
 """
 
 import base64
-import logging as log
+import logging
 import platform
 import zlib
 import random
-
 import json5
-
 from net import info
+
+log = logging.getLogger(__name__)
 
 
 def compress_b64(d2c, cspeed=-1):
@@ -20,6 +20,7 @@ def compress_b64(d2c, cspeed=-1):
     :param cspeed: int
     :return: string
     """
+
     log.debug("COMPRESSION STARTED")
 
     d2c = base64.urlsafe_b64encode(d2c).encode("utf8")
@@ -46,7 +47,6 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     :param disable_test: bool
     :return: message: str
     """
-    full = True
     res = {
         'length': full
     }
@@ -54,7 +54,6 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     if disable_test:
         log.warning("DISABLE_TEST is enabled! This is UNSECURE!")
     if full:
-
         pj = {
             'Name': info.PNAME,
             'Version': info.VERSION,
@@ -70,9 +69,9 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
         res["pubkeys"] = pubkeys
 
     if encoding not in info.SUPPORTED_ENCODINGS and not disable_test:
-        raise Exception("Not Supported Encoding. To disable test set DISABLE_TEST to True")
+        raise TypeError("Not Supported Encoding. To disable test set DISABLE_TEST to True")
     if mtype not in info.SUPPORTED_TYPES and not disable_test:
-        raise Exception("Not Supported Type. To disable test set DISABLE_TEST to True")
+        raise TypeError("Not Supported Type. To disable test set DISABLE_TEST to True")
 
     mes = {
         'address': endaddr if endaddr is not None else None,
@@ -85,7 +84,7 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
     res['n'] = random.randint(0, 1000)
     res['answers'] = ans
     res['requests'] = requests
-    log.debug('protocol.generate n: ' + str(res['n']) + ' requests: ' + str(requests))
+    log.debug('n: %s requests: %s' % (res['n'], requests))
     res["message"] = mes
     return json5.dumps(res, indent=5)
 
@@ -93,11 +92,11 @@ def generate(message="", peers=(), ans=(), pubkeys=(), requests=(), encoding="te
 def handle_request(request, peers):
     if request['request'] == 'peer_by_hash':
         ans = [peers.peer_by_hash(h) for h in request['body']]
-        log.debug('protocol.handle_request: answer: ' + str(ans) + 'for request ' + str(request))
+        log.debug('Answer %s for %s request' % (ans, request))
         return ans
 
 
-def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=False):
+def handle(answer, adr, mypeers, alternative_message_handlers=(), first=False):
     """
     Handle message answer from adr
     :param answer: str, message
@@ -121,13 +120,12 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
     ]
     """
     # todo: process sender's pubkeys
-    z = None
     if not answer:
         log.debug("Empty message in handle")
         return [False]
     answer = json5.loads(answer)
     rlength = answer.get("length")
-    log.debug('protocol.handle n: ' + str(answer['n']) + ' requests: ' + str(answer['requests']) + ',\npeers: '+repr(answer.get('peers'))
+    log.debug('n: %s requests: %s,\npeers: %s' % (answer['n'], answer['requests'], answer.get('peers'))
               + ',\nlength: ' + str(rlength) + ',\nkeys: ' + str(answer.keys()))
     if rlength:
         rprotocol = answer.get("protocol")
@@ -136,7 +134,7 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
     requests = []
     if rlength:
         request_peers = mypeers.needed_peers(answer.get('peers'))
-        log.debug('protocol.handle: requests appended by peer request')
+        log.debug('Requests appended by peer request')
         requests.append({'request': 'request_peers', 'body': request_peers})
     answers = []
     for request in answer["requests"]:
@@ -146,13 +144,12 @@ def handle(answer, adr, mypeers=set(), alternative_message_handlers=(), first=Fa
             if a:
                 continue
         answers.append(handle_request(request, mypeers))
-    log.debug('protocol.handle: answers: ' + str(answers))
+    log.debug('Answers: %s' % answers)
     return answers or requests or first, ['', requests, answers, False]
 
 
 if __name__ == "__main__":
-    from net.Peers import Peers
+    from net.peers import Peers
 
-    log.basicConfig(level=log.DEBUG)
     print(handle(generate(message="Hello World!", pubkeys=[], mtype="PRequest", peers=Peers()), "0xEXAMPLE",
                  mypeers=Peers()))
