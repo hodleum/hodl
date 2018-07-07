@@ -96,13 +96,18 @@ def handle_request(request, peers):
         return ans
 
 
-def handle(answer, adr, mypeers, alternative_message_handlers=(), first=False):
+def handle_peer_ans(ans, peers):
+    return peers   # todo
+
+
+def handle(answer, adr, mypeers, alternative_message_handlers=(), alternative_answer_handlers=(), first=False):
     """
     Handle message answer from adr
     :param answer: str, message
     :param adr: str, sender's address
     :param mypeers: Peers
     :param alternative_message_handlers: list of functions
+    :param alternative_answer_handlers: list of functions
     :return:
     [
         new peers,
@@ -142,10 +147,19 @@ def handle(answer, adr, mypeers, alternative_message_handlers=(), first=False):
         for amh in alternative_message_handlers:
             a = amh(request)
             if a:
-                continue
-        answers.append(handle_request(request, mypeers))
+                answers.append(a)
+                break
+        else:
+            answers.append(handle_request(request, mypeers))
     log.debug('Answers: %s' % answers)
-    return answers or requests or first, ['', requests, answers, False]
+    for ans in answer['answers']:
+        for aah in alternative_answer_handlers:
+            a = aah(ans)
+            if a:
+                break
+        else:
+            mypeers = handle_peer_ans(ans, mypeers)
+    return answers or requests or first, ['', requests, answers, False, mypeers, answer['n']]
 
 
 if __name__ == "__main__":
