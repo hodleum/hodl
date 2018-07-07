@@ -2,3 +2,5 @@ pycryptodome
 json5
 docker
 raven
+mmh3
+twisted

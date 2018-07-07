@@ -1,7 +1,10 @@
 from socket import socket
-import logging as log
+
 import struct
 import json5
+
+import logging
+log = logging.getLogger(__name__)
 
 
 def sock_to(addr):
@@ -21,7 +24,7 @@ def recv(sock):
     if len(chunk) < 4:
         return
     slen = struct.unpack('>L', chunk)[0]
-    log.debug('proto.recv. len: ' + str(slen))
+    log.debug('len: %s' % slen)
     chunk = sock.recv(slen)
     while len(chunk) < slen:
         chunk += sock.recv(slen - len(chunk))
@@ -39,7 +42,7 @@ def send(sock, data):
 
     :return: None
     """
-    log.debug('proto.send. len: ' + str(len(data)) + ', n: ' + str(json5.loads(data)['n']))
+    log.debug('Len: %s, n: %s' % (len(data), json5.loads(data)['n']))
     if type(data) == str:
         data = data.encode()
     data = struct.pack('>L', len(data)) + data

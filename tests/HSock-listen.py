@@ -3,7 +3,7 @@ import time
 import json
 import logging as log
 from net.hsock import HSock, listen
-from net.Peers import Peers, Peer
+from net.peers import Peers, Peer
 
 
 log.basicConfig(level=log.DEBUG, format='[%(asctime)s]:%(message)s')

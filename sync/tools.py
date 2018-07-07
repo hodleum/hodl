@@ -1,5 +1,5 @@
 import logging as log
-from net.Peers import Peers, Peer
+from net.peers import Peers, Peer
 import net
 from sync.Connections import InputConnection, Connection
 from _thread import start_new_thread

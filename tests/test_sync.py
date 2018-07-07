@@ -4,7 +4,7 @@ import multiprocessing
 import time
 import logging as log
 import block
-from net.Peers import Peer, Peers
+from net.peers import Peer, Peers
 import sync
 
 
