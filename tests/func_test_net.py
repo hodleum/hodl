@@ -18,7 +18,7 @@ def cat_peers():
 name = str(os.getenv('HODL_NAME'))
 
 log.basicConfig(level=log.DEBUG,
-                format='%(name)s.%(funcName)s [LINE:%(lineno)d]# [{}] %(levelname)-8s [%(asctime)s]'
+                format='%(name)s.%(funcName)-8s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
                        '  %(message)s'.format(name))
 log.debug(
     '\n\n\n\n\n\n-------------------------------------\nstart\n-------------------------------------\n\n\n\n\n\n\n\n\n')
@@ -51,7 +51,6 @@ hsock.connect_to_all(peers, keys['Alice'])
 
 log.debug('HSock connected to all.\nHSocks: [\n' + '\n'.join([repr(s) for s in hsock.hsocks]) + ']\n\n--------------\n')
 
-
 if name == 'Bob':
     log.debug('Bob listen')
     while len(hsock.hsocks) == 0:
@@ -72,7 +71,6 @@ elif name == 'Alice':
     s = hsock.connect_to(keys['Bob'][1], keys['Alice'], peers)
     log.debug('hsock connected')
     s.send(data='im alice')
-
 
 time.sleep(0.5)
 

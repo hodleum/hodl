@@ -18,8 +18,8 @@ class Protocol(DatagramProtocol):
         self.port = port
         self.reactor = r
         self.server = server
-        # task.LoopingCall(self.refresh_connections).start(self.update)
-        # task.LoopingCall(lambda: log.debug(self.server.peers)).start(5.0)  # TODO: Unhandled error in Deferred
+        self.reactor.callLater(1, lambda: task.LoopingCall(self.refresh_connections).start(self.update))
+        self.reactor.callLater(1, lambda: task.LoopingCall(lambda: log.debug(self.server.peers.keys())).start(5))
 
     def datagramReceived(self, datagram, addr):
         try:
@@ -28,24 +28,31 @@ class Protocol(DatagramProtocol):
             data = message.get('data')
             peer = self.server.peers.get(addr)
         except (UnicodeDecodeError, json.decoder.JSONDecodeError):
-            self.send(self.get_error_message('001'), addr)
-            return
+            return self.send(self.get_error_message('001'), addr)
 
         if not peer and request != 'connect':
-            self.send(self.get_error_message('003'), addr)
-            return
+            return self.send(self.get_error_message('003'), addr)
 
         if request:
             if request != 'ping':
                 log.debug('Datagram %s received from %s' % (repr(datagram), repr(addr)))
 
-            if request == 'connect':
+            if request == 'ping':
+                peer = self.server.peers.get(addr)
+                if not peer:
+                    return self.send(self.get_error_message('003'), addr)
+                peer.ping_time = time.time()
+
+            elif request == 'connect':
                 peer = self.server.peers.add(addr)
                 if peer:
                     self.check_new_peers(data)
                     peer.connect(response=True)
-        else:
-            pass
+
+            elif request == 'success_connect':
+                peer = self.server.peers.get(addr)
+                if peer:
+                    self.check_new_peers(data)
 
     def get_error_message(self, error_id):
         return {'type': 'error', 'data': {'code': error_id, 'message': self.errors[error_id]}}
@@ -86,7 +93,8 @@ class Peer:
         self.proto = proto
 
     def send(self, data):
-        log.debug('Send: %s, %s' % (data, self.addr))
+        if data.get('request') != 'ping':
+            log.debug('[Peer %s]: Send %s' % (self.addr, data))
         self.proto.send(data, self.addr)
 
     def ping(self):
@@ -99,7 +107,8 @@ class Peer:
         })
 
     def disconnect(self):
-        pass  # TODO: disconnect peer
+        log.info('[Peer %s]: connection lost' % (self.addr,))
+        self.proto.server.peers.remove(self.addr)
 
     @staticmethod
     def on_message(message):
@@ -149,7 +158,7 @@ class Server:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(name)s.%(funcName)s [LINE:%(lineno)d]# [{}] %(levelname)-8s [%(asctime)s]'
+                        format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
                                '  %(message)s'.format('<Bob>'))
     # s = Server(peers=[('127.0.0.1', 8003)])
     s = Server(port=8001, white=False, new_peers=[('127.0.0.1', 8000)])
