@@ -147,26 +147,25 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
-        if self.author[0:4] == 'scaw':
-            if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
+        # check validness of nick definition
+        if ';' in self.author:
+            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]:   # todo: control nick emission
                 return False
-        elif not self.author[0:2] == 'sc':
+        # check validness of tnx made by smart contract
+        if self.author[0:2] == 'sc':
+            if not bch[int(self.author.split('[')[1][:-1].split(',')[0])].contracts[int(
+                    self.author.split('[')[1][:-1].split(', ')[1])].validate_tnx(self, bch):
+                return False
+        else:
             try:
                 if not cg.verify_sign(self.sign, self.hash, self.author):
                     log.debug(str(self.index) + ' is not valid: sign is wrong')
                     return False
             except Exception as e:
                 log.debug(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
-                return False
-        else:
-            scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
-            sc = bch[scind[0]].contracts[scind[1]]
-            for tnx in sc.txs:
-                if self.index == tnx.index:
-                    break
-            else:
-                return False
-        is_tnx_money_valid(self, bch)
+        # validate transaction money, for example froms and outs should be equal
+        if not is_tnx_money_valid(self, bch):
+            return False
         self.update()
         return True
 

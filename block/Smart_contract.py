@@ -175,6 +175,20 @@ class Smart_contract:
             return False
         return True
 
+    def validate_tnx(self, tnx, bch):
+        """
+        Validate transaction made by smart contract
+        :param tnx: Transaction
+        :param bch: Blockchain
+        :return: validness: bool
+        """
+        for tnx in self.txs:
+            if self.index == tnx.index:
+                break
+        else:
+            return False
+        return True
+
     def calc_awards(self, bch):
         """
         Calculates how much to pay to miners.
