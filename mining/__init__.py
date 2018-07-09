@@ -2,9 +2,8 @@
 This file contains functions for mining.
 HODL has 4 ways of mining:
 pow_mining: classical mining like in Bitcoin (proofs-of-work)
-pos_mining: proofs-of-stake
 pok_mining: miner stores smart contracts' data there is not only one miner, everybody who stores it becomes HODL
-(proofs-of-keeping). It is the base for decentralized data storage.
+proof-of-keeping. It is the base for decentralized data storage.
 poc_mining: miner calculates what smart contracts need (proofs-of-calcing). It is the base for dezentralized computing
 in HODL.
 """

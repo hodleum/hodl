@@ -26,9 +26,6 @@ from block.Block import Block
 from block.UnfilledBlock import UnfilledBlock
 from block.SimpleSC import SimpleSC
 
-minerfee = 1
-#__all__ = ['Blockchain', 'Block', 'UnfilledBlock', 'SimpleSC', 'Smart_contract', 'Transaction']
-
 
 class Blockchain:
     """Class for blockchain"""
@@ -82,7 +79,7 @@ class Blockchain:
                         money += n
         return money
 
-    def new_block(self, creators, txs=[]):
+    def new_block(self, creators, txs=tuple()):
         """Creates the new block and adds it to chain"""
         b = Block(0, creators, self, txs)
         self.append(b)
@@ -181,30 +178,31 @@ class Blockchain:
         b.contracts.append(sc)
         self[-1] = b
 
-    def close(self):
-        """Close connection to database"""
-        self.conn.commit()
-        self.conn.close()
-
     def commit(self):
         self.close()
         self.conn = sqlite3.connect(self.f)
         self.c = self.conn.cursor()
 
-    def __repr__(self):
-        return str([[len(b.txs), len(b.contracts)] for b in self])
-
     def pubkey_by_nick(self, nick):
-        if nick.startswith('-----BEGIN PUBLIC KEY-----'):
-            if nick.endswith('-----END PUBLIC KEY-----'):
-                return nick
-            else:
-                return nick.split('-----END PUBLIC KEY-----')[0]+'-----END PUBLIC KEY-----'
+        """
+        Nicks can be used in transactions. Nicks can be defined in transaction with author=pubkey;nick;
+        :param nick: str: pubkey, nick or nick definition
+        :return: str: pubkey
+        """
+        if ';' not in nick:
+            return nick
         else:
             o = None
             for i in range(len(self)):
                 for tnx in self[i].txs:
-                    if tnx.author.endswith(nick+';'):
-                        o = nick.split('-----END PUBLIC KEY-----')[0]+'-----END PUBLIC KEY-----'
-        # todo
-        return
+                    if tnx.author.endswith(nick + ';'):
+                        o = nick.split(';')[0]
+                        return o
+
+    def close(self):
+        """Close connection to database"""
+        self.conn.commit()
+        self.conn.close()
+
+    def __repr__(self):
+        return str([[len(b.txs), len(b.contracts)] for b in self])
