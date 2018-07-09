@@ -178,8 +178,8 @@ class PeerProtocol(DatagramProtocol):
                     if peer:
                         peer.invite()
                 elif self.children_subnet:
-                    n = random.randint(0, self.max_children - 1)
-                    self.children_subnet[n].connect_request(addr)
+
+                    random.choice(self.children_subnet).connect_request(addr)
                 else:
                     self.create_child_subnet(addr)
 
@@ -206,26 +206,28 @@ class PeerProtocol(DatagramProtocol):
             return
         self.transport.write(json.dumps(data).encode('utf-8'), address)
 
-    def forward(self, data):
+    def forward(self, message):
         """
         Send the package forward to net
         """
-        pass
+        message.forward //= 2
+        peers = list(self.subnet.values()) + self.children_subnet + self.parents_subnet
+        random.choice(peers).send(message)
 
-    def send(self, data, net_address, uid):
+    def send(self, message, net_address, uid):
         """
         High level send
-        :param data: data to send
+        :param message: data to send
         :param net_address: address of net
         :param uid: id for callback
         :return: None
         """
         pass
 
-    def shout(self, data):
+    def shout(self, message):
         """
         High level send to all peers
-        :param data: data to send
+        :param message: data to send
         :return: None
         """
         pass
@@ -247,15 +249,15 @@ class Peer:
         self.addr = addr
         self.proto = proto
 
-    def send(self, data):
+    def send(self, message):
         """
         Low level send to peer
-        :param data: data to send
+        :param message: data to send
         :return: None
         """
-        if data.request != 'ping':
-            log.debug('[Peer %s]: Send %s' % (self.addr, data))
-        self.proto._send(data.dump(), self.addr)
+        if message.request != 'ping':
+            log.debug('[Peer %s]: Send %s' % (self.addr, message))
+        self.proto._send(message.dump(), self.addr)
 
     def ping(self):
         """
