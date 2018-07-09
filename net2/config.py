@@ -16,6 +16,7 @@ SUB_NET_MAX_SIZE = 4
 '       PEER_PROTO        '
 TIMEOUT = 5
 UPDATE = 2
+MAX_CHILDREN_NET = 1
 '-------------------------'
 
 '-------------------------'
