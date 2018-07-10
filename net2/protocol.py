@@ -6,6 +6,7 @@ import random
 from twisted.internet.protocol import DatagramProtocol
 # from twisted.internet import task
 from .config import *
+from .tools import TempDict
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class Message:
     """Message protocol"""
 
     def __init__(self, message_type, data=None, request=None, encoding=None,
-                 addressee=None, sender=None, mid=None, forward=None):
+                 addressee=None, sender=None, mid=None, forward=None, callback=None, tunnel_id=None):
         self.type = message_type
         self.data = data
         self.request = request
@@ -23,6 +24,8 @@ class Message:
         self.sender = sender
         self.id = mid
         self.forward = forward
+        self.callback = callback
+        self.tunnel_id = tunnel_id
 
     @classmethod
     def from_json(cls, message):
@@ -44,12 +47,13 @@ class Message:
 
             if DEBUG:
                 assert not message.get('uid')
-            return cls(message_type, request=request, data=message.get('data'))
+            return cls(message_type, request=request, data=message.get('data'), callback=message.get('callback'))
 
         elif message_type == 'message':
             addressee = message.get('addressee')
             sender = message.get('sender')
             mid = message.get('id')
+            tunnel_id = message.get('tunnel_id')
 
             if not addressee:
                 raise TypeError('No addressee')
@@ -61,11 +65,14 @@ class Message:
             if not mid:
                 raise TypeError('Missing message id')
 
+            if sender and not tunnel_id:
+                raise TypeError('Missing tunnel id')
+
             if DEBUG:
                 assert not message.get('address')
 
             return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), addressee=addressee,
-                       sender=sender, mid=mid, forward=message.get('forward'))
+                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
 
         elif message_type == 'shout':
             sender = message.get('sender')
@@ -81,9 +88,9 @@ class Message:
                 raise TypeError('Missing message id')
 
             return cls(message_type, data=message.get('data'), encoding=message.get('encoding'),
-                       sender=sender, mid=mid, forward=message.get('forward'))
+                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
         elif message_type == 'error':
-            return cls(message_type, data=message.get('data'))
+            return cls(message_type, data=message.get('data'), callback=message.get('callback'))
         raise TypeError('Bad message type')
 
     def dump(self):
@@ -91,7 +98,7 @@ class Message:
         :return: dict
         """
         if self.type == 'request':
-            return {
+            message = {
                 'type': 'request',
                 'request': self.request,
                 'data': self.data,
@@ -105,9 +112,6 @@ class Message:
                 'encoding': self.encoding,
                 'id': self.id
             }
-            if self.forward:
-                message['forward'] = self.forward
-            return message
         elif self.type == 'shout':
             message = {
                 'type': 'shout',
@@ -116,10 +120,13 @@ class Message:
                 'encoding': self.encoding,
                 'id': self.id
             }
-            if self.forward:
-                message['forward'] = self.forward
-            return message
-        raise TypeError('Bad message type')
+        else:
+            raise TypeError('Bad message type')
+        if self.forward:
+            message['forward'] = self.forward
+        if self.callback:
+            message['callback'] = self.callback
+        return message
 
     def __str__(self):
         return json.dumps(self.dump())
@@ -142,6 +149,7 @@ class PeerProtocol(DatagramProtocol):
         self.subnet = None
         self.parents_subnet = []
         self.children_subnet = []
+        self.tunnels = Tunnels()
 
         self.waiting_for_connect = False
 
@@ -163,22 +171,19 @@ class PeerProtocol(DatagramProtocol):
         if message.type == 'request':
             if message.request != 'ping':
                 log.debug('Datagram %s received from %s' % (repr(datagram), repr(addr)))
-
-            if message.request == 'ping':
-
+            else:
                 if not peer:
                     return self._send(self.get_error_message('003'), addr)
                 peer.ping_time = time.time()
 
-            elif message.request in ['connect', 'request_connect']:
+            if message.request in ['connect', 'request_connect']:
                 if message.request == 'request_connect':
                     addr = message.data['address']
                 if self.subnet.has_place():
                     peer = self.subnet.add(addr)
                     if peer:
                         peer.invite()
-                elif self.children_subnet:
-
+                elif len(self.children_subnet) >= self.max_children:
                     random.choice(self.children_subnet).connect_request(addr)
                 else:
                     self.create_child_subnet(addr)
@@ -186,6 +191,14 @@ class PeerProtocol(DatagramProtocol):
             elif message.request == 'invite' and self.waiting_for_connect:
                 self.subnet = SubNet(self, message.data['subnet'], peers=message.data['peers'])
                 self.waiting_for_connect = False
+
+        elif message.type == 'message':
+            tunnel = self.tunnels.get(message.tunnel_id)
+            if tunnel:
+                tunnel.send(message)
+
+            elif message.forward:
+                self.forward(message)
 
     def get_error_message(self, error_id):
         """
@@ -212,14 +225,12 @@ class PeerProtocol(DatagramProtocol):
         """
         message.forward //= 2
         peers = list(self.subnet.values()) + self.children_subnet + self.parents_subnet
-        random.choice(peers).send(message)
+        random.choice(peers).send(message)  # TODO: tunnel
 
-    def send(self, message, net_address, uid):
+    def send(self, message):
         """
         High level send
         :param message: data to send
-        :param net_address: address of net
-        :param uid: id for callback
         :return: None
         """
         pass
@@ -364,6 +375,19 @@ class SubNet(dict):
         """
         for peer in self.values():
             peer.send(data)
+
+
+class Tunnels(TempDict):
+    expire = 600
+
+    def add(self, tunnel_id, forward_peer, backward_peer):
+        self[tunnel_id] = (forward_peer, backward_peer)
+
+    def send(self, message):
+        peers = self.get(message.tunnel_id)
+        if not peers:
+            return
+        peers[1].send(message)
 
 
 class Server:
