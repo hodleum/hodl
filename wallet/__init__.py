@@ -1,5 +1,5 @@
 import cryptogr as cg
-from sync import loop
+import sync
 import block
 import mining
 import time
@@ -13,11 +13,11 @@ class Wallet:
     def __init__(self, keys=cg.gen_keys):
         try:
             keys = keys()
-        except:
+        except TypeError:
             pass
         self.privkey, self.pubkey = keys
 
-    def new_transaction(self, outs, outns):
+    def new_transaction(self, outs, outns, nick=''):
         """Performs tnx"""
         out = 0
         for i in range(len(outns)):
@@ -43,7 +43,11 @@ class Wallet:
         if o != out:
             outns.append(o - out)
             outs.append(self.pubkey)
-        bch.new_transaction(self.pubkey, froms, outs, outns, privkey=self.privkey)
+        if not nick:
+            author = self.pubkey
+        else:
+            author = self.pubkey + ';' + nick + ';'
+        bch.new_transaction(author, froms, outs, outns, privkey=self.privkey)
 
     def my_money(self):
         return bch.money(self.pubkey)
@@ -52,6 +56,9 @@ class Wallet:
     def act():
         if bch[-1].is_full:
             bch.append(mining.mine(bch))
+
+    def set_nick(self, nick):
+        self.new_transaction([0.00001], [self.pubkey], nick=nick)
 
     def __str__(self):
         return json.dumps((self.privkey, self.pubkey))
@@ -66,4 +73,4 @@ def new_wallet():
 
 
 def sync_loop():
-    loop([[w.privkey, w.pubkey] for w in wallets])
+    pass   # todo: run sync
