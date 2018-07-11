@@ -1,9 +1,10 @@
+import time
+import json
+import logging as log
 import cryptogr as cg
 import sync
 import block
 import mining
-import time
-import json
 
 bch = block.Blockchain()
 wallets = []
@@ -47,6 +48,7 @@ class Wallet:
             author = self.pubkey
         else:
             author = self.pubkey + ';' + nick + ';'
+        log.info('wallet.new_transaction: outns: {}, len(outs): {}'.format(str(outns), str(len(outs))))
         bch.new_transaction(author, froms, outs, outns, privkey=self.privkey)
 
     def my_money(self):

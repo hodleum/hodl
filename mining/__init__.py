@@ -45,7 +45,7 @@ def pow_mining(bch, b):
     try:
         i = ((int(lb.txs[-1].hash) + int(lb.txs[-3].hash)) % int(len(miners) ** 0.5)) ** 2
     except IndexError:
-        raise TooLessTxsError
+        raise TooLessTxsError('Not enough transactions in last block({}): {}'.format(str(len(bch)-1), str(len(lb.txs))))
     i1 = i
     while True:
         bl = block.Block(miners[i][1], [miners[i][2]], bch, [], [], miners[i][3])

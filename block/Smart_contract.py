@@ -60,10 +60,9 @@ class Smart_contract:
         self.memory_distribution = []   # [[Miners for part1]]
 
     def sign_sc(self, privkey):
-        self.sign = cg.sign(json.dumps((self.code, str(self.author), self.index, self.computing, self.calc_repeats, self.memory.size,
-                           self.codesize, self.timestamp)), privkey)
+        self.sign = cg.sign(self.sign_str(), privkey)
 
-    def execute(self, func='', args=[], is_task=False):
+    def execute(self, func='', args=tuple(), is_task=False):
         """
         Execute SC's code.
         SC can modify its memory, read blockchain, provide txs
@@ -169,8 +168,7 @@ class Smart_contract:
         if payed < pr:
             log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))
             return False
-        if not cg.verify_sign(self.sign, json.dumps((self.code, str(self.author), self.index, self.computing, self.calc_repeats, self.memory.size,
-                           self.codesize, self.timestamp)), self.author):
+        if not cg.verify_sign(self.sign, self.sign_str(), bch.pubkey_by_nick(self.author)):
             log.debug('not valid sign in sc')
             return False
         return True
@@ -254,10 +252,14 @@ class Smart_contract:
                 except:
                     break
 
-    def update(self, bch):
-        # delete not valid tasks
+    def sign_str(self):
+        return json.dumps((self.code, str(self.author), self.index,
+                           self.computing, self.calc_repeats, self.memory.size, self.codesize, self.timestamp))
 
-        # distribute miners if needed
+    def update(self, bch):
+        # todo: delete not valid tasks
+
+        # todo: distribute miners if needed
         self.memory.distribute_peers()
         self.distribute_tasks()
 

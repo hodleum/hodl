@@ -25,34 +25,44 @@ class TestFunc(unittest.TestCase):
         wallet.bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05],
                                    'signing', keys['Alice'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 2
         wallet.bch.new_transaction(keys['Bob'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Bob'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 3
         wallet.bch.new_transaction(keys['Chuck'][1], [[0, 0]], [my_keys[1], keys['Chuck'][1]], [0.95, 0.05],
                                    'signing', keys['Chuck'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         n = 1000
         n, t, h = block.mining.pow_mine(wallet.bch, 90000000000000000000000000000000000, my_keys[1])
         wallet.bch.add_miner([int(h), n, my_keys[1], t])
         # 0 4
         my_wallet.new_transaction(['sc[1, 0]'], [0.52])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 5
         my_wallet.set_nick('me')
-        # 1 0, 1 1
+        # 1 0
         wallet.bch.append(block.mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
-        # 1 2
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
+        # 1 1
         my_wallet.new_transaction([your_pub_key], [0.5])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
-                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
-        print(wallet.bch.money(my_keys[1]))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
+        # 1 2
+        my_wallet.new_transaction(['me'], [0.5])
+        log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
+                 + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
+                 '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         with open('tests/scex.py', 'r') as f:
             wallet.bch.new_sc(f.readlines(), my_keys[1], my_keys[0], memsize=10000520)
         wallet.bch.commit()
