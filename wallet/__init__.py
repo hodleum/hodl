@@ -68,8 +68,10 @@ class Wallet:
         return cls(json.loads(st))
 
 
-def new_wallet():
-    wallets.append(Wallet())
+def new_wallet(keys=cg.gen_keys):
+    w = Wallet(keys)
+    wallets.append(w)
+    return w
 
 
 def sync_loop():

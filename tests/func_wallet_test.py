@@ -13,7 +13,7 @@ class TestFunc(unittest.TestCase):
     def test_func(self):
         with open('tests/my_keys', 'r') as f:
             my_keys = json.loads(f.read())
-        my_wallet = wallet.Wallet(my_keys)
+        my_wallet = wallet.new_wallet(my_keys)
         with open('tests/your_key', 'r') as f:
             your_pub_key = json.loads(f.read())[0]
         wallet.bch.clean()
@@ -26,6 +26,7 @@ class TestFunc(unittest.TestCase):
                                    'signing', keys['Alice'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+        my_wallet.set_nick('me')
         # 0 2
         wallet.bch.new_transaction(keys['Bob'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Bob'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
