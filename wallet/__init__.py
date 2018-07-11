@@ -59,6 +59,7 @@ class Wallet:
 
     def set_nick(self, nick):
         self.new_transaction([self.pubkey], [0], nick=nick)
+        self.pubkey = nick
 
     def __str__(self):
         return json.dumps((self.privkey, self.pubkey))

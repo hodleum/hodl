@@ -159,9 +159,10 @@ class Transaction:
             if not bch[int(self.author.split('[')[1][:-1].split(',')[0])].contracts[int(
                     self.author.split('[')[1][:-1].split(', ')[1])].validate_tnx(self, bch):
                 return False
+        # check sign
         else:
             try:
-                if not cg.verify_sign(self.sign, self.hash, self.author):
+                if not cg.verify_sign(self.sign, self.hash, bch.pubkey_by_nick(self.author)):
                     log.debug(str(self.index) + ' is not valid: sign is wrong')
                     return False
             except Exception as e:
