@@ -58,7 +58,7 @@ class Wallet:
             bch.append(mining.mine(bch))
 
     def set_nick(self, nick):
-        self.new_transaction([0.00001], [self.pubkey], nick=nick)
+        self.new_transaction([self.pubkey], [0], nick=nick)
 
     def __str__(self):
         return json.dumps((self.privkey, self.pubkey))

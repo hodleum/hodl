@@ -65,7 +65,7 @@ def is_tnx_money_valid(self, bch):
                 return False
             inp += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
         except Exception as e:
-            log.debug(self.index, 'is not valid: exception:', e)
+            log.debug(str(self.index) + ' is not valid: exception: ' + str(e))
             return False
     o = 0
     for n in self.outns:  # all money must be spent
@@ -147,6 +147,9 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
+        # check outs and outns are not empty
+        if not (self.outs and self.outns):
+            return False
         # check validness of nick definition
         if ';' in self.author:
             if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]:   # todo: control nick emission

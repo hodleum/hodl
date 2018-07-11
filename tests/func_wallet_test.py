@@ -26,7 +26,6 @@ class TestFunc(unittest.TestCase):
                                    'signing', keys['Alice'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
-        my_wallet.set_nick('me')
         # 0 2
         wallet.bch.new_transaction(keys['Bob'][1], [[0, 0]], [my_keys[1]], [1], 'signing', keys['Bob'][0])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
@@ -43,6 +42,8 @@ class TestFunc(unittest.TestCase):
         my_wallet.new_transaction(['sc[1, 0]'], [0.52])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
+        # 0 5
+        my_wallet.set_nick('me')
         # 1 0, 1 1
         wallet.bch.append(block.mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
@@ -81,7 +82,7 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
         # tests of SC tasks distribution and mining
         print('my money', wallet.bch.money(my_keys[1]))
-        self.assertEqual(wallet.bch.money(my_keys[1]), 201.88)
+        self.assertEqual(wallet.bch.money(my_keys[1]), 202.88)
         print('your money', wallet.bch.money(your_pub_key))
         self.assertEqual(wallet.bch.money(your_pub_key), 0.5)
         print('Passed!')
