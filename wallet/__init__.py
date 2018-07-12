@@ -24,7 +24,7 @@ class Wallet:
         for i in range(len(outns)):
             outns[i] = round(outns[i], 10)
             out += outns[i]
-        if out > bch.money(self.pubkey):
+        if out > bch.money(bch.pubkey_by_nick(self.pubkey)):
             return False
         froms = []
         o = 0

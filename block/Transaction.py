@@ -152,7 +152,9 @@ class Transaction:
             return False
         # check validness of nick definition
         if ';' in self.author:
-            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]:   # todo: control nick emission
+            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]\
+                    or not 4 < len(self.author.split(';')[1]) < 20 \
+                    or ';' in self.author.split(';')[1]:   # todo: control nick emission
                 return False
         # check validness of tnx made by smart contract
         if self.author[0:2] == 'sc':
@@ -184,11 +186,12 @@ class Transaction:
         :return: Is transaction used by other transaction
         """
         outs, outns = rm_dubl_from_outs(self.outs, self.outns)
+        outs = [bch.pubkey_by_nick(o) for o in outs]
         spent = [False] * len(outs)
-        for block in bch:  # перебираем все транзакции в каждом блоке
+        for block in bch:  # each tnx in each block
             for tnx in block.txs[1:]:
                 if tuple(self.index) in [tuple(from_ind) for from_ind in tnx.froms] and tnx.index not in exc and \
-                        tnx.author in outs:
+                        bch.pubkey_by_nick(tnx.author) in outs:
                     spent[outs.index(tnx.author)] = True
         return spent
 

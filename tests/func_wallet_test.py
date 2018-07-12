@@ -48,17 +48,17 @@ class TestFunc(unittest.TestCase):
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 5
         my_wallet.set_nick('me')
-        # 1 0
+        # 1 0, 1 1
         wallet.bch.append(block.mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
-        # 1 1
+        # 1 2
         my_wallet.new_transaction([your_pub_key], [0.5])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
-        # 1 2
+        # 1 3
         my_wallet.new_transaction(['me'], [0.5])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
