@@ -192,11 +192,13 @@ class Blockchain:
         """
         if ';' not in nick and len(nick) > 20:
             return nick
+        if nick.count(';') == 2:
+            return nick.split(';')[0]
         o = None
         for i in range(len(self)):
             for tnx in self[i].txs:
                 if tnx.author.endswith(nick + ';'):
-                    o = nick.split(';')[0]
+                    o = tnx.author.split(';')[0]
                     return o
 
     def close(self):

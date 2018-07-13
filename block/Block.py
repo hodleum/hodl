@@ -104,25 +104,25 @@ class Block:
         if i != 0:
             if self.txs[0].froms != 'mining' or self.txs[0].author != 'mining' \
                     or self.txs[0].outs != self.creators:
-                log.debug('invalid first tnx')
+                log.warning('invalid first tnx')
                 return False
             n = 0
             for o in self.txs[0].outns:
                 n += o
             if self.txs[0].outns != mining.miningprice:
-                log.debug('not all money in first tnx')
+                log.warning('not all money in first tnx')
                 return False
             for t in self.txs[2:]:
                 if not t.is_valid(bch):
-                    log.debug('tnx isnt valid')
+                    log.warning("tnx {} isn't valid".format(str(t.index)))
                     return False
             if i != 0:
                 if not mining.validate(bch, i):
-                    log.debug('not valid mined block. i:', i)
+                    log.warning('not valid mined block. i:', i)
                     return False
             if i != 0:
                 if self.prevhash != bch[i - 1].h:
-                    log.debug('prevhash not valid. i:', i)
+                    log.warning('prevhash not valid. i:', i)
                     return False
             else:
                 pass

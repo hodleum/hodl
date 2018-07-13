@@ -47,7 +47,7 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 5
-        my_wallet.set_nick('me')
+        my_wallet.set_nick('meee')
         # 1 0, 1 1
         wallet.bch.append(block.mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
@@ -59,7 +59,7 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 1 3
-        my_wallet.new_transaction(['me'], [0.5])
+        my_wallet.new_transaction(['meee'], [0.5])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
@@ -67,11 +67,10 @@ class TestFunc(unittest.TestCase):
             wallet.bch.new_sc(f.readlines(), my_keys[1], my_keys[0], memsize=10000520)
         wallet.bch.commit()
         b = wallet.bch[1]
-        b.contracts[0].execute()
-        b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
+        #b.contracts[0].execute()
+        #b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
         wallet.bch[1] = b
-        cc = block.Blockchain()[0].contracts
-        b.contracts[0].handle_messages()
+        #b.contracts[0].handle_messages()
         wallet.bch[1] = b
         #self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
         print('validness checking started. Bch has now', len(wallet.bch), 'blocks, last block has', len(wallet.bch[-1].txs), 'txs.')
