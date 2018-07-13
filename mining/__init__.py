@@ -17,6 +17,7 @@ pow_max = 1000000000000000000000000000000000000
 pok_total = 10000
 poc_total = 10000
 miningprice = [100]
+# todo: replace pow with poc and change sc calculating awards
 
 
 class TooLessTxsError(Exception):

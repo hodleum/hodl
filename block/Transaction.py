@@ -64,11 +64,11 @@ def is_tnx_money_valid(self, bch):
             return False
     o = 0
     for n in self.outns:  # all money must be spent
-        if n < 0:
-            log.warning('{} is not valid because outn < 0'.format(str(self.index)))
+        if n < 0 or round(n, 9) != n:
+            log.warning('{} is not valid because outn < 0 or n not rounded'.format(str(self.index)))
             return False
         o += n
-    if not o == inp:
+    if round(o, 9) != round(inp, 9):
         log.warning(str(self.index) + ' is not valid: not all money')
         return False
     return True
@@ -126,6 +126,8 @@ class Transaction:
         return self
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
+        for i in range(len(outns)):
+            outns[i] = round(outns[i], 9)
         self.froms = froms  # transactions to get money from
         self.outs = outs  # destinations
         self.outns = outns  # values of money on each destination
