@@ -41,7 +41,7 @@ class SmartContract:
     their answers.
     Calculating miners also compare their answers.
     """
-    def __init__(self, code, author, index, computing=False, tasks=[], calc_repeats=3,
+    def __init__(self, code, author, index, computing=False, calc_repeats=3,
                  memsize=sc_base_mem, codesize=sc_base_code_size):
         self.code = code
         self.author = author
@@ -51,10 +51,8 @@ class SmartContract:
         self.timestamp = time.time()
         self.calculators = []
         self.computing = computing
-        self.tasks = tasks  # [[command, {miner:[cg.h(str(ans)+miner), time when cg.h added, ans(appended after)]]},
-        # repeats, award, author, len(bch) when publishing, tnx for awards's index, solved]]
         self.codesize = codesize
-        self.txs = []
+        self.signs = []
         self.membs = []
         self.calc_repeats = calc_repeats
         self.awards = {}
@@ -114,14 +112,9 @@ class SmartContract:
         file = open('tmp/sc.mem', 'r')
         self.memory = SCMemory.from_json(file.readline())
         file.close()
-        file = open('tmp/sc.tasks', 'r')
-        self.tasks = [json.loads(task) for task in file.readlines()]
+        file = open('tmp/sc.signs', 'r')
+        self.signs.append(json.loads(file.read()))
         file.close()
-        file = open('tmp/sc.txs', 'r')
-        self.txs.append([Transaction.from_json(tnxstr) for tnxstr in file.readlines()])
-        file.close()
-
-        # todo: sc tnx
 
     def __str__(self):
         """
@@ -257,6 +250,9 @@ class SmartContract:
     def sign_str(self):
         return json.dumps((self.code, str(self.author), self.index,
                            self.computing, self.calc_repeats, self.memory.size, self.codesize, self.timestamp))
+
+    def verify_sign(self, sign):
+        return sign in self.signs
 
     def update(self, bch):
         # todo: delete not valid tasks
