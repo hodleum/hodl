@@ -14,7 +14,7 @@ one_peer_max_mem = 4000000
 sc_award_from = 1
 sc_award_to = 5
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark
-# todo: rename Smart_contract to SmartContract
+# todo: smart contract's signs
 
 
 class SCMemoryError(Exception):
@@ -25,7 +25,7 @@ def check_sc_award_tnx(bch, tnxind, sc):
     pass
 
 
-class Smart_contract:
+class SmartContract:
     """
     Class for smart contracts (SC)
     SC.code stores smart contract's code.

@@ -2,7 +2,7 @@ import time
 import json
 import logging as log
 from block.Transaction import Transaction
-from block.Smart_contract import Smart_contract
+from block.Smart_contract import SmartContract
 import cryptogr as cg
 import mining
 
@@ -70,7 +70,7 @@ class Block:
         for t in s[0]:
             self.txs.append(Transaction.from_json(t))
         for c in s[5]:
-            sc = Smart_contract.from_json(c)
+            sc = SmartContract.from_json(c)
             self.contracts.append(sc)
         self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = (s[1], s[2],  s[3],
                                                                                                     s[4], s[6], s[7])

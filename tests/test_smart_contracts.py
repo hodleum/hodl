@@ -19,7 +19,7 @@ class TestSmartContracts(unittest.TestCase):
         bch.clean()
         bch.new_block([my_keys[1], your_pub_key])
         with open('tests/scex.py', 'r') as f:
-            sc = block.Smart_contract(f.readlines(), my_keys[1], [0, 0])
+            sc = block.SmartContract(f.readlines(), my_keys[1], [0, 0])
         sc.sign_sc(my_keys[0])
         bch.add_sc(sc)
         bch = block.Blockchain()
@@ -46,9 +46,9 @@ class TestSmartContracts(unittest.TestCase):
 
     def test_str_encoding(self):
         with open('tests/scex.py', 'r') as f:
-            sc = block.Smart_contract(f.readlines(), my_keys[1], [0, 0])
+            sc = block.SmartContract(f.readlines(), my_keys[1], [0, 0])
         sc.sign_sc(my_keys[0])
-        sc2 = block.Smart_contract.from_json(str(sc))
+        sc2 = block.SmartContract.from_json(str(sc))
         self.assertTrue(sc == sc2)
 
     def test_sc_memory_str(self):
