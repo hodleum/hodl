@@ -28,10 +28,6 @@ class NoValidMinersError(Exception):
     pass
 
 
-def is_pow_miner_valid(bch, miner):
-    return True
-
-
 def mining_delta_t(bch_len):
     return 300    # int(((0.005*bch_len)**0.95)/30+5)
 
@@ -40,6 +36,7 @@ def pow_mining(bch, b):
     """Proof-of-work new block processing
     miner:
     [hash, n, miner's address, timestamp]"""
+    # todo: another powminers getting mechanism
     lb = bch[-1]
     miners = lb.powminers
     miners.sort()
@@ -68,6 +65,7 @@ def pow_mining(bch, b):
 
 
 def pow_validate(bch, num):
+    # todo: another powminers getting mechanism
     miners = bch[num - 1].powminers
     miners.sort(reverse=True)
     if len(miners) == 0:
@@ -136,25 +134,13 @@ def pok_validate(bch, n):
     return True
 
 
-def poc_mining(b, bch):
-    """Proof-of-calcing new block processing"""
-    # todo
-    return b
-
-
-def poc_validate(bch, n):
-    # todo
-    return True
-
-
 def validate(bch, i=-1):
     """Checks is block mined"""
     # todo: write mining.validate()
     powv = pow_validate(bch, i)
     pokv = pok_validate(bch, i)
-    pocv = poc_validate(bch, i)
-    log.debug(str((powv, pokv, pocv)))
-    return all([powv, pokv, pocv])
+    log.debug(str((powv, pokv)))
+    return all([powv, pokv])
 
 
 def mine(bch):
@@ -164,7 +150,6 @@ def mine(bch):
     b.txs[0].gen('mining', 'mining', [], miningprice, (len(bch), 0), 'mining', 'mining')
     b = pow_mining(bch, b)
     b = pok_mining(b, bch)
-    b = poc_mining(b, bch)
     b.prevhash = bch[-1].h
     b.calc_pow_hash()
     b.update()

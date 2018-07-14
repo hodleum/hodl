@@ -24,7 +24,6 @@ from block.Smart_contract import *
 from block.Transaction import *
 from block.Block import Block
 from block.UnfilledBlock import UnfilledBlock
-from block.SimpleSC import SimpleSC
 
 
 class Blockchain:
