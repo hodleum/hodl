@@ -4,6 +4,8 @@
 '-------------------------'
 '         GLOBAL          '
 DEBUG = True
+IP = '0.0.0.0'
+PORT = 8000
 '-------------------------'
 
 
@@ -16,7 +18,7 @@ SUB_NET_MAX_SIZE = 4
 '       PEER_PROTO        '
 TIMEOUT = 5
 UPDATE = 2
-MAX_CHILDREN_NET = 1
+MAX_CHILDREN_NET = 2
 '-------------------------'
 
 '-------------------------'
