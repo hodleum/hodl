@@ -1,3 +1,18 @@
+"""
+Messages:
+
+1) requests:
+  --> Without connections
+  --> You know real address
+  --> Low level interaction
+
+2) message:
+  --> Connection required
+  --> You don't know real address
+
+"""
+
+
 import logging
 import time
 import json
@@ -6,139 +21,17 @@ import random
 from twisted.internet.protocol import DatagramProtocol
 # from twisted.internet import task
 from .config import *
-from .tools import TempDict
+from .tools import TempDict, Message, NetAddress
 
 log = logging.getLogger(__name__)
 
 
-class Message:
-    """Message protocol"""
-
-    def __init__(self, message_type, data=None, request=None, encoding=None,
-                 addressee=None, sender=None, mid=None, forward=None, callback=None, tunnel_id=None):
-        self.type = message_type
-        self.data = data
-        self.request = request
-        self.encoding = encoding
-        self.addressee = addressee
-        self.sender = sender
-        self.id = mid
-        self.forward = forward
-        self.callback = callback
-        self.tunnel_id = tunnel_id
-
-    @classmethod
-    def from_json(cls, message):
-        """
-        :param message: json
-        :type message: str
-
-        :return: Message
-        """
-        message = json.loads(message)
-        message_type = message.get('type')
-        if not message_type:
-            raise TypeError('Missing message type')
-        if message_type == 'request':
-            request = message.get('request')
-
-            if not request:
-                raise TypeError('Missing request')
-
-            if DEBUG:
-                assert not message.get('uid')
-            return cls(message_type, request=request, data=message.get('data'), callback=message.get('callback'))
-
-        elif message_type == 'message':
-            addressee = message.get('addressee')
-            sender = message.get('sender')
-            mid = message.get('id')
-            tunnel_id = message.get('tunnel_id')
-
-            if not addressee:
-                raise TypeError('No addressee')
-
-            if (not addressee.get('uid') or not addressee.get('subnet')) or (
-                    sender and (not sender.get('uid') or not sender.get('subnet'))):
-                raise TypeError('Bad address')
-
-            if not mid:
-                raise TypeError('Missing message id')
-
-            if sender and not tunnel_id:
-                raise TypeError('Missing tunnel id')
-
-            if DEBUG:
-                assert not message.get('address')
-
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), addressee=addressee,
-                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
-
-        elif message_type == 'shout':
-            sender = message.get('sender')
-            mid = message.get('id')
-
-            if not sender:
-                raise TypeError('Sender required')
-
-            if not sender.get('uid') or not sender.get('subnet'):
-                raise TypeError('Bad address')
-
-            if not mid:
-                raise TypeError('Missing message id')
-
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'),
-                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
-        elif message_type == 'error':
-            return cls(message_type, data=message.get('data'), callback=message.get('callback'))
-        raise TypeError('Bad message type')
-
-    def dump(self):
-        """
-        :return: dict
-        """
-        if self.type == 'request':
-            message = {
-                'type': 'request',
-                'request': self.request,
-                'data': self.data,
-            }
-        elif self.type == 'message':
-            message = {
-                'type': 'message',
-                'data': self.data,
-                'addressee': self.addressee,
-                'sender': self.sender,
-                'encoding': self.encoding,
-                'id': self.id
-            }
-        elif self.type == 'shout':
-            message = {
-                'type': 'shout',
-                'data': self.data,
-                'sender': self.sender,
-                'encoding': self.encoding,
-                'id': self.id
-            }
-        else:
-            raise TypeError('Bad message type')
-        if self.forward:
-            message['forward'] = self.forward
-        if self.callback:
-            message['callback'] = self.callback
-        return message
-
-    def __str__(self):
-        return json.dumps(self.dump())
-
-
 class PeerProtocol(DatagramProtocol):
-
     timeout = TIMEOUT
     update = UPDATE
     max_children = MAX_CHILDREN_NET
 
-    errors = {'001': 'Bad request', '002': 'Wrong request', '003': 'Connection first'}
+    errors = {'001': 'Bad request', '002': 'Wrong request', '003': 'Connection required'}
 
     def __init__(self, ip, port, r, server):
         self.ip = ip
@@ -164,32 +57,23 @@ class PeerProtocol(DatagramProtocol):
         except (UnicodeDecodeError, json.decoder.JSONDecodeError, TypeError):
             return self._send(self.get_error_message('001'), addr)
 
-        peer = self.subnet.get(addr)
-        if not peer and message.request not in ['connect', 'invite']:
+        if addr not in self.subnet and message.type != 'request':
             return self._send(self.get_error_message('003'), addr)
 
         if message.type == 'request':
+            peer = self.subnet.get(addr)
             if message.request != 'ping':
-                log.debug('Datagram %s received from %s' % (repr(datagram), repr(addr)))
+                log.debug('%s Datagram received %s' % (repr(addr), repr(datagram)))
             else:
-                if not peer:
-                    return self._send(self.get_error_message('003'), addr)
                 peer.ping_time = time.time()
 
-            if message.request in ['connect', 'request_connect']:
-                if message.request == 'request_connect':
-                    addr = message.data['address']
+            if message.request == 'connect':
                 if self.subnet.has_place():
-                    peer = self.subnet.add(addr)
-                    if peer:
-                        peer.invite()
-                elif len(self.children_subnet) >= self.max_children:
-                    random.choice(self.children_subnet).connect_request(addr)
-                else:
-                    self.create_child_subnet(addr)
+                    pass  # TODO: connect
 
             elif message.request == 'invite' and self.waiting_for_connect:
                 self.subnet = SubNet(self, message.data['subnet'], peers=message.data['peers'])
+                self.parents_subnet.append(Peer(addr, self))  # TODO: find another parent
                 self.waiting_for_connect = False
 
         elif message.type == 'message':
@@ -200,13 +84,10 @@ class PeerProtocol(DatagramProtocol):
             elif message.forward:
                 self.forward(message)
 
-    def get_error_message(self, error_id):
+    def get_error_message(self, error_id: str) -> dict:
         """
         Get error message by id
         :param error_id: error code
-        :type error_id: str
-
-        :return: Message
         """
 
         return Message('error', data={'code': error_id, 'message': self.errors[error_id]}).dump()
@@ -219,7 +100,7 @@ class PeerProtocol(DatagramProtocol):
             return
         self.transport.write(json.dumps(data).encode('utf-8'), address)
 
-    def forward(self, message):
+    def forward(self, message: Message):
         """
         Send the package forward to net
         """
@@ -227,24 +108,22 @@ class PeerProtocol(DatagramProtocol):
         peers = list(self.subnet.values()) + self.children_subnet + self.parents_subnet
         random.choice(peers).send(message)  # TODO: tunnel
 
-    def send(self, message):
+    def send(self, message: Message):
         """
         High level send
-        :param message: data to send
-        :return: None
         """
         pass
 
-    def shout(self, message):
+    def shout(self, message: Message):
         """
         High level send to all peers
-        :param message: data to send
-        :return: None
         """
         pass
 
     def create_child_subnet(self, addr):
-        pass
+        peer = Peer(addr, self)
+        self.children_subnet.append(peer)
+        peer.create_subnet()  # TODO: notify subnet
 
     def refresh_connections(self):
         t = time.time()
@@ -260,11 +139,9 @@ class Peer:
         self.addr = addr
         self.proto = proto
 
-    def send(self, message):
+    def send(self, message: Message):
         """
         Low level send to peer
-        :param message: data to send
-        :return: None
         """
         if message.request != 'ping':
             log.debug('[Peer %s]: Send %s' % (self.addr, message))
@@ -273,7 +150,6 @@ class Peer:
     def ping(self):
         """
         Ping the peer
-        :return: None
         """
         self.send(Message(
             message_type='request',
@@ -283,7 +159,6 @@ class Peer:
     def connect(self):
         """
         Send connection request
-        :return: None
         """
         self.send(Message(
             message_type='request',
@@ -291,11 +166,10 @@ class Peer:
         ))
         self.proto.waiting_for_connect = True
 
-    def connect_request(self, addr):
+    def connect_request(self, addr: tuple):
         """
         Resend connection request
         :param addr: address of child subnet
-        :return: None
         """
         self.send(Message(
             message_type='request',
@@ -308,7 +182,6 @@ class Peer:
     def invite(self):
         """
         Invite peer into subnet
-        :return: None
         """
         self.send(Message(
             message_type='request',
@@ -319,10 +192,21 @@ class Peer:
             }
         ))  # TODO: notify subnet
 
+    def create_subnet(self):
+        address = self.proto.subnet.addr.copy()
+        address[len(self.proto.children_subnet) - 1] += 1
+        self.send(Message(
+            message_type='request',
+            request='invite',
+            data={
+                'peers': [],
+                'subnet': address
+            }
+        ))
+
     def disconnect(self):
         """
         Forget peer
-        :return: None
         """
         log.info('[Peer %s]: connection lost' % (self.addr,))
         self.proto.subnet.remove(self.addr)
@@ -333,9 +217,12 @@ class SubNet(dict):
 
     max_size = SUB_NET_MAX_SIZE
 
-    def __init__(self, proto, net_address, peers=()):
+    def __init__(self, proto: PeerProtocol, net_address: NetAddress, peers=()):
         self.proto = proto
         self.addr = net_address
+
+        self.children = []  # [SubNet(), ...]
+        self.parents = []   # [SubNet(), ...]
 
         super().__init__()
         for addr in peers:
@@ -344,7 +231,10 @@ class SubNet(dict):
     def has_place(self):
         return len(self) < self.max_size
 
-    def add(self, addr):
+    def has_children(self):
+        return bool(self.children)
+
+    def add(self, addr: tuple):
         """
         Add peer by address
         """
@@ -354,7 +244,7 @@ class SubNet(dict):
         self[addr] = peer
         return peer
 
-    def remove(self, addr):
+    def remove(self, addr: tuple):
         """
         Remove peer by address
         """
@@ -369,12 +259,12 @@ class SubNet(dict):
         for peer in self.values():
             peer.ping()
 
-    def shout(self, data):
+    def shout(self, message: Message):
         """
         Shout into subnet
         """
         for peer in self.values():
-            peer.send(data)
+            peer.send(message)
 
 
 class Tunnels(TempDict):
@@ -391,7 +281,7 @@ class Tunnels(TempDict):
 
 
 class Server:
-    def __init__(self, ip='0.0.0.0', port=8000, white=True):
+    def __init__(self, ip=IP, port=PORT, white=True):
         from twisted.internet import reactor
 
         self.ip = ip
