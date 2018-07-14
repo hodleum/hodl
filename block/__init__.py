@@ -73,9 +73,10 @@ class Blockchain:
         for i in range(len(self)):  # every tnx in every block
             for tnx in self[i].txs:
                 outs, outns = rm_dubl_from_outs(tnx.outs, tnx.outns)
-                l = zip(outs, outns, range(len(outns)))
+                l = zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns)))
                 for w, n, j in l:
-                    if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] and 'mining' not in tnx.outs:
+                    if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
+                            and 'mining' not in tnx.outs:
                         money += n
         return money
 
@@ -189,15 +190,16 @@ class Blockchain:
         :param nick: str: pubkey, nick or nick definition
         :return: str: pubkey
         """
-        if ';' not in nick:
+        if ';' not in nick and len(nick) > 20:
             return nick
-        else:
-            o = None
-            for i in range(len(self)):
-                for tnx in self[i].txs:
-                    if tnx.author.endswith(nick + ';'):
-                        o = nick.split(';')[0]
-                        return o
+        if nick.count(';') == 2:
+            return nick.split(';')[0]
+        o = None
+        for i in range(len(self)):
+            for tnx in self[i].txs:
+                if tnx.author.endswith(nick + ';'):
+                    o = tnx.author.split(';')[0]
+                    return o
 
     def close(self):
         """Close connection to database"""

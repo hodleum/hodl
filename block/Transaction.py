@@ -54,26 +54,22 @@ def is_tnx_money_valid(self, bch):
                 else:
                     tnx = bch.get_block(int(t[0])).txs[int(t[1])]
             clean_outs = rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)
-            is_first = t[0] == 0 and t[1] == 0
-            if not tnx.is_valid and not is_first:
-                log.debug(self.index, 'is not valid: from(', tnx.index, ') is not valid')
-                return False
-            if self.author not in tnx.outs:
-                return False
-            if tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
-                log.debug(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
+            if bch.pubkey_by_nick(self.author) not in [bch.pubkey_by_nick(o) for o in tnx.outs] \
+                    or tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
+                log.warning(str(self.index) + ' is not valid: from(' + str(tnx.index) + ') is not valid as from')
                 return False
             inp += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
         except Exception as e:
-            log.debug(self.index, 'is not valid: exception:', e)
+            log.warning(str(self.index) + ' is not valid: exception: ' + str(e))
             return False
     o = 0
     for n in self.outns:  # all money must be spent
-        if n < 0:
+        if n < 0 or round(n, 9) != n:
+            log.warning('{} is not valid because outn < 0 or n not rounded'.format(str(self.index)))
             return False
-        o = o + n
-    if not o == inp:
-        log.debug(self.index, 'is not valid: not all money')
+        o += n
+    if round(o, 9) != round(inp, 9):
+        log.warning(str(self.index) + ' is not valid: not all money')
         return False
     return True
 
@@ -130,6 +126,8 @@ class Transaction:
         return self
 
     def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
+        for i in range(len(outns)):
+            outns[i] = round(outns[i], 9)
         self.froms = froms  # transactions to get money from
         self.outs = outs  # destinations
         self.outns = outns  # values of money on each destination
@@ -147,24 +145,34 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
+        # check outs and outns are not empty
+        if not (self.outs and self.outns):
+            log.warning('{} is not valid: outs or outns are empty'.format(str(self.index)))
+            return False
         # check validness of nick definition
         if ';' in self.author:
-            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]:   # todo: control nick emission
+            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]\
+                    or not 4 <= len(self.author.split(';')[1]) < 20 \
+                    or ';' in self.author.split(';')[1]:   # todo: control nick emission
+                log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False
         # check validness of tnx made by smart contract
         if self.author[0:2] == 'sc':
             if not bch[int(self.author.split('[')[1][:-1].split(',')[0])].contracts[int(
                     self.author.split('[')[1][:-1].split(', ')[1])].validate_tnx(self, bch):
+                log.warning('{} made by sc is not valid'.format(str(self.index)))
                 return False
+        # check sign
         else:
             try:
-                if not cg.verify_sign(self.sign, self.hash, self.author):
-                    log.debug(str(self.index) + ' is not valid: sign is wrong')
+                if not cg.verify_sign(self.sign, self.hash, bch.pubkey_by_nick(self.author)):
+                    log.warning(str(self.index) + ' is not valid: sign is wrong')
                     return False
             except Exception as e:
-                log.debug(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
+                log.warning(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
         # validate transaction money, for example froms and outs should be equal
         if not is_tnx_money_valid(self, bch):
+            log.warning('{} is not valid: money calculated wrong'.format(str(self.index)))
             return False
         self.update()
         return True
@@ -180,12 +188,13 @@ class Transaction:
         :return: Is transaction used by other transaction
         """
         outs, outns = rm_dubl_from_outs(self.outs, self.outns)
+        outs = [bch.pubkey_by_nick(o) for o in outs]
         spent = [False] * len(outs)
-        for block in bch:  # перебираем все транзакции в каждом блоке
+        for block in bch:  # each tnx in each block
             for tnx in block.txs[1:]:
                 if tuple(self.index) in [tuple(from_ind) for from_ind in tnx.froms] and tnx.index not in exc and \
-                        tnx.author in outs:
-                    spent[outs.index(tnx.author)] = True
+                        bch.pubkey_by_nick(tnx.author) in outs:
+                    spent[outs.index(bch.pubkey_by_nick(tnx.author))] = True
         return spent
 
     def update(self):
