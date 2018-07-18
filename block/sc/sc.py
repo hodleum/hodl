@@ -200,26 +200,7 @@ class SmartContract:
                     self.awards[m] = sc_memprice / (len(self.memory.accepts)*len(p))
 
         # Calculators
-        for i, task in enumerate(self.tasks):
-            if not task[-1]:
-                for m in task[1]:
-                    a = 0
-                    last_time = 0
-                    for m in task[1]:
-                        if len(task[1][m]) > 1:
-                            a += 0
-                            last_time = max((task[1][m][1], last_time))
-                    if a / len(task[1]) > 0.8 and last_time - time.time() > 600:
-                        ans = [task[1][m][2] for m in task[1]]
-                        c = [ans.count(an) for an in ans]
-                        right_ans = ans[c.index(max(c))]
-                        for m in task[1]:
-                            if task[1][m][2] == right_ans:
-                                if sc_award_to > task[3] > sc_award_from:
-                                    self.awards[m] = task[3] / len(task[1])
-                                elif task[3] > sc_award_to:
-                                    self.awards[m] = sc_award_to / len(task[1])
-                task[-1] = True
+        # todo: calculators awards
 
     def handle_messages(self):
         """
