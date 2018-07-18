@@ -2,7 +2,7 @@ import time
 import json
 import logging as log
 from block.Transaction import Transaction
-from block.Smart_contract import SmartContract
+from block.sc import SmartContract
 import cryptogr as cg
 import mining
 

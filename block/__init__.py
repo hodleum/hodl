@@ -20,7 +20,7 @@ sc - smart contract(DApp)
 """
 import sqlite3
 import mining
-from block.Smart_contract import *
+from block.sc import *
 from block.Transaction import *
 from block.Block import Block
 from block.UnfilledBlock import UnfilledBlock

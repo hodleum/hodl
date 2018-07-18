@@ -121,7 +121,7 @@ class SmartContract:
         Encode contract to str
         :return: str
         """
-        return json.dumps((self.code, self.author, self.index, self.computing, self.tasks, self.calc_repeats, self.msgs,
+        return json.dumps((self.code, self.author, self.index, self.computing, self.calc_repeats, self.msgs,
                            self.codesize, self.timestamp, self.sign, str(self.memory)))
 
     @classmethod
@@ -131,9 +131,9 @@ class SmartContract:
         :param s: SC encoded to string
         :return: SC
         """
-        self = cls(*json.loads(s)[0:5])
-        self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[6:10]
-        self.memory = SCMemory.from_json(json.loads(s)[10])
+        self = cls(*json.loads(s)[0:4])
+        self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[5:9]
+        self.memory = SCMemory.from_json(json.loads(s)[9])
         return self
 
     def __eq__(self, other):
