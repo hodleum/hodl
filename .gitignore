@@ -101,3 +101,9 @@ ENV/
 .mypy_cache/
 
 .idea/
+
+# blockchain
+*.db
+
+
+tmp/
