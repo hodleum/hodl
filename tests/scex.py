@@ -2,7 +2,7 @@ import sc_api as s
 import json
 import block
 import cryptogr as cg
-
+from vpy.decorators import msg_handler
 
 balances, bc, tc = {}, 0, 0
 start = True
@@ -39,7 +39,7 @@ def handle(sender, msg):
 
 
 balances['0'] = 0.2
-while True:
+while True: # IF WHILE TRUE DETECTED, IT WILL BE USED AS MAIN TASK
     if not start:
         if tc != len(s.bch[bc-1].txs):
             for tnx in s.bch[bc-1].txs[tc:len(s.bch[bc-1].txs)]:
