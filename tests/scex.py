@@ -28,6 +28,16 @@ def sell(sender, money):
             write()
 
 
+@msg_handler
+def handle(sender, msg):
+    if msg[0] == 'sell':
+        sell(sender, msg[1])
+    elif msg[0] == 'send':
+        send(sender, msg[1], msg[2])
+    elif msg[0] == 'add_task':
+        add_task(sender, msg[1])
+
+
 balances['0'] = 0.2
 while True:
     if not start:
