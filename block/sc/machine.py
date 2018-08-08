@@ -17,6 +17,9 @@ class DFS:
     def __delitem__(self, key):
         pass   # todo
 
+    def add(self, data):
+        pass   # todo
+
 
 class Proc:
     """
