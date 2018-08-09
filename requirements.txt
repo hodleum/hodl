@@ -4,3 +4,4 @@ docker
 raven
 mmh3
 twisted
+dpath

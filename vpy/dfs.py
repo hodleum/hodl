@@ -1,6 +1,18 @@
 import dpath.util
 
 
+def shift(d, level, length):
+    for key in d.keys():
+        if type(d[key]) == dict:
+            d[key] = shift(d[key], level, length)
+        else:
+            if d[key][0] > level:
+                d[key][0] += length
+            if d[key][1] > level:
+                d[key][1] += length
+    return d
+
+
 class DFS:
     """
     Decentralized filesystem
@@ -30,6 +42,8 @@ class DFS:
             dpath.util.new(self.sys, path, [len(self), len(self) + len(data)])
             self.plus(data)
 
-    def _shift(self, level, shift):
-        # iterate for each file and shift number if number > level
-        pass    # todo
+    def new_folder(self, path):
+        dpath.util.new(self.sys, path, {})
+
+    def _shift(self, level, length):
+        self.sys = shift(self.sys, level, length)
