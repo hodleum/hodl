@@ -13,13 +13,14 @@ def shift(d, level, length):
     return d
 
 
-class DFS:
+class FS:
     """
-    Decentralized filesystem
+    FileSystem
     Necessary functions:
+    __getitem__
     __setitem__
     __delitem__
-    append
+    add
     __len__
     """
     def __init__(self):
@@ -40,7 +41,7 @@ class DFS:
             self._shift(f[0], len(data))
         else:
             dpath.util.new(self.sys, path, [len(self), len(self) + len(data)])
-            self.plus(data)
+            self.add(data)
 
     def new_folder(self, path):
         dpath.util.new(self.sys, path, {})

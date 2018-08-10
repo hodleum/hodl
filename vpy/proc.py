@@ -1,3 +1,3 @@
-class DMachine:
+class Proc:
     pass   # todo
 
