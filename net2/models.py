@@ -1,25 +1,11 @@
 import time
 import json
-import string
+import logging
 from .config import *
+from .errors import *
 
 
-def convert_base(num, to_base=10, from_base=10):
-    if isinstance(num, str):
-        n = int(num, from_base)
-    else:
-        n = int(num)
-    alphabet = string.digits + string.ascii_lowercase
-    if n < to_base:
-        return alphabet[n]
-    else:
-        return convert_base(n // to_base, to_base) + alphabet[n % to_base]
-
-
-class NetAddress(int):
-
-    def get_nearest(self, goal: int, addresses: list) -> int:
-        return min([goal - i for i in addresses if i <= self])
+log = logging.getLogger(__name__)
 
 
 class TempDict(dict):
@@ -54,7 +40,7 @@ class Message:
     """Message protocol"""
 
     def __init__(self, message_type, data=None, request=None, encoding=None,
-                 addressee=None, sender=None, mid=None, forward=None, callback=None, tunnel_id=None):
+                 addressee=None, sender=None, mid=None, forward=None, callback=None):
         self.type = message_type
         self.data = data
         self.request = request
@@ -64,25 +50,21 @@ class Message:
         self.id = mid
         self.forward = forward
         self.callback = callback
-        self.tunnel_id = tunnel_id
 
     @classmethod
-    def from_json(cls, message):
-        """
-        :param message: json
-        :type message: str
-
-        :return: Message
-        """
-        message = json.loads(message)
+    def from_bytes(cls, message: bytes):
+        try:
+            message = json.loads(message.decode('utf-8'))
+        except (ValueError, UnicodeDecodeError):
+            raise BadRequest
         message_type = message.get('type')
         if not message_type:
-            raise TypeError('Missing message type')
+            raise BadRequest('Missing message type')
         if message_type == 'request':
             request = message.get('request')
 
             if not request:
-                raise TypeError('Missing request')
+                raise BadRequest('Missing request')
 
             if DEBUG:
                 assert not message.get('uid')
@@ -92,20 +74,16 @@ class Message:
             addressee = message.get('addressee')
             sender = message.get('sender')
             mid = message.get('id')
-            tunnel_id = message.get('tunnel_id')
 
             if not addressee:
-                raise TypeError('No addressee')
+                raise BadRequest('No addressee')
 
             if (not addressee.get('uid') or not addressee.get('subnet')) or (
                     sender and (not sender.get('uid') or not sender.get('subnet'))):
-                raise TypeError('Bad address')
+                raise BadRequest('Bad address')
 
             if not mid:
-                raise TypeError('Missing message id')
-
-            if sender and not tunnel_id:
-                raise TypeError('Missing tunnel id')
+                raise BadRequest('Missing message id')
 
             if DEBUG:
                 assert not message.get('address')
@@ -151,21 +129,47 @@ class Message:
                 'encoding': self.encoding,
                 'id': self.id
             }
-        elif self.type == 'shout':
-            message = {
-                'type': 'shout',
-                'data': self.data,
-                'sender': self.sender,
-                'encoding': self.encoding,
-                'id': self.id
-            }
         else:
-            raise TypeError('Bad message type')
+            raise BadRequest('Bad message type')
         if self.forward:
             message['forward'] = self.forward
         if self.callback:
             message['callback'] = self.callback
-        return message
+        return json.dumps(message).encode('utf-8')
 
     def __str__(self):
         return json.dumps(self.dump())
+
+    def __repr__(self):
+        return f'<Message> {self.type} {self.data}'
+
+
+class Peer:
+    def __init__(self, addr, proto):
+        self.ping_time = time.time()
+        self.addr = addr
+        self.proto = proto
+
+    def copy(self):
+        return self
+
+    def send(self, message: Message):
+        """
+        Low level send to peer
+        """
+        if message.request != 'ping':
+            log.debug(f'[Peer {self.addr}]: Send {message}')
+        self.proto._send(message.dump(), self.addr)
+
+
+class Tunnels(TempDict):
+    expire = 600
+
+    def add(self, tunnel_id, backward_peer, forward_peer):
+        self[tunnel_id] = (backward_peer, forward_peer)
+
+    def send(self, message):
+        peers = self.get(message.tunnel_id)
+        if not peers:
+            return
+        peers[1].send(message)
