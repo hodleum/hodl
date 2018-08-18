@@ -126,7 +126,8 @@ class Block:
                     return False
             else:
                 pass
-        # todo: write first block processing
+        else:
+            pass    # todo: write first block processing - hash comparation
         return v
 
     def __eq__(self, other):

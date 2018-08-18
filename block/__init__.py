@@ -26,6 +26,11 @@ from block.Block import Block
 from block.UnfilledBlock import UnfilledBlock
 
 
+# todo: time from the beginning of blockchain
+# todo: nick transfer
+# todo: global mining pool
+
+
 class Blockchain:
     """Class for blockchain"""
     def __init__(self, filename='bch.db', m='w'):
@@ -152,7 +157,7 @@ class Blockchain:
         if not self[i].is_unfilled:
             return self[i]
         else:
-            pass   # todo
+            pass   # todo: send request to network
 
     def add_miner(self, miner):
         """add proof-of-work miner
