@@ -29,6 +29,7 @@ from block.UnfilledBlock import UnfilledBlock
 # todo: time from the beginning of blockchain
 # todo: nick transfer
 # todo: global mining pool
+# todo: blockchain freeze before new block
 
 
 class Blockchain:

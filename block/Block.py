@@ -99,6 +99,7 @@ class Block:
         :param bch: Blockchain
         :return: validness (bool)
         """
+        self.sort()
         i = bch.index(self)
         v = True
         if i != 0:
@@ -163,3 +164,14 @@ class Block:
         for tnx in self.txs:
             if tnx.author in important_wallets or not set(important_wallets).isdisjoint(set(tnx.outs)):
                 txs.append(tnx)
+
+    def rev(self, bch):
+        self.sort()
+        for i in range(len(self.txs)):
+            if not self.txs[i].is_valid(bch):
+                self.txs.pop(i)
+        for i in range(len(self.contracts)):
+            if not self.contracts[i].is_valid(bch):
+                self.contracts.pop(i)
+        self.sort()
+        self.update()

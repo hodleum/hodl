@@ -207,6 +207,6 @@ class Transaction:
         """
         Update hash
         """
-        x = ''.join(chain(str(self.author), str(self.index), [str(f) for f in self.froms],
+        x = ''.join(chain(str(self.author), [str(f) for f in self.froms],
                           [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
         self.hash = cg.h(str(x))
