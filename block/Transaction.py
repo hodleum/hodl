@@ -1,9 +1,13 @@
 import json
 import logging as log
 from itertools import chain
-import time
+import time as t
 from collections import Counter
 import cryptogr as cg
+
+
+def timestamp(ts):
+    return t.time() if ts == 'now' else ts
 
 
 def indexmany(a, k):
@@ -91,10 +95,12 @@ def sign_tnx(self, sign, privkey, t):
 
 
 class Transaction:
-    """Class for transaction.
+    """
+    Class for transaction.
     To create new transaction, use:
     tnx=Transaction()
-    tnx.gen(parameters)"""
+    tnx.gen(parameters)
+    """
 
     def __init__(self):
         self.froms = None
@@ -125,7 +131,7 @@ class Transaction:
         self.update()
         return self
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now'):
         for i in range(len(outns)):
             outns[i] = round(outns[i], 9)
         self.froms = froms  # transactions to get money from
@@ -133,7 +139,7 @@ class Transaction:
         self.outns = outns  # values of money on each destination
         self.author = author
         self.index = list(index)
-        self.timestamp = time.time() if t == 'now' else t
+        self.timestamp = timestamp(ts)
         for i in range(len(self.outns)):
             self.outns[i] = round(self.outns[i], 10)
         self.update()

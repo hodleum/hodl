@@ -76,7 +76,7 @@ class TestFunc(unittest.TestCase):
         print('validness checking started. Bch has now', len(wallet.bch), 'blocks, last block has', len(wallet.bch[-1].txs), 'txs.')
         v = wallet.bch.is_valid()
         self.assertTrue(v)
-        b.contracts[0].memory += '{}fads;"[]'*1000001
+        b.contracts[0].memory.add('{}fads;"[]'*1000001)
         b.contracts[0].memory.peers = [my_keys[1], your_pub_key, '1', '2', '3', '4', '5', '6', '7', '8', '9']
         b.contracts[0].memory.distribute_peers()
         wallet.bch[1] = b
