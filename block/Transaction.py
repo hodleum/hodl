@@ -6,6 +6,9 @@ from collections import Counter
 import cryptogr as cg
 
 
+nick_av = set([chr(i) for i in list(range(48, 58)) + list(range(97, 123))])
+
+
 def timestamp(ts):
     return t.time() if ts == 'now' else ts
 
@@ -156,10 +159,15 @@ class Transaction:
             log.warning('{} is not valid: outs or outns are empty'.format(str(self.index)))
             return False
         # check validness of nick definition
-        if ';' in self.author:
-            if bch.pubkey_by_nick(self.author) != self.author.split(';')[0]\
+        if self.author.count(';') == 2:
+            if bch.pubkey_by_nick(self.author.split(';')[1], self.index)\
                     or not 4 <= len(self.author.split(';')[1]) < 20 \
-                    or ';' in self.author.split(';')[1]:   # todo: control nick emission
+                    or set(list(self.author.split(';')[1])).issubset(nick_av):   # todo: control nick emission
+                log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
+                return False
+        elif self.author.count(';') == 3:
+            if bch.pubkey_by_nick(self.author.split(';')[1], self.index) != self.author.split(';')[0]:
+                # todo: control nick emission
                 log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False
         # check validness of tnx made by smart contract

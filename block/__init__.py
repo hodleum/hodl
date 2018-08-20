@@ -27,10 +27,8 @@ from block.UnfilledBlock import UnfilledBlock
 
 
 # todo: time from the beginning of blockchain
-# todo: nick transfer
 # todo: global mining pool
 # todo: blockchain freeze before new block
-
 
 class Blockchain:
     """Class for blockchain"""
@@ -189,22 +187,41 @@ class Blockchain:
         self.conn = sqlite3.connect(self.f)
         self.c = self.conn.cursor()
 
-    def pubkey_by_nick(self, nick):
+    def pubkey_by_nick(self, nick, maxn=('l', 'l')):
         """
         Nicks can be used in transactions. Nicks can be defined in transaction with author=pubkey;nick;
+        Nick can be transfered in transaction with autor=pubkey;nick;new pubkey;
         :param nick: str: pubkey, nick or nick definition
+        :param maxn: tuple: maximum index or ('l', 'l') for entire blockchain
         :return: str: pubkey
         """
         if ';' not in nick and len(nick) > 20:
             return nick
-        if nick.count(';') == 2:
+        if nick.count(';') >= 2:
             return nick.split(';')[0]
         o = None
-        for i in range(len(self)):
+        if maxn[0] == 'l':
+            maxn[0] = len(self)
+        if maxn[1] == 'l':
+            maxn[1] = len(self[-1].txs)
+        if maxn[0] < 0:
+            maxn[0] = len(self) + maxn[0]
+        if maxn[1] < 0:
+            maxn[1] = len(self[-1].txs) + maxn[1]
+        for i in range(maxn[0] - 1):
             for tnx in self[i].txs:
                 if tnx.author.endswith(nick + ';'):
                     o = tnx.author.split(';')[0]
-                    return o
+                elif ';' in tnx.author:
+                    if tnx.author.count(';') == 3 and tnx.author.split(';')[1] == nick:
+                        o = tnx.author.split(';')[1]
+        for tnx in self[-1].txs[:maxn[1]]:
+            if tnx.author.endswith(nick + ';'):
+                o = tnx.author.split(';')[0]
+            elif ';' in tnx.author:
+                if tnx.author.count(';') == 3 and tnx.author.split(';')[1] == nick:
+                    o = tnx.author.split(';')[1]
+        return o
 
     def close(self):
         """Close connection to database"""
