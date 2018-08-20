@@ -4,9 +4,7 @@ from itertools import chain
 import time as t
 from collections import Counter
 import cryptogr as cg
-
-
-nick_av = set([chr(i) for i in list(range(48, 58)) + list(range(97, 123))])
+from block.constants import nick_av, nick_min, nick_max
 
 
 def timestamp(ts):
@@ -161,7 +159,7 @@ class Transaction:
         # check validness of nick definition
         if self.author.count(';') == 2:
             if bch.pubkey_by_nick(self.author.split(';')[1], self.index)\
-                    or not 4 <= len(self.author.split(';')[1]) < 20 \
+                    or not nick_min <= len(self.author.split(';')[1]) <= nick_max \
                     or set(list(self.author.split(';')[1])).issubset(nick_av):   # todo: control nick emission
                 log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False

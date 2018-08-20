@@ -5,14 +5,9 @@ import logging as log
 import vpy
 import cryptogr as cg
 from block.sc.memory import SCMemory, sc_base_mem
+from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price
 
 
-sc_base_code_size = 5000000
-sc_memprice = 0.001
-sc_code_price = 10**(-6)
-sc_price = 0
-sc_award_from = 1
-sc_award_to = 5
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark
 # todo: smart contract's signs
 

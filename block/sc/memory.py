@@ -3,10 +3,6 @@ import net
 from vpy.fs import FS
 
 
-sc_base_mem = 10000000
-one_peer_max_mem = 4000000
-
-
 class SCMemoryError(Exception):
     pass
 

@@ -11,12 +11,9 @@ import time
 import logging as log
 import block
 import cryptogr as cg
+from block.constants import pow_max, pok_total, miningprice
 
 
-pow_max = 1000000000000000000000000000000000000
-pok_total = 10000
-poc_total = 10000
-miningprice = [100]
 # todo: replace pow with poc and change sc calculating awards
 
 
@@ -26,10 +23,6 @@ class TooLessTxsError(Exception):
 
 class NoValidMinersError(Exception):
     pass
-
-
-def mining_delta_t(bch_len):
-    return 300    # int(((0.005*bch_len)**0.95)/30+5)
 
 
 def pow_mining(bch, b):
@@ -84,8 +77,10 @@ def pow_validate(bch, num):
                 raise NoValidMinersError
             if i == len(bch):
                 i = i - len(bch) + 1
-    if not miners[i][2] == bch[num].creators[0] or not bch[num].pow_timestamp == miners[i][3] or not bch[num].n == miners[i][1]:
-        log.debug('block pow mining wrong.', not miners[i][2] == bch[num].creators[0], not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
+    if not miners[i][2] == bch[num].creators[0] or not bch[num].pow_timestamp == miners[i][3] \
+            or not bch[num].n == miners[i][1]:
+        log.debug('block pow mining wrong.', not miners[i][2] == bch[num].creators[0],
+                  not bch[num].pow_timestamp == miners[i][3], not bch[num].n == miners[i][1], hash(miners[i][2])%100, hash(bch[num].creators[0])%100, bch[num].pow_timestamp, miners[i][3], bch[num].n, miners[i][1], i)
         return False
     return True
 

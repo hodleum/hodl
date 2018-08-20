@@ -5,8 +5,7 @@ from block.Transaction import Transaction
 from block.sc import SmartContract
 import cryptogr as cg
 import mining
-
-maxblocksize = 4000000
+from block.constants import block_time
 
 
 def get_timestamp(t):
@@ -141,7 +140,7 @@ class Block:
 
     def is_full(self):
         """is block full"""
-        return len(str(self)) >= maxblocksize
+        return time.time() > block_time + self.timestamp  # int(((0.005*bch_len)**0.95)/30+5)
 
     def calc_pow_hash(self):
         try:
