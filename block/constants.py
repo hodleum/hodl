@@ -20,8 +20,10 @@ nick_av = set([chr(i) for i in list(range(48, 58)) + list(range(97, 123))] + lis
 nick_min = 5
 # maximal length of nick
 nick_max = 20
-# block is mined every {block_time} seconds
-block_time = 300
+# new block is mined every {block_time} seconds
+block_time = 120
+# blockchain freeze before mining block time (seconds)
+freeze = 5
 # free memory size for smart contract (symbols)
 sc_base_mem = 10000000
 # maximum SC memory size one peer can store

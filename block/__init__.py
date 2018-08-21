@@ -25,7 +25,6 @@ from block.Block import Block
 from block.UnfilledBlock import UnfilledBlock
 
 
-# todo: global mining pool
 # todo: blockchain freeze before new block
 
 class Blockchain:
