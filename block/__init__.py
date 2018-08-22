@@ -27,6 +27,7 @@ from block.UnfilledBlock import UnfilledBlock
 
 # todo: blockchain freeze before new block
 
+
 class Blockchain:
     """Class for blockchain"""
     def __init__(self, filename='bch.db', m='w'):
@@ -78,7 +79,7 @@ class Blockchain:
                     if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
                             and 'mining' not in tnx.outs:
                         money += n
-        return money
+        return round(money, 10)
 
     def new_block(self, creators, txs=tuple()):
         """Creates the new block and adds it to chain"""
@@ -192,6 +193,7 @@ class Blockchain:
         :param maxn: tuple: maximum index or ('l', 'l') for entire blockchain
         :return: str: pubkey
         """
+        maxn = list(maxn)
         if ';' not in nick and len(nick) > 20:
             return nick
         if nick.count(';') >= 2:

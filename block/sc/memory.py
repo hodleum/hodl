@@ -1,5 +1,6 @@
 import json
 import net
+from block.constants import sc_base_mem, one_peer_max_mem
 from vpy.fs import FS
 
 

@@ -4,8 +4,8 @@ import os
 import logging as log
 import vpy
 import cryptogr as cg
-from block.sc.memory import SCMemory, sc_base_mem
-from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price
+from block.sc.memory import SCMemory
+from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
 
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark
@@ -151,6 +151,7 @@ class SmartContract:
             if cp < 0:
                 cp = 0
             pr += mp + cp
+        pr = round(pr, 10)
         payed = bch.money('sc' + str(list(self.index)))
         if payed < pr:
             log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))

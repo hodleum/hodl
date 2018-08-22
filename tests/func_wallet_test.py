@@ -3,6 +3,7 @@ import logging as log
 import json
 import cryptogr as cg
 import block
+import mining
 import wallet
 
 
@@ -39,17 +40,17 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         n = 1000
-        n, t, h = block.mining.pow_mine(wallet.bch, 90000000000000000000000000000000000, my_keys[1])
+        n, t, h = mining.pow_mine(wallet.bch, 90000000000000000000000000000000000, my_keys[1])
         wallet.bch.add_miner([int(h), n, my_keys[1], t])
         # 0 4
-        my_wallet.new_transaction(['sc[1, 0]'], [0.52])
+        my_wallet.new_transaction(['sc[1, 0]'], [0.57])
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
         # 0 5
         my_wallet.set_nick('meee')
         # 1 0, 1 1
-        wallet.bch.append(block.mining.mine(wallet.bch))
+        wallet.bch.append(mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs))))
@@ -83,15 +84,15 @@ class TestFunc(unittest.TestCase):
         self.assertEqual(len(b.contracts[0].memory.accepts), 3)
         self.assertTrue(b.contracts[0].is_valid(wallet.bch))
         n = 1000
-        n, t, h = block.mining.pow_mine(wallet.bch, 90000000000000000000000000000000000, my_keys[1])
+        n, t, h = mining.pow_mine(wallet.bch, 90000000000000000000000000000000000, my_keys[1])
         wallet.bch.add_miner([int(h), n, my_keys[1], t])
         # 2 0, 2 1
-        wallet.bch.append(block.mining.mine(wallet.bch))
+        wallet.bch.append(mining.mine(wallet.bch))
         log.info('me: ' + str(wallet.bch.money(my_keys[1])) + ', you: ' + str(wallet.bch.money(your_pub_key))
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])))
         # tests of SC tasks distribution and mining
         print('my money', wallet.bch.money(my_keys[1]))
-        self.assertEqual(wallet.bch.money(my_keys[1]), 201.88)
+        self.assertEqual(wallet.bch.money(my_keys[1]), 201.83)
         print('your money', wallet.bch.money(your_pub_key))
         self.assertEqual(wallet.bch.money(your_pub_key), 0.5)
         print('Passed!')
