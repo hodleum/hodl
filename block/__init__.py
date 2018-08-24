@@ -26,6 +26,7 @@ from block.UnfilledBlock import UnfilledBlock
 
 
 # todo: blockchain freeze before new block
+# todo: transaction limit
 
 
 class Blockchain:
@@ -68,17 +69,41 @@ class Blockchain:
             if self[i].h == block.h:
                 return i
 
-    def money(self, wallet):
+    def tnxiter(self, maxn=('l', 'l'), fr=(0, 0)):
+        maxn = list(maxn)
+        if maxn[0] == 'l':
+            maxn[0] = len(self)
+        if maxn[1] == 'l':
+            maxn[1] = len(self[-1].txs)
+        if maxn[0] < 0:
+            maxn[0] = len(self) + maxn[0]
+        if maxn[1] < 0:
+            maxn[1] = len(self[-1].txs) + maxn[1]
+        if fr[0] > maxn[0]:
+            return
+        elif fr[0] == maxn[0]:
+            for tnx in self[fr[0]].txs[fr[1]:maxn[1]]:
+                yield tnx
+        else:
+            for tnx in self[fr[0]].txs[fr[1]:]:
+                yield tnx
+            for i in range(fr[0] + 1, maxn[0] - 1):
+                for tnx in self[i].txs:
+                    yield tnx
+            for tnx in self[maxn[0]-1].txs[:maxn[1]]:
+                yield tnx
+
+    def money(self, wallet, at=('l', 'l')):
         """Counts money on wallet"""
+        at = list(at)
         money = 0
-        for i in range(len(self)):  # every tnx in every block
-            for tnx in self[i].txs:
-                outs, outns = rm_dubl_from_outs(tnx.outs, tnx.outns)
-                l = zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns)))
-                for w, n, j in l:
-                    if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
-                            and 'mining' not in tnx.outs:
-                        money += n
+        for tnx in self.tnxiter(maxn=at):  # every tnx in every block
+            outs, outns = rm_dubl_from_outs(tnx.outs, tnx.outns)
+            l = zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns)))
+            for w, n, j in l:
+                if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
+                        and 'mining' not in tnx.outs:
+                    money += n
         return round(money, 10)
 
     def new_block(self, creators, txs=tuple()):
@@ -193,28 +218,12 @@ class Blockchain:
         :param maxn: tuple: maximum index or ('l', 'l') for entire blockchain
         :return: str: pubkey
         """
-        maxn = list(maxn)
         if ';' not in nick and len(nick) > 20:
             return nick
         if nick.count(';') >= 2:
             return nick.split(';')[0]
         o = None
-        if maxn[0] == 'l':
-            maxn[0] = len(self)
-        if maxn[1] == 'l':
-            maxn[1] = len(self[-1].txs)
-        if maxn[0] < 0:
-            maxn[0] = len(self) + maxn[0]
-        if maxn[1] < 0:
-            maxn[1] = len(self[-1].txs) + maxn[1]
-        for i in range(maxn[0] - 1):
-            for tnx in self[i].txs:
-                if tnx.author.endswith(nick + ';'):
-                    o = tnx.author.split(';')[0]
-                elif ';' in tnx.author:
-                    if tnx.author.count(';') == 3 and tnx.author.split(';')[1] == nick:
-                        o = tnx.author.split(';')[1]
-        for tnx in self[-1].txs[:maxn[1]]:
+        for tnx in self.tnxiter(maxn=maxn):
             if tnx.author.endswith(nick + ';'):
                 o = tnx.author.split(';')[0]
             elif ';' in tnx.author:
