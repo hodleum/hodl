@@ -50,9 +50,10 @@ class SmartContract:
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
+        self.h = self.sign_str()
 
     def sign_sc(self, privkey):
-        self.sign = cg.sign(self.sign_str(), privkey)
+        self.sign = cg.sign(self.h, privkey)
 
     def execute(self, func='', args=tuple(), is_task=False):
         """
