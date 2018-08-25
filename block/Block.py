@@ -14,13 +14,13 @@ def get_timestamp(t):
     return int(time.time()) if t == 'now' else int(t)
 
 
-def get_prevhash(bch, creators):
+def get_prevhash(bch):
     try:
-        if creators and bch[-1].h:
+        if bch[-1].h:
             return bch[-1].h
         else:
             return '0'
-    except AttributeError:
+    except (AttributeError, IndexError):
         return '0'
 
 
@@ -29,14 +29,11 @@ class Block:
     To convert block to string, use str(block)
     To convert string to block, use Block.from_json(string)"""
 
-    def __init__(self, creators=(), bch=(), txs=(), contracts=(), t='now'):
-        self.prevhash = get_prevhash(bch, creators)
+    def __init__(self, bch=(), txs=(), contracts=(), t='now'):
+        self.prevhash = get_prevhash(bch)
         self.timestamp = get_timestamp(t)
         self.is_unfilled = False
-        tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), 'mining', '',
-                 self.timestamp)
-        self.txs = [tnx0] + list(txs)
+        self.txs = list(txs)
         self.contracts = contracts
         self.miners = Miners()
         self.fixer = None
@@ -138,10 +135,9 @@ class Block:
 
     def sort(self):
         """Sort transactions in block"""
-        t0 = self.txs[0]
         ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs[1:]]
         ts.sort()
-        self.txs = [t0] + [t[2] for t in ts]
+        self.txs = [t[2] for t in ts]
         for i in range(len(self.txs)):
             self.txs[i].index[1] = i
 

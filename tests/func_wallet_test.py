@@ -21,7 +21,10 @@ class TestFunc(unittest.TestCase):
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
         with open('tests/genblock.bl', 'r') as f:
-            wallet.bch.append(block.Block.from_json(f.readline()))
+            bl = f.readline()
+            bl = block.Block.from_json(bl)
+            wallet.bch.append(bl)
+        print(wallet.bch[0].txs)
         # 0 1
         wallet.bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05],
                                    'signing', keys['Alice'][0])
