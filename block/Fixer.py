@@ -1,4 +1,5 @@
 import json
+import mmh3
 from block.constants import block_time, freeze
 from mining.pool import Miners
 
@@ -13,6 +14,7 @@ class BlockFixer:
         self.sclen = sclen
         self.tnx_last_h = tnx_last_h
         self.sc_last_h = sc_last_h
+        self.update_hash()
 
     @classmethod
     def from_bch(cls, bch, miners, n):
@@ -27,3 +29,9 @@ class BlockFixer:
         s = json.loads(s)
         s[0] = Miners.from_json(s[0])
         return cls(*s)
+
+    def update_hash(self):
+        self.h = mmh3.hash(str(self))
+
+    def __hash__(self):
+        return mmh3.hash(str(self))

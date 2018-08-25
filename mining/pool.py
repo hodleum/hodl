@@ -107,3 +107,6 @@ class Miners:
         for i in range(len(other.pok_miners)):
             other.pok_miners[i] = other.pok_miners[i].to_time(fr=fr, to=to)
         return other
+
+    def __hash__(self):
+        return mmh3.hash(str(self))
