@@ -5,6 +5,8 @@ from block.Transaction import Transaction
 from block.sc import SmartContract
 import cryptogr as cg
 import mining
+from block.Fixer import BlockFixer
+from mining.pool import Miners
 from block.constants import block_time
 
 
@@ -27,22 +29,17 @@ class Block:
     To convert block to string, use str(block)
     To convert string to block, use Block.from_json(string)"""
 
-    def __init__(self, n=0, creators=(), bch=(), txs=(), contracts=(), pow_timestamp='now', t='now'):
-        self.n = n
+    def __init__(self, creators=(), bch=(), txs=(), contracts=(), t='now'):
         self.prevhash = get_prevhash(bch, creators)
         self.timestamp = get_timestamp(t)
-        self.pow_timestamp = pow_timestamp
         self.is_unfilled = False
         tnx0 = Transaction()
-        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), b'mining', '',
-                 self.pow_timestamp)
+        tnx0.gen('mining', [['nothing']], creators, mining.miningprice, (len(bch), 0), 'mining', '',
+                 self.timestamp)
         self.txs = [tnx0] + list(txs)
         self.contracts = contracts
-        self.creators = creators
-        self.powminers = []
-        self.powhash = 0
-        self.powhash = self.calc_pow_hash()
-
+        self.miners = Miners()
+        self.fixer = None
         self.h = None
 
         self.update()
@@ -52,8 +49,8 @@ class Block:
         Encodes block to str using JSON
         :return:block, converted to str
         """
-        return json.dumps(([str(t) for t in self.txs], self.n, self.timestamp, self.prevhash, self.creators,
-                           [str(c) for c in self.contracts], self.powminers, self.pow_timestamp))
+        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash,
+                           [str(c) for c in self.contracts], str(self.fixer) if self.fixer else None, str(self.miners)))
 
     @classmethod
     def from_json(cls, s):
@@ -68,12 +65,13 @@ class Block:
         self.contracts = []
         for t in s[0]:
             self.txs.append(Transaction.from_json(t))
-        for c in s[5]:
+        for c in s[3]:
             sc = SmartContract.from_json(c)
             self.contracts.append(sc)
-        self.n, self.timestamp, self.prevhash, self.creators, self.powminers, self.pow_timestamp = (s[1], s[2],  s[3],
-                                                                                                    s[4], s[6], s[7])
-        self.powhash = self.calc_pow_hash()
+        self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[4], s[5]
+        if self.fixer:
+            self.fixer = BlockFixer.from_json(self.fixer)
+        self.miners = Miners.from_json(self.miners)
         self.update()
         return self
 
@@ -82,14 +80,14 @@ class Block:
         Adds txn to block
         :param txn: Transaction to add to block
         """
-        self.txs.append(txn)  # добавляем транзакцию в список транзакций
-        self.update()  # обновляем хэш
+        self.txs.append(txn)  # Add transaction to transaction list
+        self.update()  # update hash
 
     def update(self):
         """Updates hash"""
         self.sort()
-        h = ''.join([str(self.prevhash)] + [str(self.powhash)] + [str(t.hash) for t in self.txs] +
-                    [str(sc) for sc in self.contracts] + [str(e) for e in self.powminers])
+        h = json.dumps((str(self.prevhash), [str(t.hash) for t in self.txs],
+                    [str(sc) for sc in self.contracts], hash(self.miners)))
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
@@ -102,10 +100,6 @@ class Block:
         i = bch.index(self)
         v = True
         if i != 0:
-            if self.txs[0].froms != 'mining' or self.txs[0].author != 'mining' \
-                    or self.txs[0].outs != self.creators:
-                log.warning('invalid first tnx')
-                return False
             n = 0
             for o in self.txs[0].outns:
                 n += o
@@ -141,13 +135,6 @@ class Block:
     def is_full(self):
         """is block full"""
         return time.time() > block_time + self.timestamp  # int(((0.005*bch_len)**0.95)/30+5)
-
-    def calc_pow_hash(self):
-        try:
-            h = ''.join([str(self.pow_timestamp), str(self.n), self.creators[0]])
-        except IndexError:
-            h = ''.join([str(self.pow_timestamp), str(self.n)])
-        return cg.h(str(h))
 
     def sort(self):
         """Sort transactions in block"""
