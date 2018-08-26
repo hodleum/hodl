@@ -24,7 +24,6 @@ class TestFunc(unittest.TestCase):
             bl = f.readline()
             bl = block.Block.from_json(bl)
             wallet.bch.append(bl)
-        print(wallet.bch[0].txs)
         # 0 1
         wallet.bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05],
                                    'signing', keys['Alice'][0])
@@ -97,7 +96,7 @@ class TestFunc(unittest.TestCase):
                  + '\n[{}, {}]'.format(str(len(wallet.bch)-1), str(len(wallet.bch[-1].txs)-1)))
         # tests of SC tasks distribution and mining
         print('my money', wallet.bch.money(my_keys[1]))
-        self.assertEqual(wallet.bch.money(my_keys[1]), 201.83)
+        self.assertEqual(wallet.bch.money(my_keys[1]), 1.83)
         print('your money', wallet.bch.money(your_pub_key))
         self.assertEqual(wallet.bch.money(your_pub_key), 0.5)
         print('Passed!')

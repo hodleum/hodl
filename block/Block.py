@@ -100,9 +100,6 @@ class Block:
             n = 0
             for o in self.txs[0].outns:
                 n += o
-            if self.txs[0].outns != mining.miningprice:
-                log.warning('not all money in first tnx')
-                return False
             for t in self.txs[2:]:
                 if not t.is_valid(bch):
                     log.warning("tnx {} isn't valid".format(str(t.index)))
@@ -135,7 +132,7 @@ class Block:
 
     def sort(self):
         """Sort transactions in block"""
-        ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs[1:]]
+        ts = [[int(tnx.timestamp), int(tnx.hash), tnx] for tnx in self.txs]
         ts.sort()
         self.txs = [t[2] for t in ts]
         for i in range(len(self.txs)):
