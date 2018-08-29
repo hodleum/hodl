@@ -1,3 +1,0 @@
-class Proc:
-    pass   # todo
-
