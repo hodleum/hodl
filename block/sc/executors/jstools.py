@@ -9,6 +9,7 @@ def context():
     ctx = shortcuts.get_context()
     ctx.tear_down()
     ctx.set_up()
+    ctx.run_script("var __answer__='';function log(s){__answer__+=s}")
     return ctx
 
 

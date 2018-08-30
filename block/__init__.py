@@ -26,7 +26,7 @@ from block.UnfilledBlock import UnfilledBlock
 
 
 # todo: blockchain freeze before new block
-# todo: transaction limit
+# todo: transaction and smart contract limit, remove smart contract's comission
 
 
 class Blockchain:

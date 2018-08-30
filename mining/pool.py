@@ -74,6 +74,8 @@ class PoKMiner:
 class Miners:
     """
     This class stores all miners in network after block -1 and some random blocks
+    # todo: to be miner, you need to make some calculations
+    # todo: miner has his request for tasks
     """
     def __init__(self):
         self.pow_miners = []
