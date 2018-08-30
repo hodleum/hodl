@@ -21,6 +21,8 @@ def context_to_str(ctx):
 
 
 def context_from_json(s):
+    if not s:
+        return context()
     sess = json.loads(s)
     ctx = context()
     ctx.run_script("""
