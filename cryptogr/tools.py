@@ -44,7 +44,7 @@ def sign(plaintext, private_key):
     return base64.encodebytes(signature).decode()
 
 
-def verify_sign(s, plaintext, public_key):
+def verify_sign(s, plaintext, public_key, bch):
     """
     Verifies signature
 
@@ -57,8 +57,13 @@ def verify_sign(s, plaintext, public_key):
     :param public_key: RSA public key
     :type public_key: str
 
+    :param bch: Blockchain
+    :type bch: Blockchain
+
     :return: bool
     """
+    if public_key[-1] == ']':
+        return bch.verify_sc_sign(public_key, s)
     pub_key = RSA.importKey(public_key)
     plaintext = plaintext.encode('utf-8')
     # decryption signature

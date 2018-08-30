@@ -41,6 +41,7 @@ class SmartContract:
         self.codesize = codesize
         self.signs = []
         self.membs = []
+        self.tasks = []
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
@@ -76,9 +77,9 @@ class SmartContract:
         :param s: SC encoded to string
         :return: SC
         """
-        self = cls(*json.loads(s)[0:4])
-        self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[5:9]
-        self.memory = SCMemory.from_json(json.loads(s)[9])
+        self = cls(*json.loads(s)[0:3])
+        self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[3:7]
+        self.memory = SCMemory.from_json(json.loads(s)[7])
         return self
 
     def __eq__(self, other):
@@ -95,6 +96,7 @@ class SmartContract:
         :param bch: Blockchain
         :return: validness(bool)
         """
+        # todo: sign check
         pr = sc_price
         if self.memory.size > sc_base_mem or self.codesize > sc_base_code_size:
             mp = ((self.memory.size - sc_base_mem) * sc_memprice)
@@ -109,7 +111,7 @@ class SmartContract:
         if payed < pr:
             log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))
             return False
-        if not cg.verify_sign(self.sign, self.sign_str(), bch.pubkey_by_nick(self.author)):
+        if not cg.verify_sign(self.sign, self.sign_str(), bch.pubkey_by_nick(self.author), bch):
             log.debug('not valid sign in sc')
             return False
         return True
@@ -172,8 +174,7 @@ class SmartContract:
                     break
 
     def sign_str(self):
-        return json.dumps((self.code, str(self.author), self.index,
-                           self.computing, self.calc_repeats, self.memory.size, self.codesize, self.timestamp))
+        return json.dumps((self.code, str(self.author), self.index, self.memory.size, self.codesize, self.timestamp))
 
     def verify_sign(self, sign):
         return sign in self.signs

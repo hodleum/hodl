@@ -93,6 +93,29 @@ class Blockchain:
             for tnx in self[maxn[0]-1].txs[:maxn[1]]:
                 yield tnx
 
+    def get_sc(self, smartcontract):
+        """
+        Get smart contract by index
+        :param smartcontract: index
+        :type smartcontract: str
+        :return: Smart contract
+        :type: SmartContrct
+        """
+        smartcontract = smartcontract[:-1].split('[')[1].replace(' ', '').split(',')
+        smartcontract = [int(smartcontract[0]), int(smartcontract[1])]
+
+    def verify_sc_sign(self, smartcontract, sign):
+        """
+        Verify smart contract's sign
+        :param smartcontract: smart contract's index
+        :type smartcontract: str
+        :param sign: sign
+        :type sign: str
+        :return: validness
+        :type: bool
+        """
+        return self.get_sc(smartcontract).validate_sign(sign)
+
     def money(self, wallet, at=('l', 'l')):
         """Counts money on wallet"""
         at = list(at)

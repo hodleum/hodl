@@ -168,20 +168,13 @@ class Transaction:
                 # todo: control nick emission
                 log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False
-        # check validness of tnx made by smart contract
-        if self.author[0:2] == 'sc':
-            if not bch[int(self.author.split('[')[1][:-1].split(',')[0])].contracts[int(
-                    self.author.split('[')[1][:-1].split(', ')[1])].validate_tnx(self, bch):
-                log.warning('{} made by sc is not valid'.format(str(self.index)))
-                return False
         # check sign
-        else:
-            try:
-                if not cg.verify_sign(self.sign, self.hash, bch.pubkey_by_nick(self.author)):
-                    log.warning(str(self.index) + ' is not valid: sign is wrong')
-                    return False
-            except Exception as e:
-                log.warning(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
+        try:
+            if not cg.verify_sign(self.sign, self.hash, bch.pubkey_by_nick(self.author), bch):
+                log.warning(str(self.index) + ' is not valid: sign is wrong')
+                return False
+        except Exception as e:
+            log.warning(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
         # validate transaction money, for example froms and outs should be equal
         if not is_tnx_money_valid(self, bch):
             log.warning('{} is not valid: money calculated wrong'.format(str(self.index)))
