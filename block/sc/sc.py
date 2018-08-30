@@ -1,8 +1,6 @@
 import json
 import time
-import os
 import logging as log
-import vpy
 import cryptogr as cg
 from block.sc.memory import SCMemory
 from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
@@ -32,20 +30,17 @@ class SmartContract:
     their answers.
     Calculating miners also compare their answers.
     """
-    def __init__(self, code, author, index, computing=False, calc_repeats=3,
-                 memsize=sc_base_mem, codesize=sc_base_code_size):
+    def __init__(self, code, author, index, memsize=sc_base_mem, codesize=sc_base_code_size):
         self.code = code
         self.author = author
         self.index = index
         self.memory = SCMemory(self.index, memsize)
-        self.msgs = []  # [[message func, message args(the first is message's sender), str(list(sender's sign)), is executed]]
+        self.msgs = []  # [[author, sign, msg:str, ans=None]]
         self.timestamp = time.time()
         self.calculators = []
-        self.computing = computing
         self.codesize = codesize
         self.signs = []
         self.membs = []
-        self.calc_repeats = calc_repeats
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
@@ -55,66 +50,23 @@ class SmartContract:
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
 
-    def execute(self, func='', args=tuple(), is_task=False):
+    def execute(self, author='', msg='', is_task=False):
         """
         Execute SC's code.
         SC can modify its memory, read blockchain, provide txs
-        :param func: function to execute(if executing msg or task)
-        :param args: func's args
-        :param is_task: if executing task, no timeout needed
+        :param author: author
+        :param msg: message
+        :param is_task
         """
-        # todo: run with vpy
-        file = open('tmp/__init__.py', 'w')
-        file.close()
-        file = open('sc_main.py', 'w')
-        if func == '':
-            file.writelines(['from tmp import sc\n', 'import json\n'])
-        else:
-            file.writelines(['from tmp import sc\n', 'import json\n',
-                             "args = {}\n".format(args), 'sc.{}(*args)\n'.format(func)])
-        file.close()
-        file = open('tmp/sc.py', 'w')
-        file.writelines(['ind = ' + str(self.index) + '\n'] + self.code)
-        file.close()
-        file = open('tmp/sc.mem', 'w')
-        file.writelines(str(self.memory))
-        file.close()
-        file = open('tmp/sc.msgs', 'w')
-        file.writelines([str(mem) for mem in list(self.msgs)])
-        file.close()
-        file = open('tmp/sc.tasks', 'w')
-        file.writelines([json.dumps(task) for task in list(self.tasks)])
-        file.close()
-        file = open('tmp/sc.ind', 'w')
-        file.writelines([json.dumps(self.index)])
-        file.close()
-        open('tmp/sc.txs', 'w').close()
-        mount_str = ''
-        mount_temp = ' -v "$(pwd)"/{}:/home/hodl/{}:ro'
-        l = os.listdir()
-        l.remove('tmp')
-        if not is_task:
-            timeout = '--stop-timeout 1'
-        else:
-            timeout = ''
-        for f in l:
-            mount_str += mount_temp.format(f, f)
-        run_str = 'docker run {} -v "$(pwd)/tmp":/home/hodl/tmp{} hodl-container python3 ' \
-                  '/home/hodl/sc_main.py'.format(mount_str, timeout)
-        os.system(run_str)   # todo: replace with docker lib
-        file = open('tmp/sc.mem', 'r')
-        self.memory = SCMemory.from_json(file.readline())
-        file.close()
-        file = open('tmp/sc.signs', 'r')
-        self.signs.append(json.loads(file.read()))
-        file.close()
+        # todo
+        pass
 
     def __str__(self):
         """
         Encode contract to str
         :return: str
         """
-        return json.dumps((self.code, self.author, self.index, self.computing, self.calc_repeats, self.msgs,
+        return json.dumps((self.code, self.author, self.index, self.msgs,
                            self.codesize, self.timestamp, self.sign, str(self.memory)))
 
     @classmethod
@@ -162,19 +114,16 @@ class SmartContract:
             return False
         return True
 
-    def validate_tnx(self, tnx, bch):
+    def validate_sign(self, o_sign):
         """
         Validate transaction made by smart contract
-        :param tnx: Transaction
-        :param bch: Blockchain
+        :param o_sign: sign to verify
         :return: validness: bool
         """
-        for tnx in self.txs:
-            if self.index == tnx.index:
-                break
-        else:
-            return False
-        return True
+        for sign in self.signs:
+            if sign == o_sign:
+                return True
+        return False
 
     def calc_awards(self, bch):
         """
