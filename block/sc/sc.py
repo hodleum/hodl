@@ -3,6 +3,7 @@ import time
 import logging as log
 import cryptogr as cg
 from block.sc.memory import SCMemory
+from block.sc.executors.JSTask import js, context
 from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
 
@@ -41,7 +42,7 @@ class SmartContract:
         self.codesize = codesize
         self.signs = []
         self.membs = []
-        self.tasks = []
+        self.tasks = js[0](code)
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
@@ -51,16 +52,14 @@ class SmartContract:
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
 
-    def execute(self, author='', msg='', is_task=False):
-        """
-        Execute SC's code.
-        SC can modify its memory, read blockchain, provide txs
-        :param author: author
-        :param msg: message
-        :param is_task
-        """
-        # todo
-        pass
+    def execute_task(self):
+        if not self.tasks[0].done:
+            self.tasks[0].run(context())
+            return
+        for i, task in enumerate(self.tasks):
+            if not task.done:
+                task.run(self.tasks[i-1].context)
+                return
 
     def __str__(self):
         """

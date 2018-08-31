@@ -9,6 +9,7 @@ class JSTask:
         self.done = False
         self.ans = None
         self.difficulty = None
+        self.context = None
 
     def run(self, ctx):
         ctx = context_from_json(ctx)
@@ -16,8 +17,8 @@ class JSTask:
         ctx = context_to_str(ctx)
         self.ans = ctx.run_script('__answer__')
         ctx.run_script('__answer__=""')
+        self.context = ctx
         self.done = True
-        return ctx
 
     def __str__(self):
         return json.dumps([self.code, self.done, self.ans, self.difficulty])
@@ -49,3 +50,6 @@ def msg_task(author, msg):
 
 def net_task(author, msg):
     return JSTask('''__net__("{}")'''.format(json.dumps([author, msg])))
+
+
+js = [code_to_tasks, msg_task, net_task]
