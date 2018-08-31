@@ -74,9 +74,10 @@ class TestFunc(unittest.TestCase):
             wallet.bch.new_sc('\n'.join(f.readlines()), my_keys[1], my_keys[0], memsize=10000520)
         wallet.bch.commit()
         b = wallet.bch[1]
-        #b.contracts[0].execute()
+        b.contracts[0].execute_task()
         #b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
         wallet.bch[1] = b
+        log.info('SC result:\n' + b.contracts[0].tasks[0].ans)
         #b.contracts[0].handle_messages()
         wallet.bch[1] = b
         #self.assertAlmostEqual(0.05, json.loads(b.contracts[0].memory.local)[0][my_keys[1]])
