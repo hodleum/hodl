@@ -70,8 +70,8 @@ class TestFunc(unittest.TestCase):
                  + ', Alice: ' + str(wallet.bch.money(keys['Alice'][1])) +
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs)))
                  + '\n[{}, {}]'.format(str(len(wallet.bch)-1), str(len(wallet.bch[-1].txs)-1)))
-        with open('tests/scex.py', 'r') as f:
-            wallet.bch.new_sc(f.readlines(), my_keys[1], my_keys[0], memsize=10000520)
+        with open('tests/scex.js', 'r') as f:
+            wallet.bch.new_sc('\n'.join(f.readlines()), my_keys[1], my_keys[0], memsize=10000520)
         wallet.bch.commit()
         b = wallet.bch[1]
         #b.contracts[0].execute()
