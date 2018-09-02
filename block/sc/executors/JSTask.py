@@ -1,5 +1,5 @@
 import json
-from block.sc.executors.jstools import context, context_to_str, context_from_json
+from block.sc.executors.jstools import CTX
 
 
 class JSTask:
@@ -12,11 +12,11 @@ class JSTask:
         self.context = None
 
     def run(self, ctx):
-        ctx = context_from_json(ctx)
+        ctx = CTX.from_json(ctx)
         ctx.run_script(self.code)
         self.ans = ctx.run_script('__answer__')
         ctx.run_script('__answer__=""')
-        self.context = context_to_str(ctx)
+        self.context = str(ctx)
         self.done = True
 
     def __str__(self):

@@ -3,7 +3,8 @@ import time
 import logging as log
 import cryptogr as cg
 from block.sc.memory import SCMemory
-from block.sc.executors.JSTask import js, context, context_to_str
+from block.sc.executors.JSTask import js
+from block.sc.executors.jstools import CTX
 from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
 
@@ -56,7 +57,7 @@ class SmartContract:
         if not self.tasks:
             return
         if not self.tasks[0].done:
-            self.tasks[0].run(context_to_str(context()))
+            self.tasks[0].run(str(CTX()))
             return
         for i, task in enumerate(self.tasks):
             if not task.done:
