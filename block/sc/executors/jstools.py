@@ -5,6 +5,18 @@ import json
 shortcuts.set_up()
 
 
+def bch_replace(ctx, line, bch):
+    l = line.split('__bch__[')[1:]
+    for i in range(len(l)):
+        l[i] = l[i].split(']')[0]
+        l[i] = ctx.run_script(l[i])
+    line = line.split('__bch__[')
+    for i in range(1, len(line)):
+        line[i] = '"' + str(bch[int(l[i])]) + '"' + ']'.join(line[i].split(']')[1:])
+    '__bch__['.join(line)
+    return line
+
+
 class CTX:
     def __init__(self):
         self.ctx = shortcuts.get_context()
@@ -33,5 +45,16 @@ class CTX:
                         """)
         return self
 
-    def run_script(self, s):
-        return self.ctx.run_script(s)
+    def run_script(self, s, bch=tuple()):
+        if '__bch__[' not in s:
+            return self.ctx.run_script(s)
+        else:
+            code = s.split('\n')
+            a = 'undefined'
+            l = 0
+            for i in range(len(code)):
+                if '__bch__[' in code[i]:
+                    a = self.ctx.run_script('\n'.join(code[l:i]))
+                    l = i + 1
+                    a = self.ctx.run_script(bch_replace(self.ctx, code[i], bch))
+            return a
