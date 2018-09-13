@@ -1,6 +1,6 @@
 from twisted.internet.protocol import DatagramProtocol
-# from twisted.internet import task
-from .models import Message, Peer
+from collections import defaultdict
+from .models import *
 from werkzeug.local import Local
 from .config import *
 from .errors import *
@@ -30,14 +30,6 @@ class PeerProtocol(DatagramProtocol):
         self.reactor = r
         self.server = server
 
-        self.subnet = None
-        self.parents_subnet = []
-        self.children_subnet = []
-
-        self.waiting_for_connect = False
-
-        # self.reactor.callLater(0, lambda: task.LoopingCall(self.refresh_connections).start(self.update))
-
     def copy(self):
         return self
 
@@ -45,10 +37,10 @@ class PeerProtocol(DatagramProtocol):
     def datagramReceived(self, datagram: bytes, addr: tuple):
 
         message = Message.from_bytes(datagram)
-        func = self.server.handlers.get(message.type)
-        if func:
-            func(message.data, self, addr)
-        else:
+        for func in self.server.handlers[message.type]:
+            if func:
+                func(message.data, self, addr)
+        if not self.server.handlers[message.type]:
             raise UnhandledRequest
 
     def _send(self, data: Message, addr: tuple):
@@ -57,26 +49,26 @@ class PeerProtocol(DatagramProtocol):
         """
         if not data:
             return
+        # TODO: encryption
         self.transport.write(data.dump(), addr)
 
-    def forward(self, message: Message):
-        """
-        Send the package forward to net
-        """
-        pass
-
-    def send(self, message: Message):
+    def send(self, message: Message, addr: tuple):
         """
         High level send
         """
         pass
 
-    def refresh_connections(self):
-        pass
+    @staticmethod
+    def send_all(message: Message):
+        for _peer in session.query(Peer).filter('Peer.pub_key').all():
+            _peer.send(message)
+
+    # TODO: refresh_connections(self):
 
 
 class Server:
-    handlers = {}
+    request_handlers = defaultdict(lambda: [])
+    handlers = defaultdict(lambda: [])
     on_open_func = None
 
     def __init__(self, port=PORT, white=True):
@@ -90,16 +82,24 @@ class Server:
 
         reactor.listenUDP(port, self.udp)
 
-    def handle(self, event):
+    def handle(self, event, _type='message'):
         def decorator(func):
             # noinspection PyUnresolvedReferences,PyDunderSlots
             def wrapper(message: Message, proto: PeerProtocol, addr: tuple):
                 local.protocol = proto
-                local.peer = Peer(addr, proto)
+                _peer = session.query(Peer).filter_by(addr=addr)
+                if not _peer:
+                    _peer = Peer(protocol, addr=addr)
+                    _peer.send(Message('request', request='share_peers'))
+                local.peer = _peer
                 return func(message)
-
-            self.handlers[event] = wrapper
-            return wrapper
+            if _type == 'request':
+                self.request_handlers[event].append(wrapper)
+            if _type == 'message':
+                self.handlers[event].append(wrapper)
+            else:
+                raise UnhandledRequest
+            return func
 
         return decorator
 

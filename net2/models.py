@@ -1,15 +1,21 @@
+from sqlalchemy import Column, String, Integer, ForeignKey, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from threading import RLock
 import time
 import json
 import logging
-from .config import *
 from .errors import *
 
-
 log = logging.getLogger(__name__)
+engine = create_engine('sqlite:///db.sqlite', echo=False, connect_args={'check_same_thread': False})
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
+session = Session()
+lock = RLock()
 
 
 class TempDict(dict):
-
     update = 5
     expire = 60
 
@@ -40,16 +46,15 @@ class Message:
     """Message protocol"""
 
     def __init__(self, message_type, data=None, request=None, encoding=None,
-                 addressee=None, sender=None, mid=None, forward=None, callback=None):
+                 tunnel_id=None, mid=None, forward=None, callback=None):
         self.type = message_type
         self.data = data
         self.request = request
         self.encoding = encoding
-        self.addressee = addressee
-        self.sender = sender
         self.id = mid
         self.forward = forward
         self.callback = callback
+        self.tunnel_id = tunnel_id
 
     @classmethod
     def from_bytes(cls, message: bytes):
@@ -65,31 +70,16 @@ class Message:
 
             if not request:
                 raise BadRequest('Missing request')
-
-            if DEBUG:
-                assert not message.get('uid')
             return cls(message_type, request=request, data=message.get('data'), callback=message.get('callback'))
 
         elif message_type == 'message':
-            addressee = message.get('addressee')
-            sender = message.get('sender')
             mid = message.get('id')
-
-            if not addressee:
-                raise BadRequest('No addressee')
-
-            if (not addressee.get('uid') or not addressee.get('subnet')) or (
-                    sender and (not sender.get('uid') or not sender.get('subnet'))):
-                raise BadRequest('Bad address')
-
             if not mid:
                 raise BadRequest('Missing message id')
 
-            if DEBUG:
-                assert not message.get('address')
-
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), addressee=addressee,
-                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
+            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), mid=mid,
+                       forward=message.get('forward'), callback=message.get('callback'),
+                       tunnel_id=message.get('tunnel_id'))
 
         elif message_type == 'shout':
             sender = message.get('sender')
@@ -104,8 +94,8 @@ class Message:
             if not mid:
                 raise TypeError('Missing message id')
 
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'),
-                       sender=sender, mid=mid, forward=message.get('forward'), callback=message.get('callback'))
+            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), mid=mid,
+                       forward=message.get('forward'), callback=message.get('callback'))
         elif message_type == 'error':
             return cls(message_type, data=message.get('data'), callback=message.get('callback'))
         raise TypeError('Bad message type')
@@ -124,8 +114,6 @@ class Message:
             message = {
                 'type': 'message',
                 'data': self.data,
-                'addressee': self.addressee,
-                'sender': self.sender,
                 'encoding': self.encoding,
                 'id': self.id
             }
@@ -144,32 +132,44 @@ class Message:
         return f'<Message> {self.type} {self.data}'
 
 
-class Peer:
-    def __init__(self, addr, proto):
-        self.ping_time = time.time()
-        self.addr = addr
+class Peer(Base):
+    __tablename__ = 'peers'
+
+    addr = Column(String, primary_key=True)
+    pub_key = Column(String)
+
+    def __init__(self, proto, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.proto = proto
 
     def copy(self):
         return self
 
     def send(self, message: Message):
-        """
-        Low level send to peer
-        """
-        if message.request != 'ping':
-            log.debug(f'[Peer {self.addr}]: Send {message}')
-        self.proto._send(message.dump(), self.addr)
+        log.debug(f'{self}: Send {message}')
+        self.proto.send(message.dump(), self.addr)
+
+    def dir_send(self, message: Message):
+        log.debug(f'{self}: Send {message}')
+        self.proto.send(message.dump(), self.addr)
+
+    def __repr__(self):
+        return f'<Peer {self.addr}>'
 
 
 class Tunnels(TempDict):
-    expire = 600
+    expire = 6000
 
     def add(self, tunnel_id, backward_peer, forward_peer):
-        self[tunnel_id] = (backward_peer, forward_peer)
+        self[tunnel_id] = [backward_peer, forward_peer]
 
     def send(self, message):
         peers = self.get(message.tunnel_id)
         if not peers:
             return
-        peers[1].send(message)
+        peers[1]._send(message)
+
+
+if __name__ == '__main__':
+    Base.metadata.create_all(engine)
+    session.commit()
