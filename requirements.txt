@@ -1,3 +1,4 @@
+sqlalchemy
 werkzeug
 pycryptodome
 json5
