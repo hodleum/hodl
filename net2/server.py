@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 local = Local()
 peer = local['peer']
 protocol = local['protocol']
+user = local['user']
 
 
 def error_cache(func):
@@ -35,11 +36,11 @@ class PeerProtocol(DatagramProtocol):
 
     @error_cache
     def datagramReceived(self, datagram: bytes, addr: tuple):
-
+        # TODO: decryption
         message = Message.from_bytes(datagram)
         for func in self.server.handlers[message.type]:
             if func:
-                func(message.data, self, addr)
+                func(message.data, self, addr, message.addressee)
         if not self.server.handlers[message.type]:
             raise UnhandledRequest
 
@@ -90,13 +91,17 @@ class Server:
     def handle(self, event, _type='message'):
         def decorator(func):
             # noinspection PyUnresolvedReferences,PyDunderSlots
-            def wrapper(message: Message, proto: PeerProtocol, addr: tuple):
+            def wrapper(message: Message, proto: PeerProtocol, addr: tuple, name=None):
                 local.protocol = proto
                 _peer = session.query(Peer).filter_by(addr=addr)
                 if not _peer:
                     _peer = Peer(protocol, addr=addr)
                     _peer.send(Message('request', request='share_peers'))
                 local.peer = _peer
+
+                local.user = None
+                if name:
+                    local.user = session.query(User).filter_by(name=name).first()
                 return func(message)
             if _type == 'request':
                 self.request_handlers[event].append(wrapper)

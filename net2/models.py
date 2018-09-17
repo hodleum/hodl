@@ -54,7 +54,7 @@ class Message:
         self.id = mid
         self.forward = forward
         self.callback = callback
-        self.tunnel_id = tunnel_id
+        self.tunnel_id = tunnel_id  # TODO: addressee
 
     @classmethod
     def from_bytes(cls, message: bytes):
@@ -100,10 +100,7 @@ class Message:
             return cls(message_type, data=message.get('data'), callback=message.get('callback'))
         raise TypeError('Bad message type')
 
-    def dump(self):
-        """
-        :return: dict
-        """
+    def dump(self) -> dict:
         if self.type == 'request':
             message = {
                 'type': 'request',
@@ -147,7 +144,7 @@ class Peer(Base):
 
     def send(self, message: Message):
         log.debug(f'{self}: Send {message}')
-        self.proto.send(message.dump(), self.addr)
+        self.proto._send(message, self.addr)
 
     def dump(self):
         return {
@@ -164,6 +161,14 @@ class User(Base):
 
     pub_key = Column(String)
     name = Column(String, primary_key=True)
+
+    def __init__(self, proto, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.proto = proto
+
+    def send(self, message: Message):
+        log.debug(f'{self}: Send {message}')
+        self.proto.send(message, self.name)
 
     def dump(self):
         return {

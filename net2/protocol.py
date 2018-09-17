@@ -21,7 +21,7 @@ def share_peers():
 
 @server.handle('share_users', 'request')
 def share_users():
-    users = [user.dump() for user in session.query(User).all()]
+    users = [_user.dump() for _user in session.query(User).all()]
     peer.send(Message(
         'request',
         request='users',
@@ -33,16 +33,16 @@ def share_users():
 
 @server.handle('new_user', 'request')
 def record_new_user(key, name):
-    user = session.query(User).filter_by(name=name)
-    if not user:
-        user = User(pub_key=key, name=name)
+    new_user = session.query(User).filter_by(name=name)
+    if not new_user:
+        new_user = User(protocol.copy(), pub_key=key, name=name)
         with lock:
-            session.add(user)
+            session.add(new_user)
             session.commit()
         protocol.send_all(Message(
             'request',
             request='new_user',
-            data=user.dump()
+            data=new_user.dump()
         ))
 
 
