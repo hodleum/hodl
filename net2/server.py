@@ -60,7 +60,7 @@ class PeerProtocol(DatagramProtocol):
 
     @staticmethod
     def send_all(message: Message):
-        for _peer in session.query(Peer).filter('Peer.pub_key').all():
+        for _peer in session.query(Peer).all():
             _peer.send(message)
 
     # TODO: refresh_connections(self):

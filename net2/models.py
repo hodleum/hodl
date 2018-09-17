@@ -149,12 +149,27 @@ class Peer(Base):
         log.debug(f'{self}: Send {message}')
         self.proto.send(message.dump(), self.addr)
 
-    def dir_send(self, message: Message):
-        log.debug(f'{self}: Send {message}')
-        self.proto.send(message.dump(), self.addr)
+    def dump(self):
+        return {
+            'key': self.pub_key,
+            'address': self.addr
+        }
 
     def __repr__(self):
         return f'<Peer {self.addr}>'
+
+
+class User(Base):
+    __tablename__ = 'users'
+
+    pub_key = Column(String)
+    name = Column(String, primary_key=True)
+
+    def dump(self):
+        return {
+            'key': self.pub_key,
+            'name': self.name
+        }
 
 
 class Tunnels(TempDict):
