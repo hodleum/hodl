@@ -52,11 +52,16 @@ class PeerProtocol(DatagramProtocol):
         # TODO: encryption
         self.transport.write(data.dump(), addr)
 
-    def send(self, message: Message, addr: tuple):
+    def send(self, message: Message, name: str):
         """
         High level send
         """
         pass
+
+    def shout(self, message: Message):
+        """
+        High level send_all
+        """
 
     @staticmethod
     def send_all(message: Message):
