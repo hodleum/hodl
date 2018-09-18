@@ -54,7 +54,7 @@ class Message:
         self.id = mid
         self.forward = forward
         self.callback = callback
-        self.tunnel_id = tunnel_id  # TODO: addressee
+        self.tunnel_id = tunnel_id  # TODO: addressee, message_type
 
     @classmethod
     def from_bytes(cls, message: bytes):
@@ -86,19 +86,19 @@ class Message:
             mid = message.get('id')
 
             if not sender:
-                raise TypeError('Sender required')
+                raise BadRequest('Sender required')
 
             if not sender.get('uid') or not sender.get('subnet'):
-                raise TypeError('Bad address')
+                raise BadRequest('Bad address')
 
             if not mid:
-                raise TypeError('Missing message id')
+                raise BadRequest('Missing message id')
 
             return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), mid=mid,
                        forward=message.get('forward'), callback=message.get('callback'))
         elif message_type == 'error':
             return cls(message_type, data=message.get('data'), callback=message.get('callback'))
-        raise TypeError('Bad message type')
+        raise BadRequest('Bad message type')
 
     def dump(self) -> dict:
         if self.type == 'request':
