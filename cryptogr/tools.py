@@ -2,9 +2,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 import Crypto.Hash.MD5 as MD5
 from Crypto.Hash import SHA
-from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES, PKCS1_OAEP
-import struct
+from Crypto.Cipher import PKCS1_OAEP
 import base64
 
 
@@ -23,7 +21,7 @@ def gen_keys():
     return privatekey.exportKey().decode(), publickey.exportKey().decode()
 
 
-def sign(plaintext, private_key):
+def sign_block(plaintext, private_key):
     """
     Creates signature
 
@@ -44,7 +42,7 @@ def sign(plaintext, private_key):
     return base64.encodebytes(signature).decode()
 
 
-def verify_sign(s, plaintext, public_key, bch):
+def verify_block(s, plaintext, public_key, bch):
     """
     Verifies signature
 
@@ -73,75 +71,38 @@ def verify_sign(s, plaintext, public_key, bch):
     return test
 
 
-def encrypt_aes(plaintext, key):
-    """
-    Encrypt text with AES cipher
-
-    :param plaintext: text to encrypt
-    :type plaintext: str
-
-    :param key: 16/32 bytes key
-    :type key: bytes
-
-    :return: str
-    """
-    plaintext = struct.pack('>L', len(plaintext)) + plaintext.encode('utf-8') + b'\x00' * (
-            16 - (len(plaintext) + 4) % 16)
-    aes = AES.new(key)
-    return base64.encodebytes(aes.encrypt(plaintext)).decode()
-
-
-def decrypt_aes(text, key):
-    """
-    Decrypt ciphertext with AES
-
-    :param text: ciphertext to decrypt
-    :type text: str
-
-    :param key: 16/32 bytes key
-    :type key: bytes
-
-    :return: str
-    """
-    aes = AES.new(key)
-    plaintext = aes.decrypt(base64.decodebytes(text.encode()))
-    text_len = struct.unpack('>L', plaintext[:4])[0]
-    return plaintext[4:text_len + 4].decode('utf-8')
-
-
-def encrypt(plaintext, pub_key):
+def encrypt(plaintext: str, pub_key: str) -> str:
     """
     Encrypt text with RSA
-
-    :param plaintext: text to encrypt
-    :type plaintext: str
-
-    :param pub_key: RSA public key
-    :type pub_key: str
-
-    :return: str
     """
     key = RSA.importKey(pub_key)
-    session = get_random_bytes(32)
-    enc_session = PKCS1_OAEP.new(key).encrypt(session)
-    text = base64.decodebytes(encrypt_aes(plaintext, session).encode())
-    return base64.encodebytes(enc_session + text).decode()
+    encrypter = PKCS1_OAEP.new(key)
+
+    plaintext = plaintext.encode()
+    size = key.size_in_bytes()
+    ciphertext = b''
+    for i in range(0, len(plaintext) // (size - 42) + 1):
+        block = plaintext[i * (size - 42):(i + 1) * (size - 42)]
+        ciphertext += encrypter.encrypt(block)
+    return base64.encodebytes(ciphertext).decode()
 
 
-def decrypt(text, priv_key):
+def decrypt(text: str, priv_key: str) -> str:
     """
     Decrypt ciphertext with RSA
-
-    :param text: ciphertext to decrypt
-    :type text: str
-
-    :param priv_key: RSA private key
-    :type priv_key: str
-
-    :return: str
     """
     key = RSA.importKey(priv_key)
     text = base64.decodebytes(text.encode())
-    cipher_text = base64.encodebytes(text[(key.size() + 1) // 8:]).decode()
-    session = PKCS1_OAEP.new(key).decrypt(text[: (key.size() + 1) // 8])
-    return decrypt_aes(cipher_text, session)
+    decrypter = PKCS1_OAEP.new(key)
+    size = key.size_in_bytes()
+
+    plaintext = b''
+    for i in range(0, len(text) // size):
+        block = text[i * size: (i + 1) * size]
+        plaintext += decrypter.decrypt(block)
+    return plaintext.decode()
+
+
+if __name__ == '__main__':
+    priv, pub = gen_keys()
+    print(decrypt(encrypt('test', pub), priv))

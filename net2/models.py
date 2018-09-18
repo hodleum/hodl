@@ -54,7 +54,7 @@ class Message:
         self.id = mid
         self.forward = forward
         self.callback = callback
-        self.tunnel_id = tunnel_id  # TODO: addressee, message_type
+        self.tunnel_id = tunnel_id  # TODO: addressee, message_type, hash, sign
 
     @classmethod
     def from_bytes(cls, message: bytes):
