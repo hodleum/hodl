@@ -5,6 +5,7 @@ from werkzeug.local import Local
 from .config import *
 from .errors import *
 import logging
+import random
 
 
 log = logging.getLogger(__name__)
@@ -64,10 +65,20 @@ class PeerProtocol(DatagramProtocol):
         High level send_all
         """
 
-    @staticmethod
-    def send_all(message: Message):
+    @property
+    def peers(self):
+        peers = []
         for _peer in session.query(Peer).all():
+            _peer.proto = self
+            peers.append(_peer)
+        return peers
+
+    def send_all(self, message: Message):
+        for _peer in self.peers:
             _peer.send(message)
+
+    def random_send(self, message: Message):
+        random.choice(self.peers).send(message)
 
     # TODO: refresh_connections(self):
 

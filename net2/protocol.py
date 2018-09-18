@@ -1,6 +1,8 @@
 from .config import *
 from .models import *
 from .server import Server, peer, protocol
+import random
+
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +66,22 @@ def record_users(users):
                 new_user = Peer(protocol.copy(), pub_key=data['key'], name=data['name'])
                 session.add(new_user)
         session.commit()
+
+
+@server.handle('forward', 'request')
+def forward(message):
+    if random.randint(0, 3) == random.randint(0, 3):
+        protocol.send_all(Message(
+            message_type='request',
+            request='message',
+            data=message
+        ))
+    else:
+        protocol.random_send(Message(
+            message_type='request',
+            request='forward',
+            data=message
+        ))
 
 
 if __name__ == '__main__':
