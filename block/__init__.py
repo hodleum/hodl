@@ -26,6 +26,7 @@ from block.UnfilledBlock import UnfilledBlock
 
 
 # todo: blockchain freeze before new block
+# todo: block award needs to be a proportion of total amount of money at some point
 # todo: transaction and smart contract limit, remove smart contract's comission
 
 

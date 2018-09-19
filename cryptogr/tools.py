@@ -33,6 +33,7 @@ def sign_block(plaintext, private_key):
 
     :return: str
     """
+    # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign
     priv_key = RSA.importKey(private_key)
     plaintext = plaintext.encode('utf-8')
     # creation of signature
