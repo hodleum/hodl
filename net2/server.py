@@ -100,6 +100,9 @@ class Server:
         reactor.listenUDP(port, self.udp)
 
     def handle(self, event, _type='message'):
+        if isinstance(event, str):
+            event = list(event)
+
         def decorator(func):
             # noinspection PyUnresolvedReferences,PyDunderSlots
             def wrapper(message: Message, proto: PeerProtocol, addr: tuple, name=None):
@@ -114,12 +117,13 @@ class Server:
                 if name:
                     local.user = session.query(User).filter_by(name=name).first()
                 return func(message)
-            if _type == 'request':
-                self.request_handlers[event].append(wrapper)
-            if _type == 'message':
-                self.handlers[event].append(wrapper)
-            else:
-                raise UnhandledRequest
+            for e in event:
+                if _type == 'request':
+                    self.request_handlers[e].append(wrapper)
+                elif _type == 'message':
+                    self.handlers[e].append(wrapper)
+                else:
+                    raise UnhandledRequest
             return func
 
         return decorator
