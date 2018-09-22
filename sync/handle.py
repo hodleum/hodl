@@ -11,6 +11,7 @@ Bob(b) sends len(B.bch), len(B.bch[-1].txs), len(B.bch[-1].contracts), if len(B.
 If Alice's blockchain is shorter, A sends request,
 if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or contracts are shorter, A sends request
 """
+import logging as log
 import block
 from net2.protocol import server
 from net2.models import Message
@@ -19,6 +20,7 @@ from net2.server import protocol, user
 
 bch = block.Blockchain()
 syncs = []
+keys = []
 
 
 class SyncHandler:
@@ -54,3 +56,8 @@ def handle_msg(msg):
         h = SyncHandler(user.pub_key, msg, user)
         user.send(Message('sync', h.on_message(msg)))
         syncs.append(h)
+
+
+def loop(my_keys):
+    keys = my_keys
+    server.run()
