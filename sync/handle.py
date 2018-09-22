@@ -11,26 +11,41 @@ Bob(b) sends len(B.bch), len(B.bch[-1].txs), len(B.bch[-1].contracts), if len(B.
 If Alice's blockchain is shorter, A sends request,
 if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or contracts are shorter, A sends request
 """
+import json
 import block
-import net
+from net2.protocol import server
+from net2.models import Message
+from net2.server import protocol, user
 
 
 bch = block.Blockchain()
+syncs = []
 
 
 class SyncHandler:
-    def __init__(self, address, msg=None):
+    def __init__(self, address, msg=None, u=None):
         self.address = address
         self.msgs = []
         # todo
         if not msg:
             answer = dict()
-            net.send_to(address, answer)
+            u.send(Message('sync', answer))
         else:
-            self.on_message(msg)
+            u.send(self.on_message(msg))
 
     def on_message(self, msg):
         answer = []
         self.msgs.append(msg)
         # todo
         return answer
+
+
+@server.handle('sync')
+def handle_msg(msg):
+    h = {u.address: u for u in syncs}.get(user.pub_key)
+    if h:
+        user.send(Message('sync', h.on_message(msg)))
+    else:
+        h = SyncHandler(user.pub_key, msg, user)
+        user.send(Message('sync', h.on_message(msg)))
+        syncs.append(h)
