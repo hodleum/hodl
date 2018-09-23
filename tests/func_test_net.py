@@ -7,7 +7,7 @@ from sync import handle
 
 
 name = str(os.getenv('HODL_NAME'))
-log.basicConfig(filename=name+'.log', level=log.DEBUG)
+log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 my_keys = keys[name]

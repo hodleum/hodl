@@ -47,17 +47,20 @@ class SyncHandler:
 
 @server.handle('sync')
 def handle_msg(msg):
+    log.debug('new sync message')
     h = {u.address: u for u in syncs}.get(user.pub_key)
     # if we have sync history with this user, use it
     if h:
         user.send(Message('sync', h.on_message(msg)))
     # if we receive message from this user at first time, create conversation
     else:
+        log.debug('new sync conversation with ' + str(user.name))
         h = SyncHandler(user.pub_key, msg, user)
         user.send(Message('sync', h.on_message(msg)))
         syncs.append(h)
 
 
 def loop(my_keys):
+    log.debug('sync loop')
     keys = my_keys
     server.run()
