@@ -14,8 +14,6 @@ from sync import handle
 
 
 name = str(os.getenv('HODL_NAME'))
-bch = block.Blockchain(filename=name+'.db')
-wallet.bch.clean()
 log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
@@ -32,7 +30,8 @@ if name == 'Chuck':
 if name == 'Dave':
     # set public key and peers
     pass
-my_wallet = wallet.new_wallet(my_keys)
+my_wallet = wallet.new_wallet(my_keys, filename=name+'.db')
+wallet.bch.clean()
 port = 5000
 
 with open('tests/genblock.bl', 'r') as f:

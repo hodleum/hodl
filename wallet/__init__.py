@@ -15,7 +15,7 @@ class NotEnoughMoney(Exception):
 
 
 class Wallet:
-    def __init__(self, keys=cg.gen_keys):
+    def __init__(self, keys=cg.gen_keys, filename="bch.db"):
         try:
             keys = keys()
         except TypeError:
@@ -77,8 +77,8 @@ class Wallet:
         return cls(json.loads(st))
 
 
-def new_wallet(keys=cg.gen_keys):
-    w = Wallet(keys)
+def new_wallet(keys=cg.gen_keys, filename="bch.db"):
+    w = Wallet(keys, filename)
     wallets.append(w)
     return w
 
