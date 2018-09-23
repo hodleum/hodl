@@ -21,6 +21,28 @@ def gen_keys():
     return privatekey.exportKey().decode(), publickey.exportKey().decode()
 
 
+def sign(plaintext, private_key):
+    """
+    Creates signature
+
+    :param plaintext: text
+    :type plaintext: str
+
+    :param private_key: RSA private key
+    :type private_key: str
+
+    :return: str
+    """
+    # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign
+    priv_key = RSA.importKey(private_key)
+    plaintext = plaintext.encode('utf-8')
+    # creation of signature
+    myhash = SHA.new(plaintext)
+    signature = PKCS1_v1_5.new(priv_key)
+    signature = signature.sign(myhash)
+    return base64.encodebytes(signature).decode()
+
+
 def sign_block(plaintext, private_key):
     """
     Creates signature
@@ -44,6 +66,35 @@ def sign_block(plaintext, private_key):
 
 
 def verify_block(s, plaintext, public_key, bch):
+    """
+    Verifies signature
+
+    :param s: signature
+    :type s: str
+
+    :param plaintext: text
+    :type plaintext: str
+
+    :param public_key: RSA public key
+    :type public_key: str
+
+    :param bch: Blockchain
+    :type bch: Blockchain
+
+    :return: bool
+    """
+    if public_key[-1] == ']':
+        return bch.verify_sc_sign(public_key, s)
+    pub_key = RSA.importKey(public_key)
+    plaintext = plaintext.encode('utf-8')
+    # decryption signature
+    myhash = SHA.new(plaintext)
+    signature = PKCS1_v1_5.new(pub_key)
+    test = signature.verify(myhash, base64.decodebytes(s.encode()))
+    return test
+
+
+def verify_sign(s, plaintext, public_key, bch):
     """
     Verifies signature
 

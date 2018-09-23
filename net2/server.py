@@ -11,9 +11,9 @@ import random
 log = logging.getLogger(__name__)
 
 local = Local()
-peer = local['peer']
-protocol = local['protocol']
-user = local['user']
+peer = local('peer')
+protocol = local('protocol')
+user = local('user')
 
 
 def error_cache(func):
