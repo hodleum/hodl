@@ -5,7 +5,7 @@ import time
 import logging as log
 import block
 import wallet
-from sync import handle
+import sync
 
 
 # Alice, Bob, Chuck, Dave are creating clear blockchain with genesis block
@@ -52,4 +52,4 @@ def main():
 
 
 multiprocessing.Process(target=main).start()
-handle.loop(my_keys,)
+sync.handle.loop(my_keys,)
