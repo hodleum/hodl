@@ -74,7 +74,7 @@ class PeerProtocol(DatagramProtocol):
 
         for func in self.server.handlers[wrapper.type]:
             if func:
-                func(wrapper, self, addr)
+                func(wrapper, addr)
         if not self.server.handlers[wrapper.type]:
             raise UnhandledRequest
 
@@ -139,8 +139,7 @@ class Server:
 
         def decorator(func):
             # noinspection PyDunderSlots,PyUnresolvedReferences
-            def wrapper(message_wrapper: MessageWrapper, proto: PeerProtocol, addr: tuple):
-                local.protocol = proto
+            def wrapper(message_wrapper: MessageWrapper, addr: tuple):
                 _peer = session.query(Peer).filter_by(addr=addr)
                 if not _peer:
                     _peer = Peer(protocol, addr=addr)
