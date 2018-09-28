@@ -110,7 +110,7 @@ class MessageWrapper:
         if not message_type or message_type not in cls.acceptable_types:
             raise BadRequest('Wrong message type')
         sender = wrapper.get('sender')
-        if message_type != 'request' and not sender or not\
+        if message_type != 'request' and not sender or not \
                 isinstance(sender, str):
             raise BadRequest('Sender name required')
 
@@ -248,6 +248,10 @@ class Tunnels(TempDict):
         peers[1]._send(message)
 
 
-if __name__ == '__main__':
+def create_db():
     Base.metadata.create_all(engine)
     session.commit()
+
+
+if __name__ == '__main__':
+    create_db()

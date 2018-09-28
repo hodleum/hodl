@@ -3,7 +3,6 @@ from .models import *
 from .server import peer, protocol, server
 import random
 
-
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
                     format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
@@ -36,10 +35,8 @@ def share_users():
 def record_new_user(key, name):
     new_user = session.query(User).filter_by(name=name)
     if not new_user:
-        new_user = User(protocol.copy(), pub_key=key, name=name)
-        with lock:
-            session.add(new_user)
-            session.commit()
+        new_user = User(protocol, pub_key=key, name=name)
+        protocol.add_object(new_user)
         protocol.send_all(Message(
             name='new_user',
             data=new_user.dump()
@@ -51,7 +48,7 @@ def record_peers(peers):
     with lock:
         for data in peers:
             if not session.query(Peer).filter_by(addr=data['address']):
-                new_peer = Peer(protocol.copy(), pub_key=data['key'], addr=data['address'])
+                new_peer = Peer(protocol, pub_key=data['key'], addr=data['address'])
                 session.add(new_peer)  # TODO: test new peers
         session.commit()
 
@@ -61,12 +58,12 @@ def record_users(users):
     with lock:
         for data in users:
             if not session.query(User).filter_by(name=data['name']):
-                new_user = Peer(protocol.copy(), pub_key=data['key'], name=data['name'])
+                new_user = Peer(protocol, pub_key=data['key'], name=data['name'])
                 session.add(new_user)
         session.commit()
 
 
-@server.handle('forward', 'request')
+@server.handle('forward', 'request')  # TODO: with_wrapper=True
 def forward(message):
     if random.randint(0, 3) == random.randint(0, 3):
         protocol.send_all(Message(

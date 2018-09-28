@@ -62,6 +62,12 @@ class PeerProtocol(DatagramProtocol):
     def copy(self):
         return self
 
+    @staticmethod
+    def add_object(obj):
+        with lock:
+            session.add(obj)
+            session.commit()
+
     @error_cache
     def datagramReceived(self, datagram: bytes, addr: tuple):
         wrapper = MessageWrapper.from_bytes(datagram)
