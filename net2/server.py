@@ -28,7 +28,6 @@ log = logging.getLogger(__name__)
 
 local = Local()
 peer = local('peer')
-protocol = local('protocol')
 user = local('user')
 
 
@@ -44,9 +43,9 @@ def error_cache(func):
 
 class PeerProtocol(DatagramProtocol):
 
-    def __init__(self, server, r):
+    def __init__(self, _server, r):
         self.reactor = r
-        self.server = server
+        self.server = _server
         self.temp = TempDict()  # TODO: Temp set
 
         try:
@@ -174,3 +173,7 @@ class Server:
     def run(self):
         log.info(f'Start at {self.port}')
         self.reactor.run()
+
+
+server = Server(PORT)
+protocol = server.udp

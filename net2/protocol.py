@@ -1,6 +1,6 @@
 from .config import *
 from .models import *
-from .server import Server, peer, protocol
+from .server import peer, protocol, server
 import random
 
 
@@ -8,8 +8,6 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
                     format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
                            '  %(message)s'.format('<Bob>'))
-
-server = Server(PORT)
 
 
 @server.handle('share_peers', 'request')
