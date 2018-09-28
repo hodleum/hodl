@@ -102,8 +102,10 @@ ENV/
 
 .idea/
 
-# blockchain
+# blockchain, peers
 *.db
+*.sqlite
 
 
 tmp/
+net2/keys
