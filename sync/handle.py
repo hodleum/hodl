@@ -11,26 +11,56 @@ Bob(b) sends len(B.bch), len(B.bch[-1].txs), len(B.bch[-1].contracts), if len(B.
 If Alice's blockchain is shorter, A sends request,
 if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or contracts are shorter, A sends request
 """
+import logging as log
 import block
-import net
+from net2.protocol import server
+from net2.models import Message
+from net2.server import protocol, user
 
 
 bch = block.Blockchain()
+syncs = []
+keys = []
 
 
 class SyncHandler:
-    def __init__(self, address, msg=None):
+    """
+    Class for synchronization conversation with one peer
+    """
+    def __init__(self, address, msg=None, u=None):
         self.address = address
         self.msgs = []
-        # todo
+        # todo: realize algorythm above
         if not msg:
             answer = dict()
-            net.send_to(address, answer)
+            u.send(Message('sync', answer))
         else:
-            self.on_message(msg)
+            u.send(self.on_message(msg))
 
     def on_message(self, msg):
-        answer = []
+        answer = dict()
         self.msgs.append(msg)
-        # todo
+        # todo: realize algorythm above
+        # todo: if synchronization complete, delete history
         return answer
+
+
+@server.handle('sync')
+def handle_msg(msg):
+    log.debug('new sync message')
+    h = {u.address: u for u in syncs}.get(user.pub_key)
+    # if we have sync history with this user, use it
+    if h:
+        user.send(Message('sync', h.on_message(msg)))
+    # if we receive message from this user at first time, create conversation
+    else:
+        log.debug('new sync conversation with ' + str(user.name))
+        h = SyncHandler(user.pub_key, msg, user)
+        user.send(Message('sync', h.on_message(msg)))
+        syncs.append(h)
+
+
+def loop(my_keys):
+    log.debug('sync loop')
+    keys = my_keys
+    server.run()

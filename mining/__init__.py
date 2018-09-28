@@ -34,7 +34,7 @@ def pow_mining(bch, b):
     # add transaction with award sending
     txn = block.Transaction()
     outs = ['miner']   # todo
-    outns = [pow_total]
+    outns = [pow_total(bch, len(bch))]
     txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=lb.timestamp + block_time)
     b.append(txn)
     b.update()
@@ -45,7 +45,7 @@ def pow_validate(bch, num):
     miners = bch[num - 1].miners
     txn = block.Transaction()
     outs = ['miner']   # todo
-    outns = [pow_total]
+    outns = [pow_total(bch, len(bch))]
     txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=bch[num - 1].timestamp + block_time)
     return txn.hash == bch[num].txs[0].hash
 
@@ -57,7 +57,7 @@ def pok_mining(b, bch):
     # add transaction with award sending
     txn = block.Transaction()
     outs = ['miner']   # todo
-    outns = [pok_total]
+    outns = [pok_total(bch, len(bch))]
     txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=lb.timestamp + block_time)
     b.append(txn)
     b.update()
@@ -68,7 +68,7 @@ def pok_validate(bch, num):
     miners = bch[num - 1].miners
     txn = block.Transaction()
     outs = ['miner']   # todo
-    outns = [pok_total]
+    outns = [pok_total(bch, len(bch))]
     txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=bch[num - 1].timestamp + block_time)
     return txn.hash == bch[num].txs[0].hash
 

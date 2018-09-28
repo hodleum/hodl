@@ -1,7 +1,7 @@
 # total reward for PoW
-pow_total = 10000
+pow_total = lambda bch: 10000   # todo: percent of total money
 # total reward for PoK
-pok_total = 10000
+pok_total = lambda bch: 10000   # todo: percent of total money
 # maximum hash to be a miner (will be removed)
 pow_max = 1000000000000000000000000000000000000
 # mining reward (will be removed)

@@ -242,6 +242,7 @@ class Blockchain:
         :param maxn: tuple: maximum index or ('l', 'l') for entire blockchain
         :return: str: pubkey
         """
+        # todo: smart contracts
         if ';' not in nick and len(nick) > 20:
             return nick
         if nick.count(';') >= 2:
