@@ -1,11 +1,14 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, create_engine
+from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker
+from cryptogr import get_random, verify, sign, encrypt, decrypt
 from threading import RLock
+from .errors import *
+import logging
+import uuid
+import attr
 import time
 import json
-import logging
-from .errors import *
 
 log = logging.getLogger(__name__)
 engine = create_engine('sqlite:///db.sqlite', echo=False, connect_args={'check_same_thread': False})
@@ -15,13 +18,18 @@ session = Session()
 lock = RLock()
 
 
-class TempDict(dict):
-    update = 5
+class TempStructure:
+    update_time = 5
     expire = 60
 
-    def __init__(self, *args):
+    def __init__(self):
         self.last_check = time.time()
-        super().__init__(*args)
+
+
+class TempDict(dict, TempStructure):
+    def __init__(self, *args):
+        dict.__init__(self, *args)
+        TempStructure.__init__(self)
 
     def __setitem__(self, key, value):
         self.check()
@@ -35,98 +43,128 @@ class TempDict(dict):
         return super().__getitem__(item)['value']
 
     def check(self):
-        if time.time() - self.last_check < self.update:
+        if time.time() - self.last_check < self.update_time:
             return
         for key, value in self.copy().items():
             if time.time() - value['time'] >= self.expire:
                 del self[key]
 
 
+@attr.s
 class Message:
-    """Message protocol"""
+    """Message"""
+    name = attr.ib(type=str)
+    data = attr.ib(factory=dict)
+    salt = attr.ib(type=str)
 
-    def __init__(self, message_type, data=None, request=None, encoding=None,
-                 tunnel_id=None, mid=None, forward=None, callback=None):
-        self.type = message_type
-        self.data = data
-        self.request = request
-        self.encoding = encoding
-        self.id = mid
-        self.forward = forward
-        self.callback = callback
-        self.tunnel_id = tunnel_id  # TODO: addressee, message_type, hash, sign
+    @salt.default
+    def _salt_gen(self):
+        return get_random()
 
-    @classmethod
-    def from_bytes(cls, message: bytes):
-        try:
-            message = json.loads(message.decode('utf-8'))
-        except (ValueError, UnicodeDecodeError):
+    @data.validator
+    @name.validator
+    def _check_type(self, attribute, value):
+        if attribute.name == 'name' and not isinstance(value, str) or \
+                attribute.name == 'data' and not isinstance(value, dict):
             raise BadRequest
-        message_type = message.get('type')
-        if not message_type:
-            raise BadRequest('Missing message type')
-        if message_type == 'request':
-            request = message.get('request')
 
-            if not request:
-                raise BadRequest('Missing request')
-            return cls(message_type, request=request, data=message.get('data'), callback=message.get('callback'))
+    def dump(self):
+        return attr.asdict(self)
 
-        elif message_type == 'message':
-            mid = message.get('id')
-            if not mid:
-                raise BadRequest('Missing message id')
-
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), mid=mid,
-                       forward=message.get('forward'), callback=message.get('callback'),
-                       tunnel_id=message.get('tunnel_id'))
-
-        elif message_type == 'shout':
-            sender = message.get('sender')
-            mid = message.get('id')
-
-            if not sender:
-                raise BadRequest('Sender required')
-
-            if not sender.get('uid') or not sender.get('subnet'):
-                raise BadRequest('Bad address')
-
-            if not mid:
-                raise BadRequest('Missing message id')
-
-            return cls(message_type, data=message.get('data'), encoding=message.get('encoding'), mid=mid,
-                       forward=message.get('forward'), callback=message.get('callback'))
-        elif message_type == 'error':
-            return cls(message_type, data=message.get('data'), callback=message.get('callback'))
-        raise BadRequest('Bad message type')
-
-    def dump(self) -> dict:
-        if self.type == 'request':
-            message = {
-                'type': 'request',
-                'request': self.request,
-                'data': self.data,
-            }
-        elif self.type == 'message':
-            message = {
-                'type': 'message',
-                'data': self.data,
-                'encoding': self.encoding,
-                'id': self.id
-            }
-        else:
-            raise BadRequest('Bad message type')
-        if self.forward:
-            message['forward'] = self.forward
-        if self.callback:
-            message['callback'] = self.callback
-        return json.dumps(message).encode('utf-8')
-
-    def __str__(self):
+    def to_json(self):
         return json.dumps(self.dump())
 
-    def __repr__(self):
-        return f'<Message> {self.type} {self.data}'
+    @classmethod
+    def from_json(cls, data):
+        return cls(**json.loads(data))
+
+
+@attr.s
+class MessageWrapper:
+    """Wrapper for message"""
+    message = attr.ib(default=None)
+    type = attr.ib(type=str, default='message')
+    sender = attr.ib(type=str, default=None)
+    encoding = attr.ib(default='json')
+    id = attr.ib(type=str)
+    sign = attr.ib(type=str, default=None)
+    tunnel_id = attr.ib(type=str, default=None)
+    callback = attr.ib(default=None)
+
+    acceptable_types = ['message', 'request', 'shout']
+    acceptable_encodings = ['json']
+
+    public_key = None
+
+    @id.default
+    def _id_gen(self):
+        return str(uuid.uuid4())
+
+    @classmethod
+    def from_bytes(cls, wrapper: bytes):
+        try:
+            wrapper = json.loads(wrapper.decode('utf-8'))
+        except (ValueError, UnicodeDecodeError):
+            raise BadRequest
+        message_type = wrapper.get('type')
+        if not message_type or message_type not in cls.acceptable_types:
+            raise BadRequest('Wrong message type')
+        sender = wrapper.get('sender')
+        if message_type != 'request' and not sender or not\
+                isinstance(sender, str):
+            raise BadRequest('Sender name required')
+
+        message = wrapper.get('message')
+        if not message:
+            raise BadRequest('Message required')
+        encoding = wrapper.get('encoding')
+        if encoding not in cls.acceptable_encodings:
+            raise BadRequest('Bad encoding')
+        uid = wrapper.get('id')
+        if not uid or not isinstance(uid, str):
+            raise BadRequest('Id required')
+        signature = wrapper.get('sign')
+        if message_type != 'request' and not signature or not \
+                isinstance(signature, str):
+            raise BadRequest('Sign required')
+        tunnel_id = wrapper.get('tunnel_id')
+        callback = wrapper.get('callback')
+        if tunnel_id and not isinstance(tunnel_id, str) or \
+                callback and type(callback) not in [str, int]:
+            raise BadRequest('Are u idiot?')
+
+        wrapper = cls(
+            message_type,
+            sender,
+            encoding,
+            uid,
+            signature,
+            tunnel_id,
+            callback
+        )
+        return wrapper
+
+    def encrypt(self, public_key):
+        return encrypt(self.message.to_json(), public_key)
+
+    def decrypt(self, private_key):
+        self.message = json.loads(decrypt(self.message.to_json(), private_key))
+
+    def verify(self):
+        if self.type == 'request':
+            return
+        if not verify(self.message.to_json(), self.sign, self.public_key):
+            raise VerificationFailed('Bad sign')
+
+    def dump(self, private_key=None, public_key=None):
+        assert self.type != 'request' or not self.sender
+        dump = json.dumps(attr.asdict(self))
+        self.public_key = public_key if public_key else self.public_key
+        if private_key and self.type != 'request':
+            self.sign = sign(dump, private_key)
+            dump['sign'] = sign
+            dump['message'] = self.encrypt(self.public_key)
+        return dump
 
 
 class Peer(Base):
@@ -142,9 +180,29 @@ class Peer(Base):
     def copy(self):
         return self
 
-    def send(self, message: Message):
-        log.debug(f'{self}: Send {message}')
-        self.proto._send(message, self.addr)
+    def send(self, wrapper: MessageWrapper):
+        """
+        Send prepared Message with wrapper to peer.
+
+        WARNING! Don't try to send Message without wrapper.
+        Use Peer.request
+        """
+        if isinstance(wrapper, Message):
+            log.warning('`Peer.send` method for sending requests is deprecated! '
+                        'Use `Peer.request` instead')
+            return self.request(wrapper)
+        self.proto._send(wrapper, self.addr)
+
+    def request(self, message: Message):
+        """
+        Send request to Peer.
+
+        WARNING! Requests are unsafe.
+        Don't try to send private information via Peer.request
+        """
+        log.debug(f'{self}: Send request {message}')
+        wrapper = MessageWrapper(message, 'request')
+        self.proto._send(wrapper, self.addr)
 
     def dump(self):
         return {

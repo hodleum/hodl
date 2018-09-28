@@ -1,14 +1,26 @@
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
-import Crypto.Hash.MD5 as MD5
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA256 as SHA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Random import get_random_bytes
 import base64
 
 
 def h(s):
     """Hash"""
-    return ''.join([str(e) for e in list(MD5.new(bytes(str(s), 'utf-8')).digest())])
+    return ''.join([str(e) for e in list(SHA.new(bytes(str(s), 'utf-8')).digest())])
+
+
+def hex_hash(s):
+    return SHA.new(s.encode('utf-8')).hexdigest()
+
+
+def get_random(n=8):
+    """
+    Random bytes in base64
+    :return: str
+    """
+    return base64.encodebytes(get_random_bytes(n)).decode()
 
 
 def gen_keys():
@@ -22,25 +34,8 @@ def gen_keys():
 
 
 def sign_block(plaintext, private_key):
-    """
-    Creates signature
-
-    :param plaintext: text
-    :type plaintext: str
-
-    :param private_key: RSA private key
-    :type private_key: str
-
-    :return: str
-    """
+    pass
     # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign
-    priv_key = RSA.importKey(private_key)
-    plaintext = plaintext.encode('utf-8')
-    # creation of signature
-    myhash = SHA.new(plaintext)
-    signature = PKCS1_v1_5.new(priv_key)
-    signature = signature.sign(myhash)
-    return base64.encodebytes(signature).decode()
 
 
 def verify_block(s, plaintext, public_key, bch):
@@ -63,13 +58,30 @@ def verify_block(s, plaintext, public_key, bch):
     """
     if public_key[-1] == ']':
         return bch.verify_sc_sign(public_key, s)
+    return verify(plaintext, s, public_key)
+
+
+def sign(plaintext: str, private_key: str) -> str:
+    priv_key = RSA.importKey(private_key)
+    plaintext = plaintext.encode('utf-8')
+    # creation of signature
+    myhash = SHA.new(plaintext)
+    signature = PKCS1_v1_5.new(priv_key)
+    signature = signature.sign(myhash)
+    return base64.encodebytes(signature).decode()
+
+
+def verify(plaintext: str, s: str, public_key: str) -> bool:
     pub_key = RSA.importKey(public_key)
     plaintext = plaintext.encode('utf-8')
     # decryption signature
     myhash = SHA.new(plaintext)
     signature = PKCS1_v1_5.new(pub_key)
-    test = signature.verify(myhash, base64.decodebytes(s.encode()))
-    return test
+    try:
+        signature.verify(myhash, base64.decodebytes(s.encode()))
+        return True
+    except ValueError:
+        return False
 
 
 def encrypt(plaintext: str, pub_key: str) -> str:

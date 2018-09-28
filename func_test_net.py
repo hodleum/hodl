@@ -1,1 +1,3 @@
-from tests import func_test_net
+from net2.protocol import *
+
+server.run()

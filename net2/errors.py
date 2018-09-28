@@ -1,12 +1,12 @@
 
 
 class BaseError(Exception):
-    message = 'Base error'
+    message = 'Unhandled error'
     code = '000'
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.message += ': ' + args[0]
+        self.message += ': ' + str(args[0])
 
 
 class BadRequest(BaseError):
@@ -17,3 +17,18 @@ class BadRequest(BaseError):
 class UnhandledRequest(BaseError):
     message = 'Unhandled Request'
     code = '002'
+
+
+class CryptogrError(BaseError):
+    message = 'Error in cryptography'
+    code = '100'
+
+
+class VerificationFailed(CryptogrError):
+    message = 'Message verification failed'
+    code = '101'
+
+
+class DecryptionFailed(CryptogrError):
+    message = 'Decryption failed'
+    code = '102'

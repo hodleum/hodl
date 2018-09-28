@@ -1,7 +1,23 @@
+"""
+
+@server.handle('echo')
+def echo(msg):
+    user.send(Message('echo_response', {'msg': msg})
+
+
+@server.handle('echo', 'request')
+def echo_request:
+    peer.request(Message('echo_response', {'msg': msg})
+
+
+"""
+
+
 from twisted.internet.protocol import DatagramProtocol
 from collections import defaultdict
 from .models import *
 from werkzeug.local import Local
+from cryptogr import gen_keys
 from .config import *
 from .errors import *
 import logging
@@ -11,9 +27,9 @@ import random
 log = logging.getLogger(__name__)
 
 local = Local()
-peer = local['peer']
-protocol = local['protocol']
-user = local['user']
+peer = local('peer')
+protocol = local('protocol')
+user = local('user')
 
 
 def error_cache(func):
@@ -31,28 +47,45 @@ class PeerProtocol(DatagramProtocol):
     def __init__(self, server, r):
         self.reactor = r
         self.server = server
+        self.temp = TempDict()  # TODO: Temp set
+
+        try:
+            with open('net2/keys') as f:
+                self.public, self.private = json.loads(f.read())
+        except FileNotFoundError:
+            self._gen_keys()
+
+    def _gen_keys(self):
+        self.private, self.public = gen_keys()
+        with open('net2/keys', 'w') as f:
+            f.write(json.dumps([self.public, self.private]))
 
     def copy(self):
         return self
 
     @error_cache
     def datagramReceived(self, datagram: bytes, addr: tuple):
-        # TODO: decryption
-        message = Message.from_bytes(datagram)
-        for func in self.server.handlers[message.type]:
+        wrapper = MessageWrapper.from_bytes(datagram)
+
+        if wrapper.id in self.temp:
+            return
+        else:
+            self.temp[wrapper.id] = wrapper
+            self._send_all(wrapper)
+
+        for func in self.server.handlers[wrapper.type]:
             if func:
-                func(message.data, self, addr, message.addressee)
-        if not self.server.handlers[message.type]:
+                func(wrapper, self, addr)
+        if not self.server.handlers[wrapper.type]:
             raise UnhandledRequest
 
-    def _send(self, data: Message, addr: tuple):
+    def _send(self, data: MessageWrapper, addr: tuple):
         """
         Low level send
         """
         if not data:
             return
-        # TODO: encryption
-        self.transport.write(data.dump(), addr)
+        self.transport.write(data.dump(self.private), addr)
 
     def send(self, message: Message, name: str):
         """
@@ -75,12 +108,14 @@ class PeerProtocol(DatagramProtocol):
 
     def send_all(self, message: Message):
         for _peer in self.peers:
-            _peer.send(message)
+            _peer.request(message)
+
+    def _send_all(self, wrapper: MessageWrapper):
+        for _peer in self.peers:
+            _peer.send(wrapper)
 
     def random_send(self, message: Message):
-        random.choice(self.peers).send(message)
-
-    # TODO: refresh_connections(self):
+        random.choice(self.peers).request(message)
 
 
 class Server:
@@ -104,19 +139,27 @@ class Server:
             event = list(event)
 
         def decorator(func):
-            # noinspection PyUnresolvedReferences,PyDunderSlots
-            def wrapper(message: Message, proto: PeerProtocol, addr: tuple, name=None):
+            # noinspection PyDunderSlots,PyUnresolvedReferences
+            def wrapper(message_wrapper: MessageWrapper, proto: PeerProtocol, addr: tuple):
                 local.protocol = proto
                 _peer = session.query(Peer).filter_by(addr=addr)
                 if not _peer:
                     _peer = Peer(protocol, addr=addr)
-                    _peer.send(Message('request', request='share_peers'))
+                    _peer.request(Message('share_peers'))
                 local.peer = _peer
 
                 local.user = None
-                if name:
-                    local.user = session.query(User).filter_by(name=name).first()
-                return func(message)
+                if message_wrapper.sender:
+                    local.user = session.query(User).filter_by(name=message_wrapper.sender).first()
+                    if not local.user:
+                        return
+
+                    try:
+                        message_wrapper.decrypt(proto.private)
+                    except ValueError:
+                        return
+
+                return func(**message_wrapper.message.data)
             for e in event:
                 if _type == 'request':
                     self.request_handlers[e].append(wrapper)

@@ -5,6 +5,9 @@ import random
 
 
 log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
+                    format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
+                           '  %(message)s'.format('<Bob>'))
 
 server = Server(PORT)
 
@@ -12,9 +15,8 @@ server = Server(PORT)
 @server.handle('share_peers', 'request')
 def share_peers():
     peers = [_peer.dump() for _peer in session.query(Peer).all()]
-    peer.send(Message(
-        'request',
-        request='peers',
+    peer.request(Message(
+        name='peers',
         data={
             'peers': peers
         }
@@ -24,9 +26,8 @@ def share_peers():
 @server.handle('share_users', 'request')
 def share_users():
     users = [_user.dump() for _user in session.query(User).all()]
-    peer.send(Message(
-        'request',
-        request='users',
+    peer.request(Message(
+        name='users',
         data={
             'users': users,
         }
@@ -42,8 +43,7 @@ def record_new_user(key, name):
             session.add(new_user)
             session.commit()
         protocol.send_all(Message(
-            'request',
-            request='new_user',
+            name='new_user',
             data=new_user.dump()
         ))
 
@@ -72,19 +72,15 @@ def record_users(users):
 def forward(message):
     if random.randint(0, 3) == random.randint(0, 3):
         protocol.send_all(Message(
-            message_type='request',
-            request='message',
+            name='message',
             data=message
         ))
     else:
         protocol.random_send(Message(
-            message_type='request',
-            request='forward',
+            name='forward',
             data=message
         ))
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
-                        format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
-                               '  %(message)s'.format('<Bob>'))
+    pass
