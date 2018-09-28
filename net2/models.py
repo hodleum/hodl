@@ -171,7 +171,6 @@ class Peer(Base):
     __tablename__ = 'peers'
 
     addr = Column(String, primary_key=True)
-    pub_key = Column(String)
 
     def __init__(self, proto, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -206,7 +205,6 @@ class Peer(Base):
 
     def dump(self):
         return {
-            'key': self.pub_key,
             'address': self.addr
         }
 
