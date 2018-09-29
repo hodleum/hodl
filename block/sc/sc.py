@@ -32,7 +32,7 @@ class SmartContract:
     their answers.
     Calculating miners also compare their answers.
     """
-    def __init__(self, code, author, index, memsize=sc_base_mem, codesize=sc_base_code_size):
+    def __init__(self, code, author, index, memsize=sc_base_mem, codesize=sc_base_code_size, langr="js"):
         self.code = code
         self.author = author
         self.index = index
@@ -49,6 +49,7 @@ class SmartContract:
         self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
         self.h = self.sign_str()
+        self.langr = langr
 
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
