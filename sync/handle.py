@@ -40,6 +40,7 @@ class SyncHandler:
     def on_message(self, msg):
         answer = dict()
         self.msgs.append(msg)
+        # todo: getting object from other peers
         # todo: realize algorythm above
         # todo: if synchronization complete, delete history
         return answer

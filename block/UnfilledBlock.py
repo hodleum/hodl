@@ -1,5 +1,6 @@
 import json
 import cryptogr as cg
+import json
 from block.Transaction import *
 
 
@@ -32,11 +33,13 @@ class UnfilledBlock:
 
     def __str__(self):
         s = ''
+        # todo
         return s
 
     @classmethod
     def from_json(cls, s):
         self = cls()
+        # todo
         return self
 
     def calc_pow_hash(self):
@@ -47,18 +50,35 @@ class UnfilledBlock:
         return cg.h(str(h))
 
     def is_valid(self):
+        # todo
         return True
 
-    def get_tnx(self, ind):
+    def get_tnx(self, ind, sync_get):
+        """
+        Get transaction by index
+        :param ind: index of transaction to get
+        :type ind: list
+        :param sync_get: function than gets object (block, transaction, smart contract) from network
+        :type sync_get: function
+        :return: Transaction
+        """
         for tnx in self.txs:
             if tnx.index[1] == ind:
                 return tnx
         else:
-            pass   # todo
+            return sync_get(json.dumps([{'type': 'tnx', 'index': ind}]))
 
-    def get_sc(self, ind):
+    def get_sc(self, ind, sync_get):
+        """
+        Get smart contract by index
+        :param ind: index of smart contract to get
+        :type ind: list
+        :param sync_get: function than gets object (block, transaction, smart contract) from network
+        :type sync_get: function
+        :return: SmartContract
+        """
         for sc in self.contracts:
             if sc.index[1] == ind:
                 return sc
         else:
-            pass   # todo
+            return sync_get(json.dumps([{'type': 'sc', 'index': ind}]))

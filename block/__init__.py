@@ -26,8 +26,8 @@ from block.UnfilledBlock import UnfilledBlock
 
 
 # todo: blockchain freeze before new block
-# todo: block award needs to be a proportion of total amount of money at some point
-# todo: transaction and smart contract limit, remove smart contract's comission
+# todo: transaction and smart contract limit or hash mining, remove smart contract's comission
+# todo: smart contracts and SC messages connected to transaction
 
 
 class Blockchain:
@@ -193,17 +193,20 @@ class Blockchain:
         self.c.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
         self.conn.commit()
 
-    def get_block(self, i):
+    def get_block(self, i, sync_get):
         """
         Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
         then get full block from other peer)
         :param i: block's index
+        :type i: int
+        :param sync_get: function than gets object (block, transaction, smart contract) from network
+        :type sync_get: function
         :return: Block
         """
         if not self[i].is_unfilled:
             return self[i]
         else:
-            pass   # todo: send request to network
+            return sync_get(json.dumps([{'type': 'block', 'index': i}]))
 
     def add_miner(self, miner):
         """add proof-of-work miner
@@ -256,6 +259,25 @@ class Blockchain:
                 if tnx.author.count(';') == 3 and tnx.author.split(';')[1] == nick:
                     o = tnx.author.split(';')[1]
         return o
+
+    def has_traffic_rest(self, user, time_to, price, mined_hash=None):
+        """
+        HODL has no commission, so, to avoid spam, user has limit of actions in proportion to his balance.
+        Next actions must be mined by this user. (todo)
+        :param user: author of action to confirm
+        :type user: str
+        :param time_to: time of action
+        :type time_to: float
+        :param price: price of the action
+        :type price: float
+        :param mined_hash: mined hash for mined actions
+        :type mined_hash: int
+        :return: validness of the action
+        :rtype: bool
+        """
+        m = self.money(user, time_to)
+        # todo: count all action prices
+        return True
 
     def close(self):
         """Close connection to database"""

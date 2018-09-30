@@ -92,7 +92,7 @@ def sign_tnx(self, sign, privkey, t):
         self.sign = cg.sign(self.hash, privkey)
     else:
         self.sign = sign
-    return self.sign  # TODO: timestamp
+    return self.sign
 
 
 class Transaction:
