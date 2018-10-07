@@ -33,28 +33,6 @@ def gen_keys():
     return privatekey.exportKey().decode(), publickey.exportKey().decode()
 
 
-def sign(plaintext, private_key):
-    """
-    Creates signature
-
-    :param plaintext: text
-    :type plaintext: str
-
-    :param private_key: RSA private key
-    :type private_key: str
-
-    :return: str
-    """
-    # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign
-    priv_key = RSA.importKey(private_key)
-    plaintext = plaintext.encode('utf-8')
-    # creation of signature
-    myhash = SHA.new(plaintext)
-    signature = PKCS1_v1_5.new(priv_key)
-    signature = signature.sign(myhash)
-    return base64.encodebytes(signature).decode()
-
-
 def sign_block(plaintext, private_key):
     pass
     # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign

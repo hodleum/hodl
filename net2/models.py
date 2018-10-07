@@ -94,8 +94,6 @@ class MessageWrapper:
     acceptable_types = ['message', 'request', 'shout']
     acceptable_encodings = ['json']
 
-    public_key = None
-
     @id.default
     def _id_gen(self):
         return str(uuid.uuid4())
@@ -150,21 +148,23 @@ class MessageWrapper:
     def decrypt(self, private_key):
         self.message = json.loads(decrypt(self.message.to_json(), private_key))
 
-    def verify(self):
+    def create_sign(self, private_key):
+        self.sign = sign(self.message.to_json(), private_key)
+
+    def verify(self, public_key):
         if self.type == 'request':
             return
-        if not verify(self.message.to_json(), self.sign, self.public_key):
+        if not verify(self.message.to_json(), self.sign, public_key):
             raise VerificationFailed('Bad sign')
 
-    def dump(self, private_key=None, public_key=None):
+    def prepare(self, private_key=None, public_key=None):
         assert self.type != 'request' or not self.sender
-        dump = json.dumps(attr.asdict(self))
-        self.public_key = public_key if public_key else self.public_key
         if private_key and self.type != 'request':
-            self.sign = sign(dump, private_key)
-            dump['sign'] = sign
-            dump['message'] = self.encrypt(self.public_key)
-        return dump
+            self.sign = sign(self.message.to_json(), private_key)
+            self.message: Message = self.encrypt(public_key)
+
+    def to_json(self):
+        json.dumps(attr.asdict(self))
 
 
 class Peer(Base):
@@ -197,7 +197,7 @@ class Peer(Base):
         Send request to Peer.
 
         WARNING! Requests are unsafe.
-        Don't try to send private information via Peer.request
+        Don't try to send private_key information via Peer.request
         """
         log.debug(f'{self}: Send request {message}')
         wrapper = MessageWrapper(message, 'request')
@@ -215,7 +215,7 @@ class Peer(Base):
 class User(Base):
     __tablename__ = 'users'
 
-    pub_key = Column(String)
+    public_key = Column(String)
     name = Column(String, primary_key=True)
 
     def __init__(self, proto, *args, **kwargs):
@@ -228,7 +228,7 @@ class User(Base):
 
     def dump(self):
         return {
-            'key': self.pub_key,
+            'key': self.public_key,
             'name': self.name
         }
 

@@ -12,7 +12,6 @@ def echo_request:
 
 """
 
-
 from twisted.internet.protocol import DatagramProtocol
 from collections import defaultdict
 from .models import *
@@ -22,7 +21,6 @@ from .config import *
 from .errors import *
 import logging
 import random
-
 
 log = logging.getLogger(__name__)
 
@@ -46,18 +44,20 @@ class PeerProtocol(DatagramProtocol):
     def __init__(self, _server, r):
         self.reactor = r
         self.server = _server
+
+        self.name = 'name'  # TODO: name
         self.temp = TempDict()  # TODO: Temp set
 
         try:
             with open('net2/keys') as f:
-                self.public, self.private = json.loads(f.read())
+                self.public, self.private_key = json.loads(f.read())
         except FileNotFoundError:
             self._gen_keys()
 
     def _gen_keys(self):
-        self.private, self.public = gen_keys()
+        self.private_key, self.public = gen_keys()
         with open('net2/keys', 'w') as f:
-            f.write(json.dumps([self.public, self.private]))
+            f.write(json.dumps([self.public, self.private_key]))
 
     def copy(self):
         return self
@@ -71,6 +71,12 @@ class PeerProtocol(DatagramProtocol):
     @error_cache
     def datagramReceived(self, datagram: bytes, addr: tuple):
         wrapper = MessageWrapper.from_bytes(datagram)
+
+        if wrapper.tunnel_id:
+            if random.randint(0, 3) != random.randint(0, 3):  # TODO: safe random func
+                return self.random_send(wrapper)  # TODO: Check exists tunnels
+            wrapper.type = 'message'
+            wrapper.tunnel_id = None
 
         if wrapper.id in self.temp:
             return
@@ -90,18 +96,35 @@ class PeerProtocol(DatagramProtocol):
         """
         if not data:
             return
-        self.transport.write(data.dump(self.private), addr)
+        self.transport.write(data.to_json().encode('utf-8'), addr)
 
-    def send(self, message: Message, name: str):
+    def send(self, message: Message, name: str, callback=None):  # TODO: callback handler
         """
         High level send
         """
-        pass
+        addressee: User = session.query(User).filter_by(name=name).first()
+        wrapper = MessageWrapper(
+            message,
+            type='message',
+            sender=self.name,
+            tunnel_id=str(uuid.uuid4()),  # TODO: check exists tunnels
+        )
+        wrapper.callback = callback
+        wrapper.prepare(self.private_key, addressee.public_key)
+        self.random_send(wrapper)
 
-    def shout(self, message: Message):
+    def shout(self, message: Message, callback=None):
         """
         High level send_all
         """
+        wrapper = MessageWrapper(
+            message,
+            type='shout',
+            sender=self.name,
+            tunnel_id=str(uuid.uuid4())
+        )
+        wrapper.callback = callback
+        self.random_send(wrapper)
 
     @property
     def peers(self):
@@ -119,8 +142,8 @@ class PeerProtocol(DatagramProtocol):
         for _peer in self.peers:
             _peer.send(wrapper)
 
-    def random_send(self, message: Message):
-        random.choice(self.peers).request(message)
+    def random_send(self, wrapper: MessageWrapper):
+        random.choice(self.peers).send(wrapper)
 
 
 class Server:
@@ -164,6 +187,7 @@ class Server:
                         return
 
                 return func(**message_wrapper.message.data)
+
             for e in event:
                 if _type == 'request':
                     self.request_handlers[e].append(wrapper)
