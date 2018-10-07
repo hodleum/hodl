@@ -4,7 +4,7 @@ import logging as log
 import cryptogr as cg
 import sync
 import block
-import mining
+from block import mining
 
 bch = block.Blockchain()
 wallets = []

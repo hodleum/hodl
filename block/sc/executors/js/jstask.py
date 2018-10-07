@@ -1,14 +1,13 @@
 import json
 import time
 from threading import Thread
-from block.sc.executors.jstools import CTX
+from block.sc.executors.js.jstools import CTX
 
 
 BENCHMARK = None
 
 
 def benchmark():
-    global BENCHMARK
     ctx = CTX()
     ts = time.time()
     ctx.run_script('for (var i =0;i<200000000;i++){Math.pow(5,1000)}')

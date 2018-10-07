@@ -3,7 +3,7 @@ import logging as log
 import json
 import cryptogr as cg
 import block
-import mining
+from block import mining
 import wallet
 
 

@@ -1,4 +1,4 @@
-import mining
+from block import mining
 import block
 import cryptogr as cg
 import unittest

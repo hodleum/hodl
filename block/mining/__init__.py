@@ -30,11 +30,18 @@ def pow_mining(bch, b):
     Proof-of-work new block processing
     """
     lb = bch[-1]
-    miners = lb.miners
+    tasks = lb.sc_tasks
+    miners = {}
+    for task in tasks:
+        aw = task.awards()
+        for miner in aw:
+            miners[miner] = miners.get(miner, 0) + aw[miner]
     # add transaction with award sending
     txn = block.Transaction()
-    outs = ['miner']   # todo
-    outns = [pow_total(bch)]
+    total = pow_total(bch)
+    reward_sum = sum(miners.values())
+    outns = list(map(lambda x: x * total / reward_sum,miners.values()))
+    outs = list(miners.keys())
     txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=lb.timestamp + block_time)
     b.append(txn)
     b.update()
@@ -42,11 +49,21 @@ def pow_mining(bch, b):
 
 
 def pow_validate(bch, num):
-    miners = bch[num - 1].miners
+    lb = bch[num - 1]
+    tasks = lb.sc_tasks
+    miners = {}
+    for task in tasks:
+        aw = task.awards()
+        for miner in aw:
+            miners[miner] = miners.get(miner, 0) + aw[miner]
+    # add transaction with award sending
     txn = block.Transaction()
-    outs = ['miner']   # todo
-    outns = [pow_total(bch)]
-    txn.gen('mining', ['mining'], outs, outns, [len(bch), 0], sign='mining', ts=bch[num - 1].timestamp + block_time)
+    total = pow_total([bch[i] for i in range(num)])
+    reward_sum = sum(miners.values())
+    outns = list(map(lambda x: x * total / reward_sum,miners.values()))
+    outs = list(miners.keys())
+    txn = block.Transaction()
+    txn.gen('mining', ['mining'], outs, outns, [num, 0], sign='mining', ts=bch[num - 1].timestamp + block_time)
     return txn.hash == bch[num].txs[0].hash
 
 

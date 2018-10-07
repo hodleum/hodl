@@ -1,7 +1,7 @@
 import json
 import mmh3
 from block.constants import block_time, freeze
-from mining.pool import Miners
+from block.mining.pool import Miners
 
 
 class BlockFixer:

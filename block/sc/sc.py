@@ -3,8 +3,8 @@ import time
 import logging as log
 import cryptogr as cg
 from block.sc.memory import SCMemory
-from block.sc.executors.JSTask import js
-from block.sc.executors.jstools import CTX
+from block.sc.executors.js.jstask import js
+from block.sc.executors.js.jstools import CTX
 from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
 

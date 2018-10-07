@@ -4,9 +4,9 @@ import logging as log
 from block.Transaction import Transaction
 from block.sc import SmartContract
 import cryptogr as cg
-import mining
+from block import mining
 from block.Fixer import BlockFixer
-from mining.pool import Miners
+from block.mining.pool import Miners
 from block.constants import block_time
 
 
@@ -38,7 +38,7 @@ class Block:
         self.miners = Miners()
         self.fixer = None
         self.h = None
-
+        self.sc_tasks = []   # completed tasks add here
         self.update()
 
     def __str__(self):
