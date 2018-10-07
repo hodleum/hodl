@@ -1,5 +1,21 @@
 import json
+import time
+from threading import Thread
 from block.sc.executors.jstools import CTX
+
+
+BENCHMARK = None
+
+
+def benchmark():
+    global BENCHMARK
+    ctx = CTX()
+    ts = time.time()
+    ctx.run_script('for (var i =0;i<200000000;i++){Math.pow(5,1000)}')
+    BENCHMARK = time.time() - ts
+
+
+Thread(target=benchmark).start()
 
 
 class JSTask:
@@ -8,12 +24,16 @@ class JSTask:
         # todo: execution time/benchmark time
         self.done = False
         self.ans = None
-        self.difficulty = None
+        self.difficulty = 1
         self.context = None
 
     def run(self, ctx):
         ctx = CTX.from_json(ctx)
+        while not BENCHMARK:
+            time.sleep(0.1)
+        t1 = time.time()
         ctx.run_script(self.code)
+        self.difficulty = (time.time() - t1) / BENCHMARK
         self.ans = ctx.run_script('__answer__')
         ctx.run_script('__answer__=""')
         self.context = str(ctx)

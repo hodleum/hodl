@@ -37,7 +37,7 @@ class Blockchain:
         if m != 'ro':
             self.conn = sqlite3.connect('db/' + filename)
         else:
-            self.conn = sqlite3.connect(filename + '?mode=ro', uri=True)
+            self.conn = sqlite3.connect('db/'+filename + '?mode=ro', uri=True)
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
