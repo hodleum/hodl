@@ -1,6 +1,7 @@
 import json
 import time
 from threading import Thread
+from cryptogr import h
 from block.sc.executors.js.jstools import CTX
 
 
@@ -50,6 +51,9 @@ class JSTask:
         self.difficulty = s[3]
         self.context = s[4]
 
+    def result_hash(self):
+        return h(json.dumps([str(self.context), str(self.ans)]))
+
 
 def code_to_tasks(code):
     tasks = []
@@ -73,4 +77,4 @@ def net_task(author, msg):
     return JSTask('''__net__("{}")'''.format(json.dumps([author, msg])))
 
 
-js = [code_to_tasks, msg_task, net_task]
+js = [JSTask, code_to_tasks, msg_task, net_task]
