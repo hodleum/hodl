@@ -17,14 +17,17 @@ class TaskMiner:
 
 
 class Task:
-    def __init__(self, task_class, miners=tuple()):
+    def __init__(self, parents, task_class, miners=tuple()):
         """
         init
+        :param parents: sc-parent index
+        :type parents: list
         :param task_class: executor type (str, 'js' or 'wasm')
         :type task_class: str
         :param miners
         :type miners: list
         """
+        self.parent = parents
         self.miners = list(miners)
         self.task_class = task_class
 
@@ -42,10 +45,10 @@ class Task:
         return awards
 
     def __str__(self):
-        return json.dumps(([str(miner) for miner in self.miners], self.task_class))
+        return json.dumps((self.parent, [str(miner) for miner in self.miners], self.task_class))
 
     @classmethod
     def from_json(cls, s):
         s = json.loads(s)
-        miners = [TaskMiner.from_json(st) for st in s[0]]
-        return cls(s[1], miners)
+        miners = [TaskMiner.from_json(st) for st in s[1]]
+        return cls(s[0], s[2], miners)
