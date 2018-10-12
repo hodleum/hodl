@@ -21,7 +21,6 @@ Thread(target=benchmark).start()
 class JSTask:
     def __init__(self, code):
         self.code = code
-        # todo: execution time/benchmark time
         self.done = False
         self.ans = None
         self.difficulty = 1
