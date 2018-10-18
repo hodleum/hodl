@@ -21,6 +21,7 @@ class TaskMiner:
         t.run()
         self.difficulty = t.difficulty
         self.result_hash = t.result_hash()
+        return t.result_dump()
 
     @classmethod
     def from_json(cls, s):
@@ -61,6 +62,17 @@ class Task:
             if miner.result_hash == result:
                 awards[miner.address] = miner.difficulty
         return awards
+
+    def find_miner(self, miner):
+        for m in self.miners:
+            if m.address == miner:
+                return m
+
+    def set_miner(self, address, miner):
+        for i, m in enumerate(self.miners):
+            if m.address == address:
+                self.miners[i] = miner
+                return
 
     def __str__(self):
         """

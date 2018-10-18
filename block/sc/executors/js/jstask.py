@@ -53,6 +53,9 @@ class JSTask:
     def result_hash(self):
         return h(json.dumps([str(self.context), str(self.ans)]))
 
+    def result_dump(self):
+        return json.dumps([str(self.context), str(self.ans)])
+
 
 def code_to_tasks(code):
     tasks = []
