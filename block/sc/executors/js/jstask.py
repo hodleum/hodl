@@ -12,6 +12,7 @@ def benchmark():
     ctx = CTX()
     ts = time.time()
     ctx.run_script('for (var i =0;i<200000000;i++){Math.pow(5,1000)}')
+    global BENCHMARK
     BENCHMARK = time.time() - ts
 
 
@@ -24,12 +25,15 @@ class JSTask:
         self.done = False
         self.ans = None
         self.difficulty = 1
-        self.context = None
+        self.context = str(CTX())
 
-    def run(self, ctx):
-        ctx = CTX.from_json(ctx)
-        while not BENCHMARK:
-            time.sleep(0.1)
+    def run(self, ctx=None):
+        if not ctx:
+            ctx = CTX.from_json(self.context)
+        if not BENCHMARK:
+            print('benchmark not finished')
+            while not BENCHMARK:
+                time.sleep(0.1)
         t1 = time.time()
         ctx.run_script(self.code)
         self.difficulty = (time.time() - t1) / BENCHMARK
