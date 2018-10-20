@@ -53,6 +53,7 @@ class JSTask:
         self.ans = s[2]
         self.difficulty = s[3]
         self.context = s[4]
+        return self
 
     def result_hash(self):
         return h(json.dumps([str(self.context), str(self.ans)]))
