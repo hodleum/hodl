@@ -164,10 +164,10 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author, author_priv, memsize):
+    def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):
         """creates new smart contract and adds it to the chain"""
         b = self[-1]
-        sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize)
+        sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize, langr=lang)
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b

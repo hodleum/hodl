@@ -23,7 +23,12 @@ class Wallet:
         self.privkey, self.pubkey = keys
 
     def new_transaction(self, outs, outns, nick=''):
-        """Performs tnx"""
+        """
+        Performs tnx
+        :param outs: wallets to send money to
+        :param outns: amounts of money to send to outs
+        :param nick: set nick
+        """
         out = 0
         for i in range(len(outns)):
             outns[i] = round(outns[i], 10)
@@ -56,6 +61,16 @@ class Wallet:
         bch.new_transaction(author, froms, outs, outns, privkey=self.privkey)
         log.info('wallet.new_transaction: outns: {}, len(outs): {}, index: {}'.format(str(outns), str(len(outs)),
                                                                                       str(bch[-1].txs[-1].index)))
+
+    def new_sc(self, code, memsize=10000000, lang="js"):
+        """
+        Create smart contract
+        :param code: SC's code
+        :param memsize: SC's memory size
+        """
+        log.info('wallet.new_sc')
+        bch.new_sc(code, self.pubkey, self.privkey, memsize, lang)
+        log.info('wallet.new_sc done: sc created')
 
     def my_money(self):
         return bch.money(self.pubkey)

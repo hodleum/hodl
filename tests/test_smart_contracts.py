@@ -1,6 +1,7 @@
 import block
 from block.sc.executors.js.jstask import JSTask
 from block.sc.executors.js.jstools import CTX
+from block.sc import SmartContract
 import unittest
 import cryptogr as cg
 import json
@@ -12,7 +13,13 @@ your_pub_key = cg.gen_keys()[1]
 
 
 class TestSmartContracts(unittest.TestCase):
-    pass   # todo
+    def test_creation(self):
+        sc = SmartContract('__answer__="hello, world"', my_keys[1], [1, 1])
+        sc.sign_sc(my_keys[0])
+
+    def test_str(self):
+        sc = SmartContract('__answer__="hello, world"', my_keys[1], [1, 1])
+        self.assertEqual(str(SmartContract.from_json(str(sc))), str(sc ))
 
 
 class TestTaskExecutors(unittest.TestCase):

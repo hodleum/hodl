@@ -32,7 +32,7 @@ class SmartContract:
     their answers.
     Calculating miners also compare their answers.
     """
-    def __init__(self, code, author, index, memsize=sc_base_mem, codesize=sc_base_code_size, langr="js"):
+    def __init__(self, code, author, index, memsize=sc_base_mem, langr="js"):
         self.code = code
         self.author = author
         self.index = index
@@ -40,7 +40,6 @@ class SmartContract:
         self.msgs = []  # [[author, sign, msg:str, ans=None]]
         self.timestamp = time.time()
         self.calculators = []
-        self.codesize = codesize
         self.signs = []
         self.membs = []
         self.tasks = js[0](code)
@@ -70,8 +69,7 @@ class SmartContract:
         Encode contract to str
         :return: str
         """
-        return json.dumps((self.code, self.author, self.index, self.msgs,
-                           self.codesize, self.timestamp, self.sign, str(self.memory)))
+        return json.dumps((self.code, self.author, self.index, self.msgs, self.timestamp, self.sign, str(self.memory)))
 
     @classmethod
     def from_json(cls, s):
@@ -81,8 +79,8 @@ class SmartContract:
         :return: SC
         """
         self = cls(*json.loads(s)[0:3])
-        self.msgs, self.codesize, self.timestamp, self.sign = json.loads(s)[3:7]
-        self.memory = SCMemory.from_json(json.loads(s)[7])
+        self.msgs, self.timestamp, self.sign = json.loads(s)[3:6]
+        self.memory = SCMemory.from_json(json.loads(s)[6])
         return self
 
     def __eq__(self, other):
@@ -101,14 +99,11 @@ class SmartContract:
         """
         # todo: sign check
         pr = sc_price
-        if self.memory.size > sc_base_mem or self.codesize > sc_base_code_size:
+        if self.memory.size > sc_base_mem:
             mp = ((self.memory.size - sc_base_mem) * sc_memprice)
             if mp < 0:
                 mp = 0
-            cp = ((self.codesize - sc_base_code_size) * sc_code_price)
-            if cp < 0:
-                cp = 0
-            pr += mp + cp
+            pr += mp
         pr = round(pr, 10)
         payed = bch.money('sc' + str(list(self.index)))
         if payed < pr:
@@ -150,18 +145,6 @@ class SmartContract:
         # Calculators
         # todo: calculators awards
 
-    def handle_messages(self):
-        """
-        Handle all messages(commands) sent to SC
-        :return:
-        """
-        for i in range(len(self.msgs)):
-            if not self.msgs[i][-1]:
-                if cg.verify_sign(self.msgs[i][2], json.dumps([self.msgs[i][0], self.msgs[i][1]]),
-                                  self.msgs[i][1][0]):
-                    self.execute(self.msgs[i][0], self.msgs[i][1])
-                    self.msgs[i][-1] = True
-
     def distribute_tasks(self):
         """
         Distribute tasks between miners
@@ -177,14 +160,13 @@ class SmartContract:
                     break
 
     def sign_str(self):
-        return json.dumps((self.code, str(self.author), self.index, self.memory.size, self.codesize, self.timestamp))
+        return json.dumps((self.code, str(self.author), self.index, self.memory.size, self.timestamp))
 
     def verify_sign(self, sign):
         return sign in self.signs
 
     def update(self, bch):
         # todo: delete not valid tasks
-
         # todo: distribute miners if needed
         self.memory.distribute_peers()
         self.distribute_tasks()

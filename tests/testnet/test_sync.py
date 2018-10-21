@@ -43,17 +43,17 @@ def main():
     # todo: start sync thread
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
-        Alice.main(wallet)
+        Alice.main(wallet, keys)
     elif name == 'Bob':
-        Bob.main(wallet)
+        Bob.main(wallet, keys)
     elif name == 'Chuck':
-        Chuck.main(wallet)
+        Chuck.main(wallet, keys)
     elif name == 'Dave':
-        Dave.main(wallet)
+        Dave.main(wallet, keys)
     elif name == 'miner':
-        miner.main(wallet)
+        miner.main(wallet, keys)
     elif name == 'evil_miner':
-        evil_miner.main(wallet)
+        evil_miner.main(wallet, keys)
 
 
 multiprocessing.Process(target=main).start()

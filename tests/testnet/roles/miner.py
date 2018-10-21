@@ -1,6 +1,6 @@
 """
 This miner is just a honest miner.
-Thread for sync must be started separately
+Thread for sync must be started separately, wallet must be already created.
 """
 import block
 
