@@ -31,19 +31,19 @@ def main(name):
         Alice.main(wallet, keys)
     elif name == 'Bob':
         my_wallet = wallet.new_wallet(keys['Bob'], filename='bch.db')
-        Alice.main(wallet, keys)
+        Bob.main(wallet, keys)
     elif name == 'Chuck':
         my_wallet = wallet.new_wallet(keys['Chuck'], filename='bch.db')
-        Alice.main(wallet, keys)
+        Chuck.main(wallet, keys)
     elif name == 'Dave':
         my_wallet = wallet.new_wallet(keys['Dave'], filename='bch.db')
-        Alice.main(wallet, keys)
+        Dave.main(wallet, keys)
     elif name == 'miner':
         my_wallet = wallet.new_wallet(keys['miner'], filename='bch.db')
-        Alice.main(wallet, keys)
+        miner.main(wallet, keys)
     elif name == 'evil_miner':
         my_wallet = wallet.new_wallet(keys['evil_miner'], filename='bch.db')
-        Alice.main(wallet, keys)
+        evil_miner.main(wallet, keys)
 
 
 multiprocessing.Process(target=main, args=('Alice',), name='Alice').start()
