@@ -54,6 +54,12 @@ class Blockchain:
                            [step, len(self)][item.stop is not None]):
                 l.append(self[i])
             return l
+        if type(item) == tuple:
+            tnx = self[item[0]].txs[item[1]]
+            if tnx.sc:
+                return tnx.sc
+            else:
+                return tnx
         if item < 0:
             item += len(self)
         self.c.execute("SELECT * FROM blocks WHERE ind=?", (item, ))
@@ -104,6 +110,7 @@ class Blockchain:
         """
         smartcontract = smartcontract[:-1].split('[')[1].replace(' ', '').split(',')
         smartcontract = [int(smartcontract[0]), int(smartcontract[1])]
+        return self[smartcontract[0]].contracts[smartcontract[1]]
 
     def verify_sc_sign(self, smartcontract, sign):
         """
@@ -144,13 +151,16 @@ class Blockchain:
                     return False
         return True
 
-    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey=''):
+    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):
         """Creates new transaction and adds it to the chain"""
         tnx = Transaction()
-        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey)
+        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey, sc=sc)
         b = self[-1]
         b.append(tnx)
         self[-1] = b
+        ind = [len(self) - 1, len(self[-1].txs) - 1]
+        log.info('created transaction with index {} and timestamp {}'.format(str(ind), str(tnx.timestamp)))
+        return ind
 
     def __str__(self):
         """Encodes blockchain to str"""
@@ -166,11 +176,16 @@ class Blockchain:
 
     def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):
         """creates new smart contract and adds it to the chain"""
+        log.debug('Blockchain.new_sc')
         b = self[-1]
         sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize, langr=lang)
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b
+        ind = len(self) - 1, len(self[-1].sc) - 1
+        tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=ind)
+        log.info('created sc with index {} connected to tnx {}'.format(str(ind), str(ind2)))
+        return ind, tnxind
 
     def __len__(self):
         self.c.execute("SELECT ind FROM blocks")

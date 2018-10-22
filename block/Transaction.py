@@ -132,13 +132,14 @@ class Transaction:
         self.update()
         return self
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now'):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=tuple()):
         for i in range(len(outns)):
             outns[i] = round(outns[i], 9)
-        self.froms = froms  # transactions to get money from
-        self.outs = outs  # destinations
-        self.outns = outns  # values of money on each destination
+        self.froms = froms    # transactions to get money from
+        self.outs = outs    # destinations
+        self.outns = outns    # values of money on each destination
         self.author = author
+        self.sc = list(sc)    # index of sc connected with transaction or [] if there is no
         self.index = list(index)
         self.timestamp = timestamp(ts)
         for i in range(len(self.outns)):
@@ -153,8 +154,8 @@ class Transaction:
         is sign valid
         are all money spent"""
         # check outs and outns are not empty
-        if not (self.outs and self.outns):
-            log.warning('{} is not valid: outs or outns are empty'.format(str(self.index)))
+        if (not (self.outs and self.outns)) and not self.sc:
+            log.warning('{} is not valid: outs or outns are empty and there is no connected sc'.format(str(self.index)))
             return False
         # check validness of nick definition
         if self.author.count(';') == 2:
@@ -206,6 +207,5 @@ class Transaction:
         """
         Update hash
         """
-        x = ''.join(chain(str(self.author), [str(f) for f in self.froms],
-                          [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
+        x = json.dumps([self.author, self.froms, self.outs, self.outns, self.sc, self.timestamp])
         self.hash = cg.h(str(x))

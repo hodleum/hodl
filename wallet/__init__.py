@@ -28,6 +28,8 @@ class Wallet:
         :param outs: wallets to send money to
         :param outns: amounts of money to send to outs
         :param nick: set nick
+        :return tnx index
+        :rtype: list
         """
         out = 0
         for i in range(len(outns)):
@@ -58,19 +60,26 @@ class Wallet:
             author = self.pubkey
         else:
             author = self.pubkey + ';' + nick + ';'
-        bch.new_transaction(author, froms, outs, outns, privkey=self.privkey)
+        ind = bch.new_transaction(author, froms, outs, outns, privkey=self.privkey)
         log.info('wallet.new_transaction: outns: {}, len(outs): {}, index: {}'.format(str(outns), str(len(outs)),
-                                                                                      str(bch[-1].txs[-1].index)))
+                                                                                      str(ind)))
+        return ind
 
     def new_sc(self, code, memsize=10000000, lang="js"):
         """
         Create smart contract
         :param code: SC's code
+        :type code: str
         :param memsize: SC's memory size
+        :type memsize: int
+        :param lang: SC type
+        :type lang: str
         """
-        log.info('wallet.new_sc')
-        bch.new_sc(code, self.pubkey, self.privkey, memsize, lang)
+        log.info('wallet.new_sc. Type: {}, memory size is {}'.format(lang, str(memsize)))
+        sc_index = bch.new_sc(code, self.pubkey, self.privkey, memsize, lang)
+        bch[sc_index[0]] = bch[sc_index[0]].update(bch)
         log.info('wallet.new_sc done: sc created')
+        return sc_index
 
     def my_money(self):
         return bch.money(self.pubkey)

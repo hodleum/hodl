@@ -14,7 +14,6 @@ import logging as log
 # Two seconds later Bob creates block & sends it to Alice & Chuck
 
 
-log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 wallet.bch.clean()
@@ -24,6 +23,7 @@ with open('tests/genblock.bl', 'r') as f:
 
 
 def main(name):
+    log.basicConfig(level=log.DEBUG, format=name + ':%(module)s:%(lineno)d:%(message)s')
     log.debug('loop started; len(bch): '+str(len(wallet.bch))+', len(bch[0]): '+str(len(wallet.bch[0].txs)))
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
