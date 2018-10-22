@@ -6,6 +6,7 @@ import block
 
 
 def main(wallet, keys=None):
+    print(wallet.bch.money(keys['Alice'][1]))
     # start blockchain checking thread
     # create transaction:
     wallet.wallets[0].new_transaction([keys['Bob'][1]], [0.01])

@@ -14,46 +14,40 @@ import logging as log
 # Two seconds later Bob creates block & sends it to Alice & Chuck
 
 
-name = str(os.getenv('HODL_NAME'))
 log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
-my_keys = keys[name]
-if name == 'Alice':
-    # set public key and peers
-    time.sleep(2)
-if name == 'Bob':
-    # set public key and peers
-    pass
-if name == 'Chuck':
-    # set public key and peers
-    pass
-if name == 'Dave':
-    # set public key and peers
-    pass
-my_wallet = wallet.new_wallet(my_keys, filename='bch.db')
 wallet.bch.clean()
 
 with open('tests/genblock.bl', 'r') as f:
     wallet.bch.append(block.Block.from_json(f.readline()))
 
 
-def main():
+def main(name):
     log.debug('loop started; len(bch): '+str(len(wallet.bch))+', len(bch[0]): '+str(len(wallet.bch[0].txs)))
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
-        Alice.main(wallet)
+        my_wallet = wallet.new_wallet(keys['Alice'], filename='bch.db')
+        Alice.main(wallet, keys)
     elif name == 'Bob':
-        Bob.main(wallet)
+        my_wallet = wallet.new_wallet(keys['Bob'], filename='bch.db')
+        Alice.main(wallet, keys)
     elif name == 'Chuck':
-        Chuck.main(wallet)
+        my_wallet = wallet.new_wallet(keys['Chuck'], filename='bch.db')
+        Alice.main(wallet, keys)
     elif name == 'Dave':
-        Dave.main(wallet)
+        my_wallet = wallet.new_wallet(keys['Dave'], filename='bch.db')
+        Alice.main(wallet, keys)
     elif name == 'miner':
-        miner.main(wallet)
+        my_wallet = wallet.new_wallet(keys['miner'], filename='bch.db')
+        Alice.main(wallet, keys)
     elif name == 'evil_miner':
-        evil_miner.main(wallet)
+        my_wallet = wallet.new_wallet(keys['evil_miner'], filename='bch.db')
+        Alice.main(wallet, keys)
 
 
-multiprocessing.Process(target=main).start()
-sync.handle.loop(my_keys,)
+multiprocessing.Process(target=main, args=('Alice',), name='Alice').start()
+multiprocessing.Process(target=main, args=('Bob',), name='Bob').start()
+multiprocessing.Process(target=main, args=('Chuck',), name='Chuck').start()
+multiprocessing.Process(target=main, args=('Dave',), name='Dave').start()
+input()

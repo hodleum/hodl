@@ -1,4 +1,6 @@
-reward_percent = 1/2000000
+reward_percent = 1/4000000
+reward_percent_at_start = 1/200000
+# todo: higher reward percent at start
 # total reward for PoW
 pow_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) + sum(b.txs[1].outns) for b in bch])
 # total reward for PoK
