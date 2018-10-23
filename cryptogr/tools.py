@@ -1,3 +1,5 @@
+# TODO: docstring
+
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256 as SHA
@@ -6,12 +8,12 @@ from Crypto.Random import get_random_bytes
 import base64
 
 
-def h(s):
+def h(s):  # TODO: Type hints
     """Hash"""
     return ''.join([str(e) for e in list(SHA.new(bytes(str(s), 'utf-8')).digest())])
 
 
-def hex_hash(s):
+def hex_hash(s):  # TODO: Type hints
     return SHA.new(s.encode('utf-8')).hexdigest()
 
 
@@ -38,7 +40,7 @@ def sign_block(plaintext, private_key):
     # todo: use pukey hashes in transaction and smart contracts' author fields and store public key in sign
 
 
-def verify_block(s, plaintext, public_key, bch):
+def verify_block(s, plaintext, public_key, bch):  # TODO: Type hints
     """
     Verifies signature
 
@@ -84,7 +86,7 @@ def verify(plaintext: str, s: str, public_key: str) -> bool:
         return False
 
 
-def verify_sign(s, plaintext, public_key, bch):
+def verify_sign(s, plaintext, public_key, bch):  # TODO: Type hints
     """
     Verifies signature
 

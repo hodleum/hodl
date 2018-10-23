@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from typing import TypeVar, List, Any, Dict
 from cryptogr import get_random, verify, sign, encrypt, decrypt
 from threading import RLock
 from .errors import *
@@ -17,6 +18,9 @@ Base = declarative_base()
 session = Session()
 lock = RLock()
 
+T = TypeVar('T', int, str)
+S = TypeVar('S', str, List[str])
+
 
 class TempStructure:
     update_time = 5
@@ -31,14 +35,14 @@ class TempDict(dict, TempStructure):
         dict.__init__(self, *args)
         TempStructure.__init__(self)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: T, value: Any):
         self.check()
         super().__setitem__(key, {
             'time': time.time(),
             'value': value
         })
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: T):
         self.check()
         return super().__getitem__(item)['value']
 
@@ -82,14 +86,14 @@ class Message:
 @attr.s
 class MessageWrapper:
     """Wrapper for message"""
-    message = attr.ib(default=None)
+    message = attr.ib(type=Message, default=None)
     type = attr.ib(type=str, default='message')
     sender = attr.ib(type=str, default=None)
     encoding = attr.ib(default='json')
     id = attr.ib(type=str)
     sign = attr.ib(type=str, default=None)
     tunnel_id = attr.ib(type=str, default=None)
-    callback = attr.ib(default=None)
+    callback = attr.ib(type=T, default=None)
 
     acceptable_types = ['message', 'request', 'shout']
     acceptable_encodings = ['json']
@@ -99,7 +103,8 @@ class MessageWrapper:
         return str(uuid.uuid4())
 
     @classmethod
-    def from_bytes(cls, wrapper: bytes):
+    def from_bytes(cls, wrapper: bytes) -> 'MessageWrapper':
+        # TODO: docstring
         try:
             wrapper = json.loads(wrapper.decode('utf-8'))
         except (ValueError, UnicodeDecodeError):
@@ -143,21 +148,26 @@ class MessageWrapper:
         return wrapper
 
     def encrypt(self, public_key):
+        # TODO: docstring
         return encrypt(self.message.to_json(), public_key)
 
     def decrypt(self, private_key):
+        # TODO: docstring
         self.message = json.loads(decrypt(self.message.to_json(), private_key))
 
     def create_sign(self, private_key):
+        # TODO: docstring
         self.sign = sign(self.message.to_json(), private_key)
 
     def verify(self, public_key):
+        # TODO: docstring
         if self.type == 'request':
             return
         if not verify(self.message.to_json(), self.sign, public_key):
             raise VerificationFailed('Bad sign')
 
     def prepare(self, private_key=None, public_key=None):
+        # TODO: docstring
         assert self.type != 'request' or not self.sender
         if private_key and self.type != 'request':
             self.sign = sign(self.message.to_json(), private_key)
@@ -203,7 +213,7 @@ class Peer(Base):
         wrapper = MessageWrapper(message, 'request')
         self.proto._send(wrapper, self.addr)
 
-    def dump(self):
+    def dump(self) -> Dict[str]:
         return {
             'address': self.addr
         }
@@ -226,7 +236,7 @@ class User(Base):
         log.debug(f'{self}: Send {message}')
         self.proto.send(message, self.name)
 
-    def dump(self):
+    def dump(self) -> Dict[str]:
         return {
             'key': self.public_key,
             'name': self.name
@@ -236,10 +246,12 @@ class User(Base):
 class Tunnels(TempDict):
     expire = 6000
 
-    def add(self, tunnel_id, backward_peer, forward_peer):
+    def add(self, tunnel_id: str, backward_peer: Peer, forward_peer: Peer):
+        # TODO: docstring
         self[tunnel_id] = [backward_peer, forward_peer]
 
-    def send(self, message):
+    def send(self, message: MessageWrapper):
+        # TODO: docstring
         peers = self.get(message.tunnel_id)
         if not peers:
             return

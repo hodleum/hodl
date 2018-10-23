@@ -1,3 +1,5 @@
+# TODO: move code from __init__.py
+
 """
 Classes:
 Blockchain:
@@ -18,7 +20,7 @@ bch - blockchain
 tnx - transaction
 sc - smart contract(DApp)
 """
-import sqlite3
+import sqlite3  # TODO: Use SQLAlchemy instead
 from block.sc import *
 from block.Transaction import *
 from block.Block import Block
@@ -32,20 +34,21 @@ from block.UnfilledBlock import UnfilledBlock
 
 class Blockchain:
     """Class for blockchain"""
-    def __init__(self, filename='bch.db', m='w'):
+
+    def __init__(self, filename='bch.db', m='w'):  # TODO: Type hints
         self.f = filename
         if m != 'ro':
             self.conn = sqlite3.connect('db/' + filename)
         else:
-            self.conn = sqlite3.connect('db/'+filename + '?mode=ro', uri=True)
-        self.c = self.conn.cursor()
+            self.conn = sqlite3.connect('db/' + filename + '?mode=ro', uri=True)
+        self.c = self.conn.cursor()  # TODO: Len of variable name < 3
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
         self.conn.commit()
 
-    def __getitem__(self, item):
-        if type(item) == slice:
-            l = []
+    def __getitem__(self, item):  # TODO: Type hints
+        if type(item) == slice:  # TODO: Use isinstance instead
+            l = []  # TODO: Len of variable name < 3; Don't use 'l' as variable name
             if item.step is None:
                 step = 1
             else:
@@ -54,7 +57,7 @@ class Blockchain:
                            [step, len(self)][item.stop is not None]):
                 l.append(self[i])
             return l
-        if type(item) == tuple:
+        if type(item) == tuple:  # TODO: Use isinstance instead
             tnx = self[item[0]].txs[item[1]]
             if tnx.sc:
                 return tnx.sc
@@ -62,22 +65,23 @@ class Blockchain:
                 return tnx
         if item < 0:
             item += len(self)
-        self.c.execute("SELECT * FROM blocks WHERE ind=?", (item, ))
+        self.c.execute("SELECT * FROM blocks WHERE ind=?", (item,))
         s = self.c.fetchone()[1]
         return Block.from_json(s)
 
-    def append(self, block):
+    def append(self, block):  # TODO: Type hints
         self.c.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(block)))
         self.conn.commit()
 
-    def index(self, block):
+    def index(self, block):  # TODO: Type hints
         """Finds block in chain by hash"""
         for i in range(len(self)):
             if self[i].h == block.h:
                 return i
 
-    def tnxiter(self, maxn=('l', 'l'), fr=(0, 0)):
-        maxn = list(maxn)
+    def tnxiter(self, maxn=None, fr=(0, 0)):  # TODO: Type hints; Don't use 'l' anywhere!!!!
+        if maxn is None:
+            maxn = ['l', 'l']
         if maxn[0] == 'l':
             maxn[0] = len(self)
         if maxn[1] == 'l':
@@ -97,10 +101,10 @@ class Blockchain:
             for i in range(fr[0] + 1, maxn[0] - 1):
                 for tnx in self[i].txs:
                     yield tnx
-            for tnx in self[maxn[0]-1].txs[:maxn[1]]:
+            for tnx in self[maxn[0] - 1].txs[:maxn[1]]:
                 yield tnx
 
-    def get_sc(self, smartcontract):
+    def get_sc(self, smartcontract):  # TODO: Type hints
         """
         Get smart contract by index
         :param smartcontract: index
@@ -112,7 +116,7 @@ class Blockchain:
         smartcontract = [int(smartcontract[0]), int(smartcontract[1])]
         return self[smartcontract[0]].contracts[smartcontract[1]]
 
-    def verify_sc_sign(self, smartcontract, sign):
+    def verify_sc_sign(self, smartcontract, sign):  # TODO: Type hints
         """
         Verify smart contract's sign
         :param smartcontract: smart contract's index
@@ -124,25 +128,27 @@ class Blockchain:
         """
         return self.get_sc(smartcontract).validate_sign(sign)
 
-    def money(self, wallet, at=('l', 'l')):
+    def money(self, wallet, at=None):  # TODO: Type hints; Don't use 'l' anywhere!!!!; # TODO: Len of variable name < 3;
         """Counts money on wallet"""
-        at = list(at)
+        if at is None:
+            at = ['l', 'l']
         money = 0
         for tnx in self.tnxiter(maxn=at):  # every tnx in every block
             outs, outns = rm_dubl_from_outs(tnx.outs, tnx.outns)
             l = zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns)))
-            for w, n, j in l:
+            # TODO: Len of variable name < 3; Don't use 'l' as variable name
+            for w, n, j in l:  # TODO: Len of variable name < 3
                 if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
                         and 'mining' not in tnx.outs:
                     money += n
         return round(money, 10)
 
-    def new_block(self, creators, txs=tuple()):
+    def new_block(self, creators, txs=()):  # TODO: Type hints
         """Creates the new block and adds it to chain"""
         b = Block(0, creators, self, txs)
         self.append(b)
 
-    def is_valid(self):
+    def is_valid(self):  # TODO: Type hints
         """Returns validness of the whole chain"""
         for i in range(1, len(self)):
             if not self[i].is_unfilled:
@@ -151,15 +157,17 @@ class Blockchain:
                     return False
         return True
 
-    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):
+    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):  # TODO: Type hints
+        # TODO: Len of variable name < 3; 'sc' shadows name from outer scope;
         """Creates new transaction and adds it to the chain"""
         tnx = Transaction()
-        tnx.gen(author, froms, outs, outns, (len(self)-1, len(self[-1].txs)), sign, privkey, sc=sc)
+        tnx.gen(author, froms, outs, outns, (len(self) - 1, len(self[-1].txs)), sign, privkey, sc=sc)
         b = self[-1]
         b.append(tnx)
         self[-1] = b
         ind = [len(self) - 1, len(self[-1].txs) - 1]
         log.info('created transaction with index {} and timestamp {}'.format(str(ind), str(tnx.timestamp)))
+        # TODO: Use f'... index {ind} ...' instead
         return ind
 
     def __str__(self):
@@ -174,17 +182,19 @@ class Blockchain:
             block.from_json(b)
             self.append(block)
 
-    def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):
+    def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):  # TODO: Type hints
         """creates new smart contract and adds it to the chain"""
         log.debug('Blockchain.new_sc')
         b = self[-1]
         sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize, langr=lang)
+        # TODO: Len of variable name < 3; 'sc' shadows name from outer scope
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b
         ind = len(self) - 1, len(self[-1].sc) - 1
         tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=ind)
         log.info('created sc with index {} connected to tnx {}'.format(str(ind), str(ind2)))
+        # TODO: Use f'... index {ind} ...' instead; CRITICAL! Name 'ind2' is not defined
         return ind, tnxind
 
     def __len__(self):
@@ -202,13 +212,13 @@ class Blockchain:
         else:
             raise StopIteration
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value):  # TODO: Type hints; Len of variable name < 3
         if key < 0:
             key += len(self)
         self.c.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
         self.conn.commit()
 
-    def get_block(self, i, sync_get):
+    def get_block(self, i, sync_get):  # TODO: Type hints; Len of variable name < 3
         """
         Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
         then get full block from other peer)
@@ -223,7 +233,7 @@ class Blockchain:
         else:
             return sync_get(json.dumps([{'type': 'block', 'index': i}]))
 
-    def add_miner(self, miner):
+    def add_miner(self, miner):  # TODO: Type hints
         """add proof-of-work miner
         miner = [hash, n, address, t]"""
         b = self[-1]
@@ -237,7 +247,7 @@ class Blockchain:
         self.c.execute('''DELETE FROM blocks''')
         self.conn.commit()
 
-    def add_sc(self, sc):
+    def add_sc(self, sc):  # TODO: Len of variable name < 3; 'sc' shadows name from outer scope
         """
         Add smart contract
         :param sc:

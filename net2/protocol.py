@@ -32,7 +32,7 @@ def share_users():
 
 
 @server.handle('new_user', 'request')
-def record_new_user(key, name):
+def record_new_user(key, name):  # TODO: Type hints
     new_user = session.query(User).filter_by(name=name)
     if not new_user:
         new_user = User(protocol, public_key=key, name=name)
@@ -44,7 +44,7 @@ def record_new_user(key, name):
 
 
 @server.handle('peers', 'request')
-def record_peers(peers):
+def record_peers(peers):  # TODO: Type hints
     with lock:
         for data in peers:
             if not session.query(Peer).filter_by(addr=data['address']):
@@ -54,7 +54,7 @@ def record_peers(peers):
 
 
 @server.handle('users', 'request')
-def record_users(users):
+def record_users(users):  # TODO: Type hints
     with lock:
         for data in users:
             if not session.query(User).filter_by(name=data['name']):
@@ -64,4 +64,4 @@ def record_users(users):
 
 
 if __name__ == '__main__':
-    pass
+    server.run()

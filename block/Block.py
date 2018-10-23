@@ -1,3 +1,6 @@
+# TODO: docstring
+# TODO: module name should be lowercase
+
 import time
 import json
 import logging as log

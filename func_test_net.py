@@ -1,8 +1,5 @@
 from net2.protocol import *
+import sys
 
 
-create_db()
-
-
-print(protocol.peers)
-server.run()
+server.run(sys.argv[1])

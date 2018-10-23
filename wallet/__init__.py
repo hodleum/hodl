@@ -1,8 +1,10 @@
-import time
+# TODO: docstring
+# TODO: move code from __init__.py
+
+
 import json
 import logging as log
 import cryptogr as cg
-import sync
 import block
 from block import mining
 
@@ -15,14 +17,14 @@ class NotEnoughMoney(Exception):
 
 
 class Wallet:
-    def __init__(self, keys=cg.gen_keys, filename="bch.db"):
+    def __init__(self, keys=cg.gen_keys, filename="bch.db"):  # TODO: Value is not used; Type hints
         try:
             keys = keys()
         except TypeError:
             pass
         self.privkey, self.pubkey = keys
 
-    def new_transaction(self, outs, outns, nick=''):
+    def new_transaction(self, outs, outns, nick=''):  # TODO: Type hints
         """
         Performs tnx
         :param outs: wallets to send money to
@@ -36,7 +38,7 @@ class Wallet:
             outns[i] = round(outns[i], 10)
             out += outns[i]
         froms = []
-        o = 0
+        o = 0  # TODO: Len of variable name < 3
         for i in range(len(bch)):
             for tnx in bch[i].txs:
                 if bch.pubkey_by_nick(self.pubkey) in [bch.pubkey_by_nick(out) for out in tnx.outs] and \
@@ -65,7 +67,7 @@ class Wallet:
                                                                                       str(ind)))
         return ind
 
-    def new_sc(self, code, memsize=10000000, lang="js"):
+    def new_sc(self, code, memsize=10000000, lang="js"):  # TODO: Type hints
         """
         Create smart contract
         :param code: SC's code
@@ -86,10 +88,12 @@ class Wallet:
 
     @staticmethod
     def act():
+        # TODO: docstring
         if bch[-1].is_full:
             bch.append(mining.mine(bch))
 
-    def set_nick(self, nick):
+    def set_nick(self, nick):  # TODO: Type hints
+        # TODO: docstring
         self.new_transaction([self.pubkey], [0], nick=nick)
         self.pubkey = nick
 
@@ -101,8 +105,9 @@ class Wallet:
         return cls(json.loads(st))
 
 
-def new_wallet(keys=cg.gen_keys, filename="bch.db"):
-    w = Wallet(keys, filename)
+def new_wallet(keys=cg.gen_keys, filename="bch.db"):  # TODO: Type hints
+    # TODO: docstring
+    w = Wallet(keys, filename)  # TODO: Len of variable name < 3
     wallets.append(w)
     return w
 

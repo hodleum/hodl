@@ -27,7 +27,8 @@ class SyncHandler:
     """
     Class for synchronization conversation with one peer
     """
-    def __init__(self, address, msg=None, u=None):
+    def __init__(self, address, msg=None, u=None):  # TODO: Type hints
+        # TODO: docstring
         self.address = address
         self.msgs = []
         # todo: realize algorythm above
@@ -47,21 +48,22 @@ class SyncHandler:
 
 
 @server.handle('sync')
-def handle_msg(msg):
+def handle_msg(msg):  # TODO: Type hints
+    # TODO: docstring
     log.debug('new sync message')
-    h = {u.address: u for u in syncs}.get(user.pub_key)
+    h = {u.address: u for u in syncs}.get(user.public_key)
     # if we have sync history with this user, use it
     if h:
         user.send(Message('sync', h.on_message(msg)))
     # if we receive message from this user at first time, create conversation
     else:
         log.debug('new sync conversation with ' + str(user.name))
-        h = SyncHandler(user.pub_key, msg, user)
+        h = SyncHandler(user.public_key, msg, user)
         user.send(Message('sync', h.on_message(msg)))
         syncs.append(h)
 
 
 def loop(my_keys):
     log.debug('sync loop')
-    keys = my_keys
+    keys = my_keys  # TODO: Value is not used
     server.run()

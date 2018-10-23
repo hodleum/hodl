@@ -1,7 +1,7 @@
 # TODO: Destroy the Planet Express Deliver Empire!
 
 from ppci import wasm
-from block.sc.executors.wasm.exceptions import *
+# from block.sc.executors.wasm.exceptions import *
 
 SUP_LANGS = ["wasm"]
 
@@ -11,12 +11,16 @@ def fp_r(fname):
         return f.read()
 
 
-def run(wsmc, pyimports={}, restrictions=tuple(), *arguments, **keyargs):
+def my_print(args: int) -> int:
+    print(args)
+    result = 0
+
+
+def run(wsmc, pyimports={'env': {}}, restrictions=tuple(), *arguments, **keyargs):
     loaded = wasm.instantiate(wsmc, pyimports)
-    try:
-        res = loaded.exports.result()
-    except AttributeError:
-        raise WrongResultVar
+
+    res = loaded.exports.result()
+
     print(res)
     return res
 

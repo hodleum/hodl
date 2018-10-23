@@ -13,7 +13,9 @@ def echo_request:
 """
 
 from twisted.internet.protocol import DatagramProtocol
+from twisted.internet import reactor
 from collections import defaultdict
+from typing import Callable
 from .models import *
 from werkzeug.local import Local
 from cryptogr import gen_keys
@@ -25,28 +27,29 @@ import random
 log = logging.getLogger(__name__)
 
 local = Local()
-peer = local('peer')
-user = local('user')
+peer: Peer = local('peer')
+user: User = local('user')
 
 
 def error_cache(func):
     def wrapper(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
-        except BaseError as ex:
-            peer.send_error_message(ex)
+        except BaseError as _:
+            log.exception('Exception during handling message.')
 
     return wrapper
 
 
 class PeerProtocol(DatagramProtocol):
 
-    def __init__(self, _server, r):
+    def __init__(self, _server: 'Server', r: reactor):
         self.reactor = r
         self.server = _server
 
         self.name = 'name'  # TODO: name
         self.temp = TempDict()  # TODO: Temp set
+        self.tunnels = TempDict()
 
         try:
             with open('net2/keys') as f:
@@ -59,11 +62,14 @@ class PeerProtocol(DatagramProtocol):
         with open('net2/keys', 'w') as f:
             f.write(json.dumps([self.public, self.private_key]))
 
-    def copy(self):
+    def copy(self) -> 'PeerProtocol':
         return self
 
     @staticmethod
-    def add_object(obj):
+    def add_object(obj: Any):
+        """
+        DEPRECATED! Use session.add and session.commit instead
+        """
         with lock:
             session.add(obj)
             session.commit()
@@ -90,6 +96,9 @@ class PeerProtocol(DatagramProtocol):
         if not self.server.handlers[wrapper.type]:
             raise UnhandledRequest
 
+    def forward(self, message: MessageWrapper):
+        pass  # TODO: forward message into tunnel
+
     def _send(self, data: MessageWrapper, addr: tuple):
         """
         Low level send
@@ -98,7 +107,7 @@ class PeerProtocol(DatagramProtocol):
             return
         self.transport.write(data.to_json().encode('utf-8'), addr)
 
-    def send(self, message: Message, name: str, callback=None):  # TODO: callback handler
+    def send(self, message: Message, name: str, callback: T = None):  # TODO: callback handler
         """
         High level send
         """
@@ -113,7 +122,7 @@ class PeerProtocol(DatagramProtocol):
         wrapper.prepare(self.private_key, addressee.public_key)
         self.random_send(wrapper)
 
-    def shout(self, message: Message, callback=None):
+    def shout(self, message: Message, callback: T = None):
         """
         High level send_all
         """
@@ -127,7 +136,8 @@ class PeerProtocol(DatagramProtocol):
         self.random_send(wrapper)
 
     @property
-    def peers(self):
+    def peers(self) -> List[Peer]:
+        # TODO: docstring
         peers = []
         for _peer in session.query(Peer).all():
             _peer.proto = self
@@ -135,6 +145,7 @@ class PeerProtocol(DatagramProtocol):
         return peers
 
     def send_all(self, message: Message):
+        # TODO: docstring
         for _peer in self.peers:
             _peer.request(message)
 
@@ -143,6 +154,7 @@ class PeerProtocol(DatagramProtocol):
             _peer.send(wrapper)
 
     def random_send(self, wrapper: MessageWrapper):
+        # TODO: docstring
         random.choice(self.peers).send(wrapper)
 
 
@@ -151,7 +163,7 @@ class Server:
     handlers = defaultdict(lambda: [])
     on_open_func = None
 
-    def __init__(self, port=PORT, white=True):
+    def __init__(self, port: int = PORT, white: bool = True):
         from twisted.internet import reactor
 
         self.port = port
@@ -162,11 +174,13 @@ class Server:
 
         reactor.listenUDP(port, self.udp)
 
-    def handle(self, event, _type='message'):
+    def handle(self, event: S, _type: str = 'message') -> Callable:
+        # TODO: docstring
+
         if isinstance(event, str):
             event = list(event)
 
-        def decorator(func):
+        def decorator(func: Callable):
             # noinspection PyDunderSlots,PyUnresolvedReferences
             def wrapper(message_wrapper: MessageWrapper, addr: tuple):
                 _peer = session.query(Peer).filter_by(addr=addr)
@@ -199,7 +213,9 @@ class Server:
 
         return decorator
 
-    def run(self):
+    def run(self, port: int = None):
+        # TODO: docstring
+        self.port = port if port else self.port
         log.info(f'Start at {self.port}')
         self.reactor.run()
 
