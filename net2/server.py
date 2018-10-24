@@ -19,7 +19,6 @@ from typing import Callable
 from .models import *
 from werkzeug.local import Local
 from cryptogr import gen_keys
-from .config import *
 from .errors import *
 import logging
 import random
@@ -42,76 +41,107 @@ def error_cache(func):
 
 
 class PeerProtocol(DatagramProtocol):
+    name = Configs.name  # TODO: names
 
     def __init__(self, _server: 'Server', r: reactor):
         self.reactor = r
         self.server = _server
 
-        self.name = 'name'  # TODO: name
         self.temp = TempDict()  # TODO: Temp set
         self.tunnels = TempDict()
 
         try:
-            with open('net2/keys') as f:
+            with open(f'net2/{self.name}_keys') as f:
                 self.public, self.private_key = json.loads(f.read())
         except FileNotFoundError:
             self._gen_keys()
 
     def _gen_keys(self):
         self.private_key, self.public = gen_keys()
-        with open('net2/keys', 'w') as f:
+        with open(f'net2/{self.name}_keys', 'w') as f:
+            log.info(f'keys generated {self.name}')
             f.write(json.dumps([self.public, self.private_key]))
 
     def copy(self) -> 'PeerProtocol':
         return self
 
-    @staticmethod
-    def add_object(obj: Any):
+    def add_object(self, obj: Any):
         """
         DEPRECATED! Use session.add and session.commit instead
         """
         with lock:
-            session.add(obj)
-            session.commit()
+            self.session.add(obj)
+            self.session.commit()
 
+    # noinspection PyUnresolvedReferences,PyDunderSlots
     @error_cache
     def datagramReceived(self, datagram: bytes, addr: tuple):
+
+        addr = ':'.join(map(str, addr))
+        log.debug(f'Datagram received {datagram}')
         wrapper = MessageWrapper.from_bytes(datagram)
 
-        if wrapper.tunnel_id:
-            if random.randint(0, 3) != random.randint(0, 3):  # TODO: safe random func
-                return self.random_send(wrapper)  # TODO: Check exists tunnels
-            wrapper.type = 'message'
-            wrapper.tunnel_id = None
+        if wrapper.type != 'request':
+            if wrapper.tunnel_id:
+                if random.randint(0, 3) != random.randint(0, 3):  # TODO: safe random func
+                    return self.random_send(wrapper)  # TODO: Check exists tunnels
+                wrapper.type = 'message'
+                wrapper.tunnel_id = None
 
-        if wrapper.id in self.temp:
-            return
-        else:
-            self.temp[wrapper.id] = wrapper
-            self._send_all(wrapper)
+            if wrapper.id in self.temp:
+                return
+            else:
+                self.temp[wrapper.id] = wrapper
+                self._send_all(wrapper)
 
-        for func in self.server.handlers[wrapper.type]:
+        # Decryption message, preparing to process
+        _peer = session.query(Peer).filter_by(addr=addr).first()
+        if not _peer:
+            _peer = Peer(protocol, addr=addr)
+            _peer.request(Message('share_peers'))
+            session.add(_peer)
+            session.commit()
+            log.debug(f'New peer {addr}')
+        _peer.proto = self
+        local.peer = _peer
+
+        local.user = None
+        if wrapper.sender:
+            local.user = session.query(User).filter_by(name=wrapper.sender).first()
+            if not local.user:
+                return
+
+            try:
+                wrapper.decrypt(self.private)
+            except ValueError:
+                return
+
+        for func in self.server.handlers[wrapper.type][wrapper.message.name]:
             if func:
-                func(wrapper, addr)
-        if not self.server.handlers[wrapper.type]:
+                func(wrapper.message)
+        if not self.server.handlers[wrapper.type][wrapper.message.name]:
             raise UnhandledRequest
 
     def forward(self, message: MessageWrapper):
         pass  # TODO: forward message into tunnel
 
-    def _send(self, data: MessageWrapper, addr: tuple):
+    def _send(self, data: MessageWrapper, addr):
         """
         Low level send
         """
         if not data:
             return
+        if isinstance(addr, str):
+            addr: list = addr.split(':')
+            addr[1] = int(addr[1])
+            addr = tuple(addr)
         self.transport.write(data.to_json().encode('utf-8'), addr)
 
     def send(self, message: Message, name: str, callback: T = None):  # TODO: callback handler
         """
         High level send
         """
-        addressee: User = session.query(User).filter_by(name=name).first()
+        addressee: User = self.session.query(User).filter_by(name=name).first()
         wrapper = MessageWrapper(
             message,
             type='message',
@@ -159,11 +189,10 @@ class PeerProtocol(DatagramProtocol):
 
 
 class Server:
-    request_handlers = defaultdict(lambda: [])
-    handlers = defaultdict(lambda: [])
+    handlers = defaultdict(lambda: defaultdict(lambda: []))
     on_open_func = None
 
-    def __init__(self, port: int = PORT, white: bool = True):
+    def __init__(self, port: int = Configs.port, white: bool = True):
         from twisted.internet import reactor
 
         self.port = port
@@ -172,53 +201,38 @@ class Server:
         self.reactor = reactor
         self.udp = PeerProtocol(self, reactor)
 
-        reactor.listenUDP(port, self.udp)
+        self.engine = None
+        self.session = None
 
     def handle(self, event: S, _type: str = 'message') -> Callable:
         # TODO: docstring
 
         if isinstance(event, str):
-            event = list(event)
+            event = [event]
 
         def decorator(func: Callable):
-            # noinspection PyDunderSlots,PyUnresolvedReferences
-            def wrapper(message_wrapper: MessageWrapper, addr: tuple):
-                _peer = session.query(Peer).filter_by(addr=addr)
-                if not _peer:
-                    _peer = Peer(protocol, addr=addr)
-                    _peer.request(Message('share_peers'))
-                local.peer = _peer
-
-                local.user = None
-                if message_wrapper.sender:
-                    local.user = session.query(User).filter_by(name=message_wrapper.sender).first()
-                    if not local.user:
-                        return
-
-                    try:
-                        message_wrapper.decrypt(proto.private)
-                    except ValueError:
-                        return
-
-                return func(**message_wrapper.message.data)
+            def wrapper(message: Message):
+                return func(**message.data)
 
             for e in event:
-                if _type == 'request':
-                    self.request_handlers[e].append(wrapper)
-                elif _type == 'message':
-                    self.handlers[e].append(wrapper)
-                else:
-                    raise UnhandledRequest
+                self.handlers[_type][e].append(wrapper)
             return func
 
         return decorator
 
     def run(self, port: int = None):
         # TODO: docstring
+
         self.port = port if port else self.port
-        log.info(f'Start at {self.port}')
+
+        logging.basicConfig(level=logging.DEBUG if Configs.debug else logging.INFO,
+                            format=f'%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{self.port}]'
+                                   f' %(levelname)-8s [%(asctime)s]  %(message)s')
+
+        self.reactor.listenUDP(self.port, self.udp)
+        log.info(f'Started at {self.port}')
         self.reactor.run()
 
 
-server = Server(PORT)
+server = Server()
 protocol = server.udp

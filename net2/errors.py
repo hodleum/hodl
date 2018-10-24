@@ -6,7 +6,8 @@ class BaseError(Exception):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.message += ': ' + str(args[0])
+        if args:
+            self.message += ': ' + str(args[0])
 
 
 class BadRequest(BaseError):

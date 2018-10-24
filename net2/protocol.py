@@ -1,12 +1,5 @@
-from .config import *
 from .models import *
 from .server import peer, protocol, server
-
-
-log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
-                    format='%(name)s.%(funcName)-20s [LINE:%(lineno)-3s]# [{}] %(levelname)-8s [%(asctime)s]'
-                           '  %(message)s'.format('<Bob>'))
 
 
 @server.handle('share_peers', 'request')
@@ -32,11 +25,12 @@ def share_users():
 
 
 @server.handle('new_user', 'request')
-def record_new_user(key, name):  # TODO: Type hints
-    new_user = session.query(User).filter_by(name=name)
+def record_new_user(key: str, name: str):
+    new_user = session.query(User).filter_by(name=name).first()
     if not new_user:
         new_user = User(protocol, public_key=key, name=name)
-        protocol.add_object(new_user)
+        session.add(new_user)
+        session.commit()
         protocol.send_all(Message(
             name='new_user',
             data=new_user.dump()
@@ -44,23 +38,28 @@ def record_new_user(key, name):  # TODO: Type hints
 
 
 @server.handle('peers', 'request')
-def record_peers(peers):  # TODO: Type hints
+def record_peers(peers: List[Dict[str, str]]):
     with lock:
         for data in peers:
-            if not session.query(Peer).filter_by(addr=data['address']):
-                new_peer = Peer(protocol, public_key=data['key'], addr=data['address'])
+            if not session.query(Peer).filter_by(addr=data['address']).first():
+                new_peer = Peer(protocol, addr=data['address'])
                 session.add(new_peer)  # TODO: test new peers
         session.commit()
 
 
 @server.handle('users', 'request')
-def record_users(users):  # TODO: Type hints
+def record_users(users: List[Dict[str, str]]):
     with lock:
         for data in users:
             if not session.query(User).filter_by(name=data['name']):
                 new_user = Peer(protocol, public_key=data['key'], name=data['name'])
                 session.add(new_user)
         session.commit()
+
+
+@server.handle('ping', 'request')
+def ping():
+    pass
 
 
 if __name__ == '__main__':

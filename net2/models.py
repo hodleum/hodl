@@ -1,3 +1,5 @@
+# TODO: docstring
+
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -10,16 +12,23 @@ import uuid
 import attr
 import time
 import json
+import os
 
 log = logging.getLogger(__name__)
-engine = create_engine('sqlite:///db.sqlite', echo=False, connect_args={'check_same_thread': False})
-Session = sessionmaker(bind=engine)
+
 Base = declarative_base()
-session = Session()
 lock = RLock()
 
 T = TypeVar('T', int, str)
 S = TypeVar('S', str, List[str])
+
+with open('net2/config.json') as _fp:
+    Configs = type('Configs', (object,), json.load(_fp))
+
+engine = create_engine(f'sqlite:///db/{Configs.name}_db.sqlite', echo=False,
+                       connect_args={'check_same_thread': False})
+Session = sessionmaker(bind=engine)
+session = Session()
 
 
 class TempStructure:
@@ -104,7 +113,9 @@ class MessageWrapper:
 
     @classmethod
     def from_bytes(cls, wrapper: bytes) -> 'MessageWrapper':
-        # TODO: docstring
+        """
+        Decrypts bytes to `MessageWrapper`. Can raise `BadRequest` exception
+        """
         try:
             wrapper = json.loads(wrapper.decode('utf-8'))
         except (ValueError, UnicodeDecodeError):
@@ -113,13 +124,15 @@ class MessageWrapper:
         if not message_type or message_type not in cls.acceptable_types:
             raise BadRequest('Wrong message type')
         sender = wrapper.get('sender')
-        if message_type != 'request' and not sender or not \
-                isinstance(sender, str):
+        if message_type != 'request' and (not sender or
+                                          not isinstance(sender, str)):
             raise BadRequest('Sender name required')
 
         message = wrapper.get('message')
         if not message:
             raise BadRequest('Message required')
+        if isinstance(message, dict):
+            message = Message(**message)
         encoding = wrapper.get('encoding')
         if encoding not in cls.acceptable_encodings:
             raise BadRequest('Bad encoding')
@@ -127,8 +140,8 @@ class MessageWrapper:
         if not uid or not isinstance(uid, str):
             raise BadRequest('Id required')
         signature = wrapper.get('sign')
-        if message_type != 'request' and not signature or not \
-                isinstance(signature, str):
+        if message_type != 'request' and (not signature or
+                                          not isinstance(signature, str)):
             raise BadRequest('Sign required')
         tunnel_id = wrapper.get('tunnel_id')
         callback = wrapper.get('callback')
@@ -137,6 +150,7 @@ class MessageWrapper:
             raise BadRequest('Are u idiot?')
 
         wrapper = cls(
+            message,
             message_type,
             sender,
             encoding,
@@ -147,34 +161,41 @@ class MessageWrapper:
         )
         return wrapper
 
-    def encrypt(self, public_key):
-        # TODO: docstring
+    def encrypt(self, public_key: str):
+        """
+        Encrypt wrapper with message inside (`self.message` type must be `Message`)
+        """
         return encrypt(self.message.to_json(), public_key)
 
-    def decrypt(self, private_key):
-        # TODO: docstring
-        self.message = json.loads(decrypt(self.message.to_json(), private_key))
+    def decrypt(self, private_key: str):
+        """
+        Decrypt `Message` from string (`self.message type must be `str`)
+        """
+        self.message = json.loads(decrypt(self.message, private_key))
 
-    def create_sign(self, private_key):
-        # TODO: docstring
+    def create_sign(self, private_key: str):
         self.sign = sign(self.message.to_json(), private_key)
 
-    def verify(self, public_key):
-        # TODO: docstring
+    def verify(self, public_key: str):
+        """
+        Verify message in wrapper
+        """
         if self.type == 'request':
             return
         if not verify(self.message.to_json(), self.sign, public_key):
             raise VerificationFailed('Bad sign')
 
-    def prepare(self, private_key=None, public_key=None):
-        # TODO: docstring
+    def prepare(self, private_key: str = None, public_key: str = None):
+        """
+        Prepare wrapper for send
+        """
         assert self.type != 'request' or not self.sender
         if private_key and self.type != 'request':
             self.sign = sign(self.message.to_json(), private_key)
             self.message: Message = self.encrypt(public_key)
 
     def to_json(self):
-        json.dumps(attr.asdict(self))
+        return json.dumps(attr.asdict(self))
 
 
 class Peer(Base):
@@ -207,13 +228,13 @@ class Peer(Base):
         Send request to Peer.
 
         WARNING! Requests are unsafe.
-        Don't try to send private_key information via Peer.request
+        Don't try to send private information via Peer.request
         """
         log.debug(f'{self}: Send request {message}')
         wrapper = MessageWrapper(message, 'request')
         self.proto._send(wrapper, self.addr)
 
-    def dump(self) -> Dict[str]:
+    def dump(self) -> Dict[str, str]:
         return {
             'address': self.addr
         }
@@ -236,7 +257,7 @@ class User(Base):
         log.debug(f'{self}: Send {message}')
         self.proto.send(message, self.name)
 
-    def dump(self) -> Dict[str]:
+    def dump(self) -> Dict[str, str]:
         return {
             'key': self.public_key,
             'name': self.name
@@ -263,5 +284,8 @@ def create_db():
     session.commit()
 
 
-if __name__ == '__main__':
-    create_db()
+def drop_db():
+    try:
+        os.remove(f'db/{Configs.name}_db.sqlite')
+    except FileNotFoundError:
+        pass
