@@ -1,4 +1,4 @@
-import block
+from block import Blockchain as block
 import wallet
 import sync
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
@@ -27,22 +27,22 @@ def main(name):
     log.debug('loop started; len(bch): '+str(len(wallet.bch))+', len(bch[0]): '+str(len(wallet.bch[0].txs)))
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
-        my_wallet = wallet.new_wallet(keys['Alice'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['Alice'])
         Alice.main(wallet, keys)
     elif name == 'Bob':
-        my_wallet = wallet.new_wallet(keys['Bob'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['Bob'])
         Bob.main(wallet, keys)
     elif name == 'Chuck':
-        my_wallet = wallet.new_wallet(keys['Chuck'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['Chuck'])
         Chuck.main(wallet, keys)
     elif name == 'Dave':
-        my_wallet = wallet.new_wallet(keys['Dave'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['Dave'])
         Dave.main(wallet, keys)
     elif name == 'miner':
-        my_wallet = wallet.new_wallet(keys['miner'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['miner'])
         miner.main(wallet, keys)
     elif name == 'evil_miner':
-        my_wallet = wallet.new_wallet(keys['evil_miner'], filename='bch.db')
+        my_wallet = wallet.new_wallet(keys['evil_miner'])
         evil_miner.main(wallet, keys)
 
 

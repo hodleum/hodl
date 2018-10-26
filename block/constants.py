@@ -5,6 +5,8 @@ reward_percent_at_start = 1/200000
 pow_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) + sum(b.txs[1].outns) for b in bch])
 # total reward for PoK
 pok_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) + sum(b.txs[1].outns) for b in bch])
+# maximum miners for one task
+MAXMINERS = 5
 # maximum hash to be a miner (will be removed)
 pow_max = 1000000000000000000000000000000000000
 # mining reward (will be removed)

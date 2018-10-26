@@ -1,6 +1,7 @@
 import json
 from collections import Counter
 from block.sc.executors.js.jstask import js
+from block.constants import MAXMINERS
 
 
 class TaskMiner:
@@ -44,6 +45,7 @@ class Task:
         self.parent = parents
         self.miners = list(miners)
         self.task_class = task_class
+        self.done = False
         if task_data:
             if task_class == 'js':
                 self.task = js[0].from_json(task_data)
@@ -61,6 +63,7 @@ class Task:
         for miner in self.miners:
             if miner.result_hash == result:
                 awards[miner.address] = miner.difficulty
+        self.done = True
         return awards
 
     def find_miner(self, miner):
@@ -73,6 +76,15 @@ class Task:
             if m.address == address:
                 self.miners[i] = miner
                 return
+
+    def task_application(self, miner):
+        if len(self.miners) > MAXMINERS:
+            return False
+        self.miners.append(miner)
+        return True
+
+    def is_open(self):
+        return len(self.miners) <= MAXMINERS and not self.done
 
     def __str__(self):
         """

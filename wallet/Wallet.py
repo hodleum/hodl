@@ -12,10 +12,12 @@ import json
 import logging as log
 import cryptogr as cg
 import block
+from block.Blockchain import Blockchain
+from block.Transaction import rm_dubl_from_outs
 from block import mining
 
 
-bch = block.Blockchain()
+bch = Blockchain()
 wallets = []
 
 
@@ -50,9 +52,9 @@ class Wallet:
         for i in range(len(bch)):
             for tnx in bch[i].txs:
                 if bch.pubkey_by_nick(self.pubkey) in [bch.pubkey_by_nick(out) for out in tnx.outs] and \
-                        not tnx.spent(bch)[block.rm_dubl_from_outs(tnx.outs, tnx.outns)[0].index(
+                        not tnx.spent(bch)[rm_dubl_from_outs(tnx.outs, tnx.outns)[0].index(
                             bch.pubkey_by_nick(self.pubkey))]:
-                    clean_outs = block.rm_dubl_from_outs(
+                    clean_outs = rm_dubl_from_outs(
                         [bch.pubkey_by_nick(out) for out in tnx.outs],
                         tnx.outns)
                     o += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.pubkey))]
