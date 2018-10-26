@@ -1,8 +1,9 @@
+from cryptogr import h
+from block.sc.executors.js.jstools import CTX
 import json
 import time
 from threading import Thread
-from cryptogr import h
-from block.sc.executors.js.jstools import CTX
+import logging as log
 
 
 BENCHMARK = None
@@ -63,16 +64,19 @@ class JSTask:
 
 
 def code_to_tasks(code):
+    log.info('code_to_tasks')
     tasks = []
     code = code.split('\n')
     l = 0
     for i in range(len(code)+1):
         if i - l >= 10:
-            if code[:i].count('{') == code[:i].count('}'):
+            if '\n'.join(code[:i]).count('{') == '\n'.join(code[:i]).count('}'):
                 tasks.append(JSTask('\n'.join(code[l:i])))
                 l = i
     if l != len(code):
-        tasks.append(JSTask('\n'.join(code[l:])))
+        task = JSTask('\n'.join(code[l:]))
+        tasks.append(task)
+    log.info(f'code_to_tasks done, len(tasks) is {len(tasks)}')
     return tasks
 
 

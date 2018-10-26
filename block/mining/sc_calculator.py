@@ -1,28 +1,36 @@
 import block
-import cryptogr as cg
 from block.sc.task import TaskMiner, Task
+import cryptogr as cg
 import json
 import time
+import logging as log
 
 
 class PoWMiner:
     def __init__(self, address):
+        log.info('PoWMiner sc_calculator created')
         self.address = address
         self.tasks = []
         self.answers = {}
 
     def task_application_loop(self, bch):
-        for tnx in bch.tnxiter():
-            if tnx.sc:
-                for task in tnx.sc.tasks:
+        log.info('PoWMiner.task_application_loop')
+        for i in range(len(bch)):
+            for sc in bch[i].contracts:
+                print('sc')
+                for task in sc.tasks:
+                    print('task')
                     if task.is_open():
+                        log.info('PoWMiner.task_application_loop: attended task')
                         task.task_application(TaskMiner(address=self.address))
                         self.tasks.append(task)
 
     def run_tasks(self, bch):
+        log.info('PoWMiner.run_tasks')
         for i in range(len(self.tasks)):
             if self.tasks[i].find_miner(self.address).result_hash:
                 self.tasks[i] = self.run_task(self.tasks[i])
+                log.info('PoWMiner.run_tasks:task done')
 
     def run_task(self, task):
         """

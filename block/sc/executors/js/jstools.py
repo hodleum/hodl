@@ -20,8 +20,6 @@ def bch_replace(ctx, line, bch):
 class CTX:
     def __init__(self):
         self.ctx = shortcuts.get_context()
-        self.ctx.tear_down()
-        self.ctx.set_up()
         self.ctx.run_script("var __answer__='';function log(s){__answer__+=s}")
 
     def __str__(self):

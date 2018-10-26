@@ -33,6 +33,7 @@ class SmartContract:
     Calculating miners also compare their answers.
     """
     def __init__(self, code, author, index, memsize=sc_base_mem, langr="js"):
+        log.info('new sc')
         self.code = code
         self.author = author
         self.index = index
@@ -42,13 +43,17 @@ class SmartContract:
         self.calculators = []
         self.signs = []
         self.membs = []
-        self.tasks = js[0](code)
+        if langr == 'js':
+            log.info('js task splitting')
+            self.tasks = js[1](code)
+            log.info('js task splitting done')
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
         self.h = self.sign_str()
         self.langr = langr
+        log.info('new sc created')
 
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
