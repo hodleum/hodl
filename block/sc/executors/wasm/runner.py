@@ -1,7 +1,7 @@
 # TODO: Destroy the Planet Express Deliver Empire!
 
 from ppci import wasm
-# from block.sc.executors.wasm.exceptions import *
+#from block.sc.executors.wasm.exceptions import WTFLangException
 
 SUP_LANGS = ["wasm"]
 
@@ -17,9 +17,9 @@ def my_print(args: int) -> int:
 
 
 def run(wsmc, pyimports={'env': {}}, restrictions=tuple(), *arguments, **keyargs):
-    loaded = wasm.instantiate(wsmc, pyimports)
+    loaded = wasm.instantiate(wsmc, pyimports, "python")
 
-    res = loaded.exports.result()
+    res = loaded.exports.Main()
 
     print(res)
     return res
@@ -27,7 +27,8 @@ def run(wsmc, pyimports={'env': {}}, restrictions=tuple(), *arguments, **keyargs
 
 def prep_code(code=fp_r("scex.wasm"), lang="wasm"):
     if lang.lower() not in SUP_LANGS:
-        raise WTFLangException("{} language are not supported yet. Sorry!".format(lang))
+        #raise WTFLangException("{} language are not supported yet. Sorry!".format(lang))
+        raise BaseException("Lang not available")
     m = wasm.Module(code)
     return m
 

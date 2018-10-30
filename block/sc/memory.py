@@ -1,5 +1,5 @@
 import json
-import net
+import net2
 from block.constants import sc_base_mem, one_peer_max_mem
 
 

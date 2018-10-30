@@ -1,8 +1,5 @@
 (module
-    (export "main" (func $main))
-    (func $main (type $1)
-        (result f64)
-        (f64.const 42.0)
-        (return)
-    )
-)
+
+  (func (export "Main")
+    i32.const 42
+    call $i))
