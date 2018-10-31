@@ -26,6 +26,13 @@ class WasmProcess:
     def from_json(self):
         pass
 
+
+    def get_mem_block(self, block: int, size: int):
+        try:
+          return self.instance.exports.memory.read(block, size)
+        except AttributeError:
+          print("Memory is not available")
+          return None
     def get_self_diag(self):
         try:
             mem_info = str(self.instance._memories)
@@ -49,13 +56,14 @@ Memory:
 ----
 Dir's info:
     Instance: {2}        
-        """.format(mem_info, list(self.instance.exports._function_map), self.instance, minfo2, ms, me)
+        """.format(len(mem_info), list(self.instance.exports._function_map), self.instance, minfo2, ms, me)
 
         return diagnose
 
 if __name__ == '__main__':
     test_prgs = [
         "(module (func (export main) (result i32) (i32.const 42) (return)))",
+
         """(module
  (table 0 anyfunc)
  (memory $0 1)
@@ -72,6 +80,7 @@ if __name__ == '__main__':
         inst = WasmProcess(i)
         inst.run_script()
         print(inst.get_self_diag())
+        print("ZBlock: ", inst.get_mem_block(0, 1))
         try:
            inst.thr.terminate()
         except AttributeError:
