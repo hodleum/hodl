@@ -3,21 +3,18 @@ It's rainy today, isn't it? 61 48 52 30 63 48 4d 36 4c 79 39 70 59 6d 49 75 59 3
 """
 from ppci import wasm
 from sc_api import hdlib
-from threading import Thread
+from multiprocessing import Process
 
-wasm.Memory
 
 class WasmProcess:
-    def __init__(self, prg, backend="ppci", daemon=True, platform="python"):
+    def __init__(self, prg, backend="ppci", platform="python"):
         self.prg = wasm.Module(prg)
         self.backend = backend
-        self.daemon = daemon
 
 
-    def run_script(self) -> Thread:
+    def run_script(self) -> Process:
         loaded = wasm.instantiate(self.prg, hdlib.pyimports, "python")
-        print(str(loaded.exports._function_map))
-        thr = Thread(target=loaded.exports.main, daemon=self.daemon)
+        thr = Process(target=loaded.exports.main)
         thr.run()
         self.thr = thr
         self.instance = loaded
@@ -30,20 +27,52 @@ class WasmProcess:
         pass
 
     def get_self_diag(self):
+        try:
+            mem_info = str(self.instance._memories)
+            minfo2 = self.instance.exports.memory
+        except AttributeError:
+            mem_info = []
+            minfo2 = ""
+
+        try:
+            ms, me = self.instance.mem0_start, self.instance.mem_end
+        except AttributeError:
+            ms, me = "null", "null"
         diagnose = """
 RainyWasm self-diagnostics by DanGSun v0.1
 --------------------------
 Memory:
     Memories: {0}
+    Memory export: {3}
     Functions: {1}
+    Mem0 Start & end: {4} - {5}
 ----
 Dir's info:
     Instance: {2}        
-        """.format(self.instance._memories, list(self.instance.exports._function_map), dir(self.instance))
+        """.format(mem_info, list(self.instance.exports._function_map), self.instance, minfo2, ms, me)
 
         return diagnose
 
 if __name__ == '__main__':
-    inst = WasmProcess("(module (func (export main) (result i32) (i32.const 42) (return)))", daemon=False)
-    inst.run_script()
-    print(inst.get_self_diag())
+    test_prgs = [
+        "(module (func (export main) (result i32) (i32.const 42) (return)))",
+        """(module
+ (table 0 anyfunc)
+ (memory $0 1)
+ (export "memory" (memory $0))
+ (export "main" (func $main))
+ (func $main (; 0 ;) (result i32)
+  (i32.const 0)
+ )
+)
+
+"""
+    ]
+    for i in test_prgs:
+        inst = WasmProcess(i)
+        inst.run_script()
+        print(inst.get_self_diag())
+        try:
+           inst.thr.terminate()
+        except AttributeError:
+           print("Already Stopped...")
