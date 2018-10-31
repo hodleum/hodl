@@ -1,5 +1,1 @@
-(module
-
-  (func (export "Main")
-    i32.const 42
-    call $i))
+(module (func (export main) (result i32) (i32.const 42) (return)))

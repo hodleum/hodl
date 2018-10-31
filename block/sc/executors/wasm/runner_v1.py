@@ -18,9 +18,8 @@ def my_print(args: int) -> int:
 
 def run(wsmc, pyimports={'env': {}}, restrictions=tuple(), *arguments, **keyargs):
     loaded = wasm.instantiate(wsmc, pyimports, "python")
-
-    res = loaded.exports.Main()
-
+    print(str(loaded.exports._function_map))
+    res = loaded.exports.main()
     print(res)
     return res
 

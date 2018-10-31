@@ -1,5 +1,5 @@
-# TODO: docstring
-
+# TODO: docstring. Destroy anything that @ennucore has done))))
+"""
 import block
 import json
 
@@ -61,3 +61,4 @@ class TnxIter:
         self.bc, self.tc = l
         self.start = False
         return self
+"""
