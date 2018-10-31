@@ -12,9 +12,9 @@ class WasmProcess:
         self.backend = backend
 
 
-    def run_script(self) -> Process:
+    def run_script(self, params=[]) -> Process:
         loaded = wasm.instantiate(self.prg, hdlib.pyimports, "python")
-        thr = Process(target=loaded.exports.main)
+        thr = Process(target=loaded.exports.main, args=params)
         thr.run()
         self.thr = thr
         self.instance = loaded
@@ -74,13 +74,56 @@ if __name__ == '__main__':
  )
 )
 
+""","""
+(module
+ (table 0 anyfunc)
+ (memory $0 1)
+ (export "memory" (memory $0))
+ (export "main" (func $main))
+ (func $main (; 0 ;) (param $0 i32) (result i32)
+  (i32.add
+   (get_local $0)
+   (i32.const -40)
+  )
+ )
+)
+
+""","""
+(module
+ (table 0 anyfunc)
+ (memory $0 1)
+ (data (i32.const 12) "\00\00\00\00")
+ (export "memory" (memory $0))
+ (export "main" (func $main))
+ (func $main (; 0 ;) (param $0 i32) (result i32)
+  (i32.store offset=12
+   (i32.const 0)
+   (i32.add
+    (get_local $0)
+    (i32.const -40)
+   )
+  )
+  (i32.const 0)
+ )
+)
+
 """
     ]
     for i in test_prgs:
         inst = WasmProcess(i)
-        inst.run_script()
+        try:
+          inst.run_script()
+        except TypeError:
+          inst.run_script(params=[2])
+
         print(inst.get_self_diag())
-        print("ZBlock: ", inst.get_mem_block(0, 1))
+        mvar = inst.get_mem_block(0, 64)
+        if mvar is not None:
+          print("ZBlock: ", mvar)
+          try:
+            if int.from_bytes(mvar, byteorder='big', signed=False) != 2-45: raise BaseException("Test failed: result is not -43")
+          except ValueError:
+            pass
         try:
            inst.thr.terminate()
         except AttributeError:
