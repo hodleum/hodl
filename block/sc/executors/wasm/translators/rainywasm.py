@@ -5,18 +5,22 @@ from ppci import wasm
 from sc_api import hdlib
 from threading import Thread
 
-
+wasm.Memory
 
 class WasmProcess:
-    def __init__(self, prg, backend="ppci", platform="python"):
+    def __init__(self, prg, backend="ppci", daemon=True, platform="python"):
         self.prg = wasm.Module(prg)
         self.backend = backend
+        self.daemon = daemon
+
 
     def run_script(self) -> Thread:
         loaded = wasm.instantiate(self.prg, hdlib.pyimports, "python")
         print(str(loaded.exports._function_map))
-        thr = Thread(target=loaded.exports.main, daemon=True)
+        thr = Thread(target=loaded.exports.main, daemon=self.daemon)
         thr.run()
+        self.thr = thr
+        self.instance = loaded
         return thr
 
     def __str__(self):
@@ -25,5 +29,21 @@ class WasmProcess:
     def from_json(self):
         pass
 
+    def get_self_diag(self):
+        diagnose = """
+RainyWasm self-diagnostics by DanGSun v0.1
+--------------------------
+Memory:
+    Memories: {0}
+    Functions: {1}
+----
+Dir's info:
+    Instance: {2}        
+        """.format(self.instance._memories, list(self.instance.exports._function_map), dir(self.instance))
+
+        return diagnose
+
 if __name__ == '__main__':
-    inst = WasmProcess("(module (func (export main) (result i32) (i32.const 42) (return)))")
+    inst = WasmProcess("(module (func (export main) (result i32) (i32.const 42) (return)))", daemon=False)
+    inst.run_script()
+    print(inst.get_self_diag())
