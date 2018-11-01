@@ -1,5 +1,6 @@
 import json
-from block.sc.executors.jstools import CTX
+
+from block.sc.executors.wasm import rainywasm
 
 
 class WASMTask:
@@ -13,7 +14,7 @@ class WASMTask:
 
     def run(self, ctx):
         # todo
-        ctx = CTX.from_json(ctx)
+        ctx = rainywasm.WasmProcess.from_json(ctx)
         ctx.run_script(self.code)
         self.ans = ctx.run_script('__answer__')
         ctx.run_script('__answer__=""')
