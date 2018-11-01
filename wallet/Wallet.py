@@ -89,7 +89,6 @@ class Wallet:
         """
         log.info('wallet.new_sc. Type: {}, memory size is {}'.format(lang, str(memsize)))
         sc_index = bch.new_sc(code, self.pubkey, self.privkey, memsize, lang)
-        bch[sc_index[0]] = bch[sc_index[0]].update(bch)
         log.info('wallet.new_sc done: sc created')
         return sc_index
 

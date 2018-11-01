@@ -1,6 +1,5 @@
 from block import Blockchain as block
 import wallet
-import sync
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import os
 import json
@@ -46,10 +45,4 @@ def main(name):
         evil_miner.main(wallet, keys)
 
 
-multiprocessing.Process(target=main, args=('Alice',), name='Alice').start()
-multiprocessing.Process(target=main, args=('Bob',), name='Bob').start()
-multiprocessing.Process(target=main, args=('Chuck',), name='Chuck').start()
-multiprocessing.Process(target=main, args=('Dave',), name='Dave').start()
-multiprocessing.Process(target=main, args=('miner',), name='miner').start()
-multiprocessing.Process(target=main, args=('evil_miner',), name='evil_miner').start()
-input()
+main(os.getenv('HODL_NAME'))

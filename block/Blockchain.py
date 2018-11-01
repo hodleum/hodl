@@ -246,7 +246,7 @@ class Blockchain:
         sc.sign_sc(author_priv)
         b.contracts.append(sc)
         self[-1] = b
-        ind = len(self) - 1, len(self[-1].sc) - 1
+        ind = len(self) - 1, len(self[-1].contracts) - 1
         tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=ind)
         log.info(f'created sc with index {ind} connected to tnx {tnxind}')
         return ind, tnxind
