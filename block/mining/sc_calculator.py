@@ -29,8 +29,10 @@ class PoWMiner:
         log.info('PoWMiner.run_tasks')
         for i in range(len(self.tasks)):
             if self.tasks[i].find_miner(self.address).result_hash:
+                log.info('PoWMiner.run_tasks: found task')
                 self.tasks[i] = self.run_task(self.tasks[i])
                 log.info('PoWMiner.run_tasks:task done')
+        log.info('PoWMiner.run_tasks done')
 
     def run_task(self, task):
         """
