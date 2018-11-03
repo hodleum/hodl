@@ -4,6 +4,7 @@ import logging as log
 import cryptogr as cg
 from block.sc.memory import SCMemory
 from block.sc.executors.js.jstask import js
+from block.sc.task import Task
 from block.sc.executors.js.jstools import CTX
 from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
@@ -14,6 +15,10 @@ from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_pr
 
 def check_sc_award_tnx(bch, tnxind, sc):
     pass
+
+
+def jstask_to_task(scind, n, task):
+    return Task(scind, n, 'js', task_data=str(task))
 
 
 class SmartContract:
@@ -43,10 +48,16 @@ class SmartContract:
         self.calculators = []
         self.signs = []
         self.membs = []
+        self.n = 0
+        self.tasks = None
         if langr == 'js':
+            # todo: do not split code to task every time
             log.info('js task splitting')
-            self.tasks = js[1](code)
-            log.info('js task splitting done')
+            self.tasks = list(map(lambda task: jstask_to_task(self.index, self.n, task), js[1](code)))
+            for i in range(len(self.tasks)):
+                self.tasks[i].n = i
+            self.n = len(self.tasks)
+            log.info(f'js task splitting done, len(self.tasks) is {len(self.tasks)}')
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
@@ -74,7 +85,9 @@ class SmartContract:
         Encode contract to str
         :return: str
         """
-        return json.dumps((self.code, self.author, self.index, self.msgs, self.timestamp, self.sign, str(self.memory)))
+        return json.dumps((self.code, self.author, self.index, self.msgs,
+                           self.timestamp, self.sign, str(self.memory), [str(task) for task in self.tasks],
+                           self.n))
 
     @classmethod
     def from_json(cls, s):
@@ -83,9 +96,12 @@ class SmartContract:
         :param s: SC encoded to string
         :return: SC
         """
-        self = cls(*json.loads(s)[0:3])
-        self.msgs, self.timestamp, self.sign = json.loads(s)[3:6]
-        self.memory = SCMemory.from_json(json.loads(s)[6])
+        s = json.loads(s)
+        self = cls(*s[0:3])
+        self.msgs, self.timestamp, self.sign = s[3:6]
+        self.memory = SCMemory.from_json(s[6])
+        self.tasks = [Task.from_json(task) for task in s[7]]
+        self.n = s[8]
         return self
 
     def __eq__(self, other):
@@ -171,7 +187,23 @@ class SmartContract:
         return sign in self.signs
 
     def update(self, bch):
+        log.info(f'SC.update, len(self.tasks) is {len(self.tasks)}')
+        if len(self.tasks) != 0:
+            try:
+                index = bch[-1].sc_tasks.index(self.tasks[0])
+                if bch[-1].sc_tasks[index].done:
+                    if self.tasks[0].task_class == 'js':
+                        self.tasks[1].task = str(self.tasks[0].task)
+                    self.tasks.pop(0)
+                log.info(f"SC.update:adding task with n={self.tasks[1].n} to last block (block number {len(bch) - 1}), "
+                         f"len(bch[-1].sc_tasks) is {len(bch[-1].sc_tasks)}")
+            except ValueError:
+                log.info(f"SC.update:adding this sc's first task to last block. len(bch[-1].sc_tasks) "
+                         f"is {len(bch[-1].sc_tasks)}")
+            b = bch[-1]
+            b.sc_tasks.append(self.tasks[0])
+            bch[-1] = b
+            log.info(f'SC.update:task added to block. len(bch[-1].sc_tasks) is {len(bch[-1].sc_tasks)}, '
+                     f'len(b.sc_tasks) is {len(b.sc_tasks)}')
         # todo: delete not valid tasks
-        # todo: distribute miners if needed
-        self.memory.distribute_peers()
-        self.distribute_tasks()
+        # todo: memory

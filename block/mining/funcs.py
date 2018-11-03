@@ -28,6 +28,7 @@ def pow_mining(bch, b):
     """
     Proof-of-work new block processing
     """
+    # todo: move not done task to next block
     lb = bch[-1]
     tasks = lb.sc_tasks
     miners = {}

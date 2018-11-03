@@ -16,22 +16,22 @@ class PoWMiner:
     def task_application_loop(self, bch):
         log.info('PoWMiner.task_application_loop')
         for i in range(len(bch)):
-            for sc in bch[i].contracts:
-                print('sc')
-                for task in sc.tasks:
-                    print('task')
-                    if task.is_open():
-                        log.info('PoWMiner.task_application_loop: attended task')
-                        task.task_application(TaskMiner(address=self.address))
-                        self.tasks.append(task)
+            for task in bch[i].sc_tasks:
+                if task.is_open():
+                    log.info('PoWMiner.task_application_loop: attending task')
+                    task.task_application(TaskMiner(address=self.address))
+                    self.tasks.append(task)
+                    log.info('PoWMiner.task_application_loop: attended task')
 
     def run_tasks(self, bch):
-        log.info('PoWMiner.run_tasks')
+        log.info(f'PoWMiner.run_tasks. len(self.tasks): {len(self.tasks)}')
         for i in range(len(self.tasks)):
-            if self.tasks[i].find_miner(self.address).result_hash:
+            if not self.tasks[i].find_miner(self.address).result_hash:
                 log.info('PoWMiner.run_tasks: found task')
                 self.tasks[i] = self.run_task(self.tasks[i])
                 log.info('PoWMiner.run_tasks:task done')
+                index = bch[-1].sc_tasks.index(self.tasks[i])
+                bch[-1].sc_tasks[index] = self.tasks[i]
         log.info('PoWMiner.run_tasks done')
 
     def run_task(self, task):

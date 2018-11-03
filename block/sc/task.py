@@ -2,6 +2,7 @@ import json
 from collections import Counter
 from block.sc.executors.js.jstask import js
 from block.constants import MAXMINERS
+import cryptogr as cg
 
 
 class TaskMiner:
@@ -30,11 +31,13 @@ class TaskMiner:
 
 
 class Task:
-    def __init__(self, parents, task_class, miners=tuple(), task_data=None):
+    def __init__(self, parents, n, task_class, miners=tuple(), task_data=None):
         """
         init
         :param parents: sc-parent index
         :type parents: list
+        :param n: number of this task in sc
+        :type n: int
         :param task_class: executor type (str, 'js' or 'wasm')
         :type task_class: str
         :param miners
@@ -43,6 +46,7 @@ class Task:
         :type task_data: str
         """
         self.parent = parents
+        self.n = n
         self.miners = list(miners)
         self.task_class = task_class
         self.done = False
@@ -86,13 +90,16 @@ class Task:
     def is_open(self):
         return len(self.miners) <= MAXMINERS and not self.done
 
+    def __hash__(self):
+        return cg.h(json.loads((self.parent, self.n)))
+
     def __str__(self):
         """
         Convert task to JSON
         :return: task's JSON representation
         :rtype: str
         """
-        return json.dumps((self.parent, [str(miner) for miner in self.miners], self.task_class, str(self.task)))
+        return json.dumps((self.parent, self.n, [str(miner) for miner in self.miners], self.task_class, str(self.task)))
 
     @classmethod
     def from_json(cls, s):
@@ -104,5 +111,5 @@ class Task:
         :rtype: Task
         """
         s = json.loads(s)
-        miners = [TaskMiner.from_json(st) for st in s[1]]
-        return cls(s[0], s[2], miners, s[3])
+        miners = [TaskMiner.from_json(st) for st in s[2]]
+        return cls(s[0], s[1], s[3], miners, s[4])

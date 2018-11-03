@@ -16,6 +16,6 @@ def main(wallet, keys=None):
     # create smart contract
     ind = wallet.wallets[0].new_sc('__answer__="hello, world!"')
     log.info('created sc with indicies {}'.format(ind))
+    log.info(f"length of last block's sc_tasks: {len(wallet.bch[-1].sc_tasks)}")
     # messages to smart contract
     # decentralized internet request
-    input()   # todo

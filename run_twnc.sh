@@ -3,7 +3,7 @@ docker stop Alice Bob Chuck Dave miner evil_miner
 docker rm Alice Bob Chuck Dave miner evil_miner
 docker network rm hodlnet
 ./twnc.sh
-sleep 15
+sleep 5
 echo "Alice:"
 docker container logs Alice
 echo "Bob:"
