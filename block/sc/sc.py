@@ -38,7 +38,6 @@ class SmartContract:
     Calculating miners also compare their answers.
     """
     def __init__(self, code, author, index, memsize=sc_base_mem, langr="js"):
-        log.info('new sc')
         self.code = code
         self.author = author
         self.index = index
@@ -51,20 +50,17 @@ class SmartContract:
         self.n = 0
         self.tasks = None
         if langr == 'js':
-            # todo: do not split code to task every time
-            log.info('js task splitting')
+            # todo: do not split code to tasks every time
             self.tasks = list(map(lambda task: jstask_to_task(self.index, self.n, task), js[1](code)))
             for i in range(len(self.tasks)):
                 self.tasks[i].n = i
             self.n = len(self.tasks)
-            log.info(f'js task splitting done, len(self.tasks) is {len(self.tasks)}')
         self.awards = {}
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
         self.h = self.sign_str()
         self.langr = langr
-        log.info('new sc created')
 
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
@@ -190,7 +186,7 @@ class SmartContract:
         log.info(f'SC.update, len(self.tasks) is {len(self.tasks)}')
         if len(self.tasks) != 0:
             try:
-                index = bch[-1].sc_tasks.index(self.tasks[0])
+                index = [hash(task) for task in bch[-1].sc_tasks].index(hash(self.tasks[0]))
                 if bch[-1].sc_tasks[index].done:
                     if self.tasks[0].task_class == 'js':
                         self.tasks[1].task = str(self.tasks[0].task)

@@ -28,10 +28,16 @@ class PoWMiner:
         for i in range(len(self.tasks)):
             if not self.tasks[i].find_miner(self.address).result_hash:
                 log.info('PoWMiner.run_tasks: found task')
+                try:
+                    index = [hash(task) for task in bch[-1].sc_tasks].index(hash(self.tasks[i]))
+                except ValueError:
+                    log.info(f'task with hash {hash(self.tasks[i])} is outdated')
+                    continue
                 self.tasks[i] = self.run_task(self.tasks[i])
                 log.info('PoWMiner.run_tasks:task done')
-                index = bch[-1].sc_tasks.index(self.tasks[i])
-                bch[-1].sc_tasks[index] = self.tasks[i]
+                b = bch[-1]
+                b.sc_tasks[index] = self.tasks[i]
+                bch[-1] = b
         log.info('PoWMiner.run_tasks done')
 
     def run_task(self, task):

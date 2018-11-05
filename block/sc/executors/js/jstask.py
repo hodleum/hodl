@@ -64,7 +64,6 @@ class JSTask:
 
 
 def code_to_tasks(code):
-    log.info('code_to_tasks')
     tasks = []
     code = code.split('\n')
     l = 0
@@ -76,7 +75,6 @@ def code_to_tasks(code):
     if l != len(code):
         task = JSTask('\n'.join(code[l:]))
         tasks.append(task)
-    log.info(f'code_to_tasks done, len(tasks) is {len(tasks)}')
     return tasks
 
 

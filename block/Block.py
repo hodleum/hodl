@@ -1,6 +1,6 @@
-# TODO: docstring
-# TODO: module name should be lowercase
-
+"""
+module describing block - an item of blockchain
+"""
 import time
 import json
 import logging as log
@@ -11,6 +11,7 @@ from block import mining
 from block.Fixer import BlockFixer
 from block.mining.pool import Miners
 from block.constants import block_time
+from block.sc.task import Task
 
 
 def get_timestamp(t):
@@ -49,8 +50,9 @@ class Block:
         Encodes block to str using JSON
         :return:block, converted to str
         """
-        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash,
-                           [str(c) for c in self.contracts], str(self.fixer) if self.fixer else None, str(self.miners)))
+        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash, [str(c) for c in self.contracts],
+                           str(self.fixer) if self.fixer else None, str(self.miners),
+                           [str(task) for task in self.sc_tasks]))
 
     @classmethod
     def from_json(cls, s):
@@ -72,6 +74,7 @@ class Block:
         if self.fixer:
             self.fixer = BlockFixer.from_json(self.fixer)
         self.miners = Miners.from_json(self.miners)
+        self.sc_tasks = [Task.from_json(task) for task in s[6]]
         self.update()
         return self
 
@@ -87,7 +90,7 @@ class Block:
         """Updates hash"""
         self.sort()
         h = json.dumps((str(self.prevhash), [str(t.hash) for t in self.txs],
-                    [str(sc) for sc in self.contracts], hash(self.miners)))
+                    [str(sc) for sc in self.contracts], hash(self.miners), [str(task) for task in self.sc_tasks]))
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):

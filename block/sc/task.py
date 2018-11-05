@@ -2,7 +2,7 @@ import json
 from collections import Counter
 from block.sc.executors.js.jstask import js
 from block.constants import MAXMINERS
-import cryptogr as cg
+import mmh3
 
 
 class TaskMiner:
@@ -91,7 +91,7 @@ class Task:
         return len(self.miners) <= MAXMINERS and not self.done
 
     def __hash__(self):
-        return cg.h(json.loads((self.parent, self.n)))
+        return mmh3.hash(json.dumps((self.parent, self.n)))
 
     def __str__(self):
         """
