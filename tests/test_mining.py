@@ -1,4 +1,4 @@
-import mining
+from block import mining
 import block
 import cryptogr as cg
 import unittest
@@ -7,41 +7,10 @@ from unittest.mock import sentinel, patch, MagicMock
 
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
+
+
 class MiningUnittest(unittest.TestCase):
-    def test_pow(self):
-        bch = block.Blockchain()
-        bch.new_block([my_keys[1], my_keys[1], your_pub_key])
-        bch.new_block([my_keys[1], my_keys[1], your_pub_key])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.5, 0.25], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        n, t, h = mining.pow_mine(bch, 900000000000000000000000000000000000, my_keys[1])
-
-    def test_mining(self):
-        bch = block.Blockchain()
-        bch.new_block([my_keys[1], my_keys[1], your_pub_key])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.5, 0.25], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], [your_pub_key, my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        bch.new_transaction(my_keys[1], [(0, 0)], ['mining', my_keys[1]], [0.05, 0.95], 'signing', my_keys[0])
-        n = 1000
-        n, t, h = mining.pow_mine(bch, 90000000000000000000000000000000000, my_keys[1])
-        bch.add_miner([int(h), n, my_keys[1], t])
-        bch.add_miner([int(h), n, my_keys[1], t])
-        bch.add_miner([int(h), n, my_keys[1], t])
-        b = mining.mine(bch)
-        bch.append(b)
-        self.assertTrue(mining.validate(bch, -1))
-
-
-class TestMiningDeltaT(unittest.TestCase):
-    def test_zero(self):
-        self.assertEqual(5, mining.mining_delta_t(0))
-        self.assertEqual(7, mining.mining_delta_t(20000))
-        self.assertEqual(42, mining.mining_delta_t(321456.5))
+    pass   # todo
 
 
 

@@ -1,8 +1,14 @@
 import json
-import cryptogr as cg
+import logging as log
 from itertools import chain
-import time
+import time as t
 from collections import Counter
+import cryptogr as cg
+from block.constants import nick_av, nick_min, nick_max
+
+
+def timestamp(ts):
+    return t.time() if ts == 'now' else ts
 
 
 def indexmany(a, k):
@@ -53,26 +59,22 @@ def is_tnx_money_valid(self, bch):
                 else:
                     tnx = bch.get_block(int(t[0])).txs[int(t[1])]
             clean_outs = rm_dubl_from_outs([bch.pubkey_by_nick(out) for out in tnx.outs], tnx.outns)
-            is_first = t[0] == 0 and t[1] == 0
-            if not tnx.is_valid and not is_first:
-                print(self.index, 'is not valid: from(', tnx.index, ') is not valid')
+            if bch.pubkey_by_nick(self.author) not in [bch.pubkey_by_nick(o) for o in tnx.outs] \
+                    or tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
+                log.warning(str(self.index) + ' is not valid: from(' + str(tnx.index) + ') is not valid as from')
                 return False
-            if 'mining' in tnx.outs:
-                return False
-            if tnx.spent(bch, [self.index])[clean_outs[0].index(bch.pubkey_by_nick(self.author))]:
-                print(self.index, 'is not valid: from(', tnx.index, ') is not valid as from')
-                return False
-            inp = inp + clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
+            inp += clean_outs[1][clean_outs[0].index(bch.pubkey_by_nick(self.author))]
         except Exception as e:
-            print(self.index, 'is not valid: exception:', e)
+            log.warning(str(self.index) + ' is not valid: exception: ' + str(e))
             return False
     o = 0
     for n in self.outns:  # all money must be spent
-        if n < 0:
+        if n < 0 or round(n, 9) != n:
+            log.warning('{} is not valid because outn < 0 or n not rounded'.format(str(self.index)))
             return False
-        o = o + n
-    if not o == inp:
-        print(self.index, 'is not valid: not all money')
+        o += n
+    if round(o, 9) != round(inp, 9):
+        log.warning(str(self.index) + ' is not valid: not all money')
         return False
     return True
 
@@ -94,10 +96,23 @@ def sign_tnx(self, sign, privkey, t):
 
 
 class Transaction:
-    """Class for transaction.
+    """
+    Class for transaction.
     To create new transaction, use:
     tnx=Transaction()
-    tnx.gen(parameters)"""
+    tnx.gen(parameters)
+    """
+
+    def __init__(self):
+        self.froms = None
+        self.outs = None
+        self.outns = None
+        self.author = None
+        self.index = None
+        self.timestamp = None
+        self.sign = None
+        self.hash = None
+
     def __str__(self):
         """Encodes transaction to str using JSON"""
         return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
@@ -117,13 +132,16 @@ class Transaction:
         self.update()
         return self
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', t='now'):
-        self.froms = froms  # transactions to get money from
-        self.outs = outs  # destinations
-        self.outns = outns  # values of money on each destination
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=tuple()):
+        for i in range(len(outns)):
+            outns[i] = round(outns[i], 9)
+        self.froms = froms    # transactions to get money from
+        self.outs = outs    # destinations
+        self.outns = outns    # values of money on each destination
         self.author = author
+        self.sc = list(sc)    # index of sc connected with transaction or [] if there is no
         self.index = list(index)
-        self.timestamp = time.time() if t == 'now' else t
+        self.timestamp = timestamp(ts)
         for i in range(len(self.outns)):
             self.outns[i] = round(self.outns[i], 10)
         self.update()
@@ -135,28 +153,33 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent"""
-        if self.author[0:4] == 'scaw':
-            if not check_sc_award_tnx(bch, self.index, eval(self.author[4:])):
+        # check outs and outns are not empty
+        if (not (self.outs and self.outns)) and not self.sc:
+            log.warning('{} is not valid: outs or outns are empty and there is no connected sc'.format(str(self.index)))
+            return False
+        # check validness of nick definition
+        if self.author.count(';') == 2:
+            if bch.pubkey_by_nick(self.author.split(';')[1], self.index)\
+                    or not nick_min <= len(self.author.split(';')[1]) <= nick_max \
+                    or set(list(self.author.split(';')[1])).issubset(nick_av):   # todo: control nick emission
+                log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False
-        elif not self.author[0:2] == 'sc':
-            print("Log TypeSign: \nSign: {}. \nHash: {}. \nAuthor: {}.".format(type(self.sign), type(self.hash),
-                                                                               type(self.author)))
-            try:
-                if not cg.verify_sign(self.sign, self.hash, self.author):
-                    print(self.index, 'is not valid: sign is wrong')
-                    return False
-            except Exception as e:
-                print(self.index, 'is not valid: exception while checking sign:', e)
+        elif self.author.count(';') == 3:
+            if bch.pubkey_by_nick(self.author.split(';')[1], self.index) != self.author.split(';')[0]:
+                # todo: control nick emission
+                log.warning('{} is not valid: nick is wrong'.format(str(self.index)))
                 return False
-        else:
-            scind = [int(self.author[2:].split(';')[0]), int(self.author[2:].split(';')[1])]
-            sc = bch[scind[0]].contracts[scind[1]]
-            for tnx in sc.txs:
-                if self.index == tnx.index:
-                    break
-            else:
+        # check sign
+        try:
+            if not cg.verify_sign(self.sign, self.hash, bch.pubkey_by_nick(self.author), bch):
+                log.warning(str(self.index) + ' is not valid: sign is wrong')
                 return False
-        is_tnx_money_valid(self, bch)
+        except Exception as e:
+            log.warning(str(self.index) + ' is not valid: exception while checking sign: ' + str(e))
+        # validate transaction money, for example froms and outs should be equal
+        if not is_tnx_money_valid(self, bch):
+            log.warning('{} is not valid: money calculated wrong'.format(str(self.index)))
+            return False
         self.update()
         return True
 
@@ -171,17 +194,18 @@ class Transaction:
         :return: Is transaction used by other transaction
         """
         outs, outns = rm_dubl_from_outs(self.outs, self.outns)
+        outs = [bch.pubkey_by_nick(o) for o in outs]
         spent = [False] * len(outs)
-        for block in bch:  # перебираем все транзакции в каждом блоке
+        for block in bch:  # each tnx in each block
             for tnx in block.txs[1:]:
-                if list(self.index) in list(tnx.froms) and 'mining' not in tnx.outs and tnx.index not in exc:
-                    spent[outs.index(tnx.author)] = True
+                if tuple(self.index) in [tuple(from_ind) for from_ind in tnx.froms] and tnx.index not in exc and \
+                        bch.pubkey_by_nick(tnx.author) in outs:
+                    spent[outs.index(bch.pubkey_by_nick(tnx.author))] = True
         return spent
 
     def update(self):
         """
         Update hash
         """
-        x = ''.join(chain(str(self.author), str(self.index), [str(f) for f in self.froms],
-                          [str(f) for f in self.outs], [str(f) for f in self.outns], str(self.timestamp)))
+        x = json.dumps([self.author, self.froms, self.outs, self.outns, self.sc, self.timestamp])
         self.hash = cg.h(str(x))

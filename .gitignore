@@ -101,3 +101,11 @@ ENV/
 .mypy_cache/
 
 .idea/
+
+# blockchain, peers
+*.db
+*.sqlite
+
+
+tmp/
+net2/keys

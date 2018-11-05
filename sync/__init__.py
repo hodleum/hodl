@@ -7,4 +7,4 @@ The first user sends blocks if his blockchain is longer.
 User checks blocks he accepted by getting the same blocks from other users (get_many_blocks), and if |delta|>1000, gets missing blocks
 """
 
-from .tools import *  # Да да, теперь всё, что нужно, пиши в tools.py
+
