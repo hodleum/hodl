@@ -1,7 +1,6 @@
 #!/bin/bash
 docker stop Alice Bob Chuck Dave miner evil_miner
 docker rm Alice Bob Chuck Dave miner evil_miner
-docker network rm hodlnet
 ./twnc.sh
 sleep 5
 echo "Alice:"

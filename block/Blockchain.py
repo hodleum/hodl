@@ -101,6 +101,7 @@ class Blockchain:
         :param maxn: maximum tnx index (latest tnx of all transactions to iterate in)
         :param fr: minimum tnx index (earliest tnx of all transactions to iterate in)
         """
+        maxn = list(maxn)
         if maxn is None:
             maxn = ['l', 'l']
         if maxn[0] == 'l':

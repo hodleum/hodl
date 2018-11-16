@@ -42,7 +42,6 @@ class SmartContract:
         self.author = author
         self.index = index
         self.memory = SCMemory(self.index, memsize)
-        self.msgs = []  # [[author, sign, msg:str, ans=None]]
         self.timestamp = time.time()
         self.calculators = []
         self.signs = []
@@ -56,6 +55,7 @@ class SmartContract:
                 self.tasks[i].n = i
             self.n = len(self.tasks)
         self.awards = {}
+        self.msg_tasks = []
         self.sign = ''
         self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
@@ -65,23 +65,12 @@ class SmartContract:
     def sign_sc(self, privkey):
         self.sign = cg.sign(self.h, privkey)
 
-    def execute_task(self):
-        if not self.tasks:
-            return
-        if not self.tasks[0].done:
-            self.tasks[0].run(str(CTX()))
-            return
-        for i, task in enumerate(self.tasks):
-            if not task.done:
-                task.run(self.tasks[i-1].context)
-                return
-
     def __str__(self):
         """
         Encode contract to str
         :return: str
         """
-        return json.dumps((self.code, self.author, self.index, self.msgs,
+        return json.dumps((self.code, self.author, self.index, self.msg_tasks,
                            self.timestamp, self.sign, str(self.memory), [str(task) for task in self.tasks],
                            self.n))
 
@@ -94,7 +83,7 @@ class SmartContract:
         """
         s = json.loads(s)
         self = cls(*s[0:3])
-        self.msgs, self.timestamp, self.sign = s[3:6]
+        self.msg_tasks, self.timestamp, self.sign = s[3:6]
         self.memory = SCMemory.from_json(s[6])
         self.tasks = [Task.from_json(task) for task in s[7]]
         self.n = s[8]
@@ -182,24 +171,29 @@ class SmartContract:
     def verify_sign(self, sign):
         return sign in self.signs
 
-    def add_task(self, task):
-        """
-        Add task (for example, HDI request or message procession)
-        :param task: task to add
-        :type task: Task
-        """
-        self.tasks.insert(1, task)
-
-    def net_request(self, request_sender, request):
+    def net_request(self, request_sender, request, bch):
         if self.langr == 'js':
-            self.add_task(js[3](request_sender, request))
+            task = js[3](request_sender, request)
+        else:
+            return
+        self.msg_tasks.append(task)
+        b = bch[-1]
+        b.sc_tasks.append(task)
+        bch[-1] = b
 
-    def msg_request(self, sender, msg):
+    def msg_request(self, sender, msg, bch):
         if self.langr == 'js':
-            self.add_task(js[2](sender, msg))
+            task = js[2](sender, msg)
+        else:
+            return
+        self.msg_tasks.append(task)
+        b = bch[-1]
+        b.sc_tasks.append(task)
+        bch[-1] = b
 
     def update(self, bch):
         log.info(f'SC.update, len(self.tasks) is {len(self.tasks)}')
+        # todo: process self.msg_tasks
         if len(self.tasks) != 0:
             try:
                 index = [hash(task) for task in bch[-1].sc_tasks].index(hash(self.tasks[0]))
