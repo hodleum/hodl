@@ -182,12 +182,28 @@ class SmartContract:
     def verify_sign(self, sign):
         return sign in self.signs
 
+    def add_task(self, task):
+        """
+        Add task (for example, HDI request or message procession)
+        :param task: task to add
+        :type task: Task
+        """
+        self.tasks.insert(1, task)
+
+    def net_request(self, request_sender, request):
+        if self.langr == 'js':
+            self.add_task(js[3](request_sender, request))
+
+    def msg_request(self, sender, msg):
+        if self.langr == 'js':
+            self.add_task(js[2](sender, msg))
+
     def update(self, bch):
         log.info(f'SC.update, len(self.tasks) is {len(self.tasks)}')
         if len(self.tasks) != 0:
             try:
                 index = [hash(task) for task in bch[-1].sc_tasks].index(hash(self.tasks[0]))
-                if bch[-1].sc_tasks[index].done:
+                if bch[-1].sc_tasks[index].done:   # todo: search in previous block too
                     if self.tasks[0].task_class == 'js':
                         self.tasks[1].task = str(self.tasks[0].task)
                     self.tasks.pop(0)
