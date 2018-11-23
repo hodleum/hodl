@@ -1,4 +1,4 @@
-from block import Blockchain as block
+import block
 import wallet
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import os

@@ -14,7 +14,7 @@ def main(wallet, keys=None):
     # start blockchain checking thread
     # start pow mining thread
     powminer = sc_calculator.PoWMiner(keys['miner'])
-    time.sleep(5.5)
+    log.info('PoWminer object created')
     log.info('task application_loop will be started just now')
     powminer.task_application_loop(wallet.bch)
     powminer.run_tasks(wallet.bch)
