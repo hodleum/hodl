@@ -17,7 +17,7 @@ class PoKMiner:
     def __init__(self, addr):
         self.mining_scs = []
         self.addr = addr
-        self.conn = sqlite3.connect('db/' + cg.h(addr))
+        self.conn = sqlite3.connect('db/pok-' + cg.h(addr))
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (blockind integer, scind integer, n integer, mem text)''')
@@ -50,3 +50,13 @@ class PoKMiner:
         while True:
             for sc in self.mining_scs:
                 self.mine(sc, bch)
+
+    def __str__(self):
+        return json.dumps((self.addr, self.mining_scs))
+
+    @classmethod
+    def from_json(cls, s):
+        s = json.loads(s)
+        self = cls(s[0])
+        self.mining_scs = s[1]
+        return self
