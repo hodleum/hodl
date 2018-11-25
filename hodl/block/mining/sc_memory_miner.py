@@ -7,6 +7,9 @@ import json
 import sqlite3
 
 
+# todo: PoW miner which wants to run task gets memory from PoK miner and pushes it after running task
+
+
 class PoKMiner:
     """
     Proof-of-keeping miner class

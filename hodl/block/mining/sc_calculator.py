@@ -6,6 +6,9 @@ import time
 import logging as log
 
 
+# todo: PoW miner which wants to run task gets memory from PoK miner and pushes it after running task
+
+
 class PoWMiner:
     def __init__(self, address):
         log.info('PoWMiner sc_calculator created')
