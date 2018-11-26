@@ -54,6 +54,32 @@ class PoKMiner:
             for sc in self.mining_scs:
                 self.mine(sc, bch)
 
+    def handle_get_request(self, request):
+        """
+        Handle get request
+        :param request: request
+        :type request: str
+        :return: answer if needed
+        :rtype: str
+        """
+        request = json.loads(request)
+        answer = ''
+        # todo: get memory
+        return answer
+
+    def handle_set_request(self, request):
+        """
+        Handle set request
+        :param request: request
+        :type request: str
+        :return: ''
+        :type: str
+        """
+        request = json.loads(request)
+        # todo: check miner and sign
+        # todo: set memory
+        return ''
+
     def __str__(self):
         return json.dumps((self.addr, self.mining_scs))
 
