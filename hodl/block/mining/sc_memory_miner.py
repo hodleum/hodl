@@ -22,8 +22,8 @@ class PoKMiner:
         self.addr = addr
         self.conn = sqlite3.connect('db/pok-' + cg.h(addr))
         self.c = self.conn.cursor()
-        self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
-                     (blockind integer, scind integer, n integer, mem text)''')
+        self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
+                     (scind text, n integer, mem text)''')
         self.conn.commit()
 
     def calculate_hash(self, mem):
@@ -57,15 +57,13 @@ class PoKMiner:
     def handle_get_request(self, request):
         """
         Handle get request
-        :param request: request
+        :param request: request (JSON)
         :type request: str
         :return: answer if needed
         :rtype: str
         """
         request = json.loads(request)
-        answer = ''
-        # todo: get memory
-        return answer
+        return self[request['scind']]
 
     def handle_set_request(self, request):
         """
@@ -79,6 +77,28 @@ class PoKMiner:
         # todo: check miner and sign
         # todo: set memory
         return ''
+
+    def __getitem__(self, item):
+        """
+        Get smart contract memory
+        :param item: SC's index
+        :type item: list
+        :return: memory of this SC
+        :rtype: str
+        """
+        self.c.execute("SELECT * FROM scs WHERE scind=?", (str([int(e) for e in item]),))
+        return self.c.fetchone()[2]
+
+    def __setitem__(self, key, value):
+        """
+        Set smart contract memory
+        :param key: SC's index
+        :type key: list
+        :param value: memory
+        :type value: str
+        """
+        self.c.execute("""UPDATE scs SET mem = ? WHERE scind = ?""", (str(value), str([int(e) for e in key])))
+        self.conn.commit()
 
     def __str__(self):
         return json.dumps((self.addr, self.mining_scs))

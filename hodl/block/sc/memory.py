@@ -53,6 +53,6 @@ class SCMemory:
         """
         l = json.loads(s)
         self = cls(l[0], l[1])
-        self.peers = l[5]
-        self.accepts = l[6]
+        self.peers = l[2]
+        self.accepts = l[3]
         return self
