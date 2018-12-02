@@ -7,7 +7,8 @@ import json
 import sqlite3
 
 
-# todo: PoW miner which wants to run task gets memory from PoK miner and pushes it after running task
+class NotMiningError(Exception):
+    pass
 
 
 class PoKMiner:
@@ -26,27 +27,33 @@ class PoKMiner:
                      (scind text, n integer, mem text)''')
         self.conn.commit()
 
-    def calculate_hash(self, mem):
-        h = cg.h(json.dumps((mem.local, self.addr)))
+    def calculate_hash(self, mem, addr=None):
+        if not addr:
+            addr = self.addr
+        h = cg.h(json.dumps((mem.local, addr)))
         return h
 
     def mine(self, scind, bch):
         sc = bch[scind[0]].contracts[scind[1]]
         ns = []
-        for i, a in enumerate(sc.memory.accepts):
-            if self.addr in a:
+        for i, part in enumerate(sc.memory.accepts):
+            if self.addr in part.keys():
                 ns.append(i)
         if not ns:
-            return
+            raise NotMiningError()
         else:
             for n in ns:
+                # if needed, calculate and push hash
+                # prove other's hashes
                 pass    # todo
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b
 
     def become_peer(self, bch, scind):
-        bch[scind[0]].contracts[scind[1]].memory.peers.append(self.addr)
+        b = bch[scind[0]]
+        b.contracts[scind[1]].memory.peers.append(self.addr)
+        bch[scind[0]] = b
         self.mining_scs.append(scind)
 
     def mining(self, bch):
