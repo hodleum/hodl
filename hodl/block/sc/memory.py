@@ -1,6 +1,6 @@
 import json
 import net2
-from block.constants import sc_base_mem, one_peer_max_mem
+from block.constants import sc_base_mem, one_peer_mem
 
 
 class SCMemoryError(Exception):
@@ -25,17 +25,21 @@ class SCMemory:
         :return:
         """
         self.peers.sort()
-        l = len(self)
-        m = len(self.peers)
-        opm = ((one_peer_max_mem * m)//l)
-        n = (l//one_peer_max_mem) + 1
-        if self.size <= sc_base_mem:
-            self.accepts = []
-        else:
-            self.accepts = [{p: ['', []] for p in self.peers[i*opm:(i+1)*opm]} for i in range(n)]
+        mem_len = len(self)
+        peers_len = len(self.peers)
+        segment_num = mem_len // one_peer_mem
+        if peers_len < segment_num:
+            raise SCMemoryError
+        peers_per_segment = peers_len // segment_num
+        self.accepts = []
+        for i in range(segment_num):
+            self.accepts.append({p: ['', []] for p in self.peers[peers_per_segment*i: peers_per_segment*(i + 1)]})
+        if peers_len >= segment_num * peers_per_segment:
+            for i, peer in enumerate(self.peers[segment_num * peers_per_segment:]):
+                self.accepts[i][peer] = ['', []]
 
     def __len__(self):
-        return self.length
+        return self.size
 
     def __str__(self):
         """

@@ -31,5 +31,5 @@ block_time = 120
 freeze = 5
 # free memory size for smart contract (symbols)
 sc_base_mem = 10000000
-# maximum SC memory size one peer can store
-one_peer_max_mem = 4000000
+# SC memory size one peer can store
+one_peer_mem = 4000000
