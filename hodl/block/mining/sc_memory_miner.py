@@ -5,9 +5,10 @@ import block
 import cryptogr as cg
 import json
 import sqlite3
+import logging as log
 
 
-class NotMiningError(Exception):
+class PoKNotMiningError(Exception):
     pass
 
 
@@ -26,26 +27,33 @@ class PoKMiner:
         self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
                      (scind text, n integer, mem text)''')
         self.conn.commit()
+        log.info('PoKMiner object created')
 
-    def calculate_hash(self, mem, addr=None):
+    def calculate_hash(self, sc, addr=None):
+        mem = self[sc]
         if not addr:
             addr = self.addr
-        h = cg.h(json.dumps((mem.local, addr)))
+        h = cg.h(json.dumps((mem, addr)))
         return h
 
     def mine(self, scind, bch):
+        """
+        Mine one smart contract: calculate and push hash for self, prove others' hashes
+        :param scind: Index of smart contract to mine
+        :type scind: list
+        :param bch: Blockchain
+        """
         sc = bch[scind[0]].contracts[scind[1]]
-        ns = []
+        part = None
         for i, part in enumerate(sc.memory.accepts):
             if self.addr in part.keys():
-                ns.append(i)
-        if not ns:
-            raise NotMiningError()
+                part = i
+        if part is None:
+            raise PoKNotMiningError()
         else:
-            for n in ns:
-                # if needed, calculate and push hash
-                # prove other's hashes
-                pass    # todo
+            # calculate and push hash
+            # prove others' hashes
+            pass    # todo
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b

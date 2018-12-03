@@ -33,10 +33,25 @@ class SCMemory:
         peers_per_segment = peers_len // segment_num
         self.accepts = []
         for i in range(segment_num):
-            self.accepts.append({p: ['', []] for p in self.peers[peers_per_segment*i: peers_per_segment*(i + 1)]})
+            self.accepts.append({p: {'hash': None, 'sign': None, 'accepts': {}}
+                                 for p in self.peers[peers_per_segment*i: peers_per_segment*(i + 1)]})
         if peers_len >= segment_num * peers_per_segment:
             for i, peer in enumerate(self.peers[segment_num * peers_per_segment:]):
                 self.accepts[i][peer] = ['', []]
+
+    def push_memory(self, address, sign, mem_hash):
+        for i in range(len(self.accepts)):
+            if address in self.accepts[i].keys():
+                self.accepts[i][address]['hash'] = mem_hash
+                self.accepts[i][address]['sign'] = sign
+                self.accepts[i][address]['accepts'] = {}
+
+    def clean_accepts(self):
+        for i in range(len(self.accepts)):
+            for address in self.accepts[i].keys():
+                mem_hash = self.accepts[i][address]['hash']
+                for accept in self.accepts[i][address]['accepts']:
+                    pass   # todo: verify accept (sign)
 
     def __len__(self):
         return self.size
