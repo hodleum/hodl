@@ -19,9 +19,10 @@ class PoKMiner:
     It attends pool and when any change is available or there is time to check miners validity
     miner writes changes to local database or calculates hash to proof validity.
     """
-    def __init__(self, addr):
+    def __init__(self, addr, privkey):
         self.mining_scs = []
         self.addr = addr
+        self.privkey = privkey
         self.conn = sqlite3.connect('db/pok-' + cg.h(addr))
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
@@ -42,6 +43,7 @@ class PoKMiner:
         :param scind: Index of smart contract to mine
         :type scind: list
         :param bch: Blockchain
+        :type bch: block.Blockchain
         """
         sc = bch[scind[0]].contracts[scind[1]]
         part = None
@@ -52,8 +54,11 @@ class PoKMiner:
             raise PoKNotMiningError()
         else:
             # calculate and push hash
+            mem_hash = self.calculate_hash(scind)
+            sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
             # prove others' hashes
-            pass    # todo
+            for addr in sc.memory.accepts[part].keys():
+                pass    # todo
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b

@@ -37,9 +37,18 @@ class SCMemory:
                                  for p in self.peers[peers_per_segment*i: peers_per_segment*(i + 1)]})
         if peers_len >= segment_num * peers_per_segment:
             for i, peer in enumerate(self.peers[segment_num * peers_per_segment:]):
-                self.accepts[i][peer] = ['', []]
+                self.accepts[i][peer] = {}
 
     def push_memory(self, address, sign, mem_hash):
+        """
+        Update hash for miner's memory part
+        :param address: miner
+        :type address: str
+        :param sign: sign hash
+        :type sign: str
+        :param mem_hash: hash
+        :type mem_hash: str
+        """
         for i in range(len(self.accepts)):
             if address in self.accepts[i].keys():
                 self.accepts[i][address]['hash'] = mem_hash
@@ -47,6 +56,9 @@ class SCMemory:
                 self.accepts[i][address]['accepts'] = {}
 
     def clean_accepts(self):
+        """
+        Delete all accepts with invalid sign (for example, previous hash was sign)
+        """
         for i in range(len(self.accepts)):
             for address in self.accepts[i].keys():
                 mem_hash = self.accepts[i][address]['hash']
