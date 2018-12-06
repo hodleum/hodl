@@ -1,3 +1,8 @@
+"""
+CONSTANTS
+
+This file contains important constants
+"""
 reward_percent = 1/4000000
 reward_percent_at_start = 1/200000
 # todo: higher reward percent at start

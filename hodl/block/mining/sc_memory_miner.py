@@ -30,8 +30,17 @@ class PoKMiner:
         self.conn.commit()
         log.info('PoKMiner object created')
 
-    def calculate_hash(self, sc, addr=None):
-        mem = self[sc]
+    def calculate_hash(self, scind, addr=None):
+        """
+        Calculate hash of memory and address
+        :param scind: index (list) of smart contract, which memory will be taken for hash calculation
+        :type scind: list
+        :param addr: address to hash with memory
+        :type addr: str
+        :return: hash
+        :rtype: str
+        """
+        mem = self[scind]
         if not addr:
             addr = self.addr
         h = cg.h(json.dumps((mem, addr)))
@@ -58,7 +67,13 @@ class PoKMiner:
             sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
             # prove others' hashes
             for addr in sc.memory.accepts[part].keys():
-                pass    # todo
+                mem_hash = self.calculate_hash(scind, addr)
+                if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
+                        sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'],
+                                       addr, []):
+                    sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
+                        json.dumps(('v', mem_hash, self.addr)), self.privkey)])
+                # todo: debug
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b
@@ -121,11 +136,19 @@ class PoKMiner:
         self.conn.commit()
 
     def __str__(self):
-        return json.dumps((self.addr, self.mining_scs))
+        """
+        Create this object's string representation
+        """
+        return json.dumps((self.addr, self.privkey, self.mining_scs))
 
     @classmethod
     def from_json(cls, s):
+        """
+        Restore PoKMiner object from its representation
+        :param s: PoKMiner object's representation (str(pokminer_object))
+        :type s: str
+        """
         s = json.loads(s)
-        self = cls(s[0])
-        self.mining_scs = s[1]
+        self = cls(s[0], s[1])
+        self.mining_scs = s[2]
         return self

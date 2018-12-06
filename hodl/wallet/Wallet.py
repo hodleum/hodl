@@ -1,12 +1,19 @@
 """
-HODL wallet
+HODL WALLET
+
+Wallet is a high-level class for wallet
+
 To create wallet:
     wallet = new_wallet()
+
 Main methods:
-    Wallet.new_transaction creates trnsaction
+    Wallet.new_transaction creates transaction
     Wallet.new_sc creates smart contracts
     Wallet.my_money returns balance of wallet
     Wallet.set_nick sets nick
+
+TODO mining tools in wallet
+TODO requests to smart contracts
 """
 import json
 import logging as log
