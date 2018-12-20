@@ -10,3 +10,5 @@ twisted
 dpath
 v8-cffi
 ppci
+python-vagrant
+fabric
