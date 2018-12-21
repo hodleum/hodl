@@ -2,7 +2,7 @@
 Dave isn't a honest user. Dave creates not valid transactions and smart contracts.
 Thread for sync must be started separately, wallet must be already created.
 """
-import block
+from hodl import block
 import logging as log
 
 

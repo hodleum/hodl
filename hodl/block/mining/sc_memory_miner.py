@@ -1,8 +1,8 @@
 """
 Proof-of-keeping local mining algorithms
 """
-import block
-import cryptogr as cg
+from hodl import block
+from hodl import cryptogr as cg
 import json
 import sqlite3
 import logging as log

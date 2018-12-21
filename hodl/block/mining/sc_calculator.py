@@ -1,6 +1,6 @@
-import block
-from block.sc.task import TaskMiner, Task
-import cryptogr as cg
+from hodl import block
+from hodl.block.sc.task import TaskMiner, Task
+from hodl import cryptogr as cg
 import json
 import time
 import logging as log

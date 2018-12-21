@@ -18,11 +18,11 @@ bch - blockchain
 tnx - transaction
 sc - smart contract(DApp)
 """
-import sqlite3  # TODO: Use SQLAlchemy instead
-from block.sc import *
-from block.Transaction import *
-from block.Block import Block
-from block.UnfilledBlock import UnfilledBlock
+import sqlite3
+from .sc import *
+from .Transaction import *
+from .Block import Block
+from .UnfilledBlock import UnfilledBlock
 
 
 # todo: blockchain freeze before new block
@@ -43,9 +43,9 @@ class Blockchain:
         """
         self.f = filename
         if m != 'ro':
-            self.conn = sqlite3.connect('db/' + filename)
+            self.conn = sqlite3.connect('hodl/db/' + filename)
         else:
-            self.conn = sqlite3.connect('db/' + filename + '?mode=ro', uri=True)
+            self.conn = sqlite3.connect('hodl/db/' + filename + '?mode=ro', uri=True)
         self.cursor = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')

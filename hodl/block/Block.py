@@ -4,14 +4,14 @@ module describing block - an item of blockchain
 import time
 import json
 import logging as log
-from block.Transaction import Transaction
-from block.sc import SmartContract
-import cryptogr as cg
-from block import mining
-from block.Fixer import BlockFixer
-from block.mining.pool import Miners
-from block.constants import block_time
-from block.sc.task import Task
+from .Transaction import Transaction
+from .sc import SmartContract
+from hodl import cryptogr as cg
+from . import mining
+from .Fixer import BlockFixer
+from .mining.pool import Miners
+from .constants import block_time
+from .sc.task import Task
 
 
 def get_timestamp(t):

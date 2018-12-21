@@ -1,10 +1,9 @@
 import json
 import logging as log
-from itertools import chain
 import time as t
 from collections import Counter
-import cryptogr as cg
-from block.constants import nick_av, nick_min, nick_max
+from hodl import cryptogr as cg
+from .constants import nick_av, nick_min, nick_max
 
 
 def timestamp(ts):

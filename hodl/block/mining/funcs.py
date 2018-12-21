@@ -8,9 +8,8 @@ poc_mining: miner calculates what smart contracts need (proofs-of-calcing). It i
 in HODL.
 """
 import logging as log
-
-import block
-from block.constants import pow_total, pok_total, block_time
+from hodl import block
+from hodl.block.constants import pow_total, pok_total, block_time
 
 
 # todo: replace pow with poc and change sc calculating awards

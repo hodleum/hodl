@@ -1,1 +1,1 @@
-from block.sc.sc import *
+from .sc import *

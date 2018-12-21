@@ -1,6 +1,5 @@
 import json
-import net2
-from block.constants import sc_base_mem, one_peer_mem
+from hodl.block.constants import sc_base_mem, one_peer_mem
 
 
 class SCMemoryError(Exception):

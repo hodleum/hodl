@@ -1,1 +1,1 @@
-from wallet.Wallet import *
+from .Wallet import *

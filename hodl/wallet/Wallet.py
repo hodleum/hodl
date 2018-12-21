@@ -17,11 +17,10 @@ TODO requests to smart contracts
 """
 import json
 import logging as log
-import cryptogr as cg
-import block
-from block.Blockchain import Blockchain
-from block.Transaction import rm_dubl_from_outs
-from block import mining
+from hodl import cryptogr as cg
+from hodl.block.Blockchain import Blockchain
+from hodl.block.Transaction import rm_dubl_from_outs
+from hodl.block import mining
 
 
 bch = Blockchain()

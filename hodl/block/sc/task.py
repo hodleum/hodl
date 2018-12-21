@@ -1,7 +1,7 @@
 import json
 from collections import Counter
-from block.sc.executors.js.jstask import js
-from block.constants import MAXMINERS
+from hodl.block.sc.executors.js.jstask import js
+from hodl.block.constants import MAXMINERS
 import mmh3
 
 
