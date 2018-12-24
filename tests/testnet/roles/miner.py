@@ -2,8 +2,8 @@
 This miner is just a honest miner.
 Thread for sync must be started separately, wallet must be already created.
 """
-import block
-from block.mining import sc_calculator
+from hodl import block
+from hodl.block.mining import sc_calculator
 import logging as log
 import time
 

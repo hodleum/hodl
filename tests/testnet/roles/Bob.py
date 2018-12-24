@@ -2,7 +2,7 @@
 Bob is a honest user. Bob creates transactions and smart contracts, like Alice.
 Thread for sync must be started separately, wallet must be already created.
 """
-import block
+from hodl import block
 import logging as log
 
 

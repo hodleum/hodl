@@ -1,7 +1,8 @@
-from block import Blockchain as block
-import wallet
-from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
+#!/usr/bin/python3
 import os
+from hodl import block
+from hodl import wallet
+from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 import multiprocessing
 import time
