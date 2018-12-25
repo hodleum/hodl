@@ -18,11 +18,12 @@ bch - blockchain
 tnx - transaction
 sc - smart contract(DApp)
 """
-import sqlite3
 from .sc import *
 from .Transaction import *
 from .Block import Block
 from .UnfilledBlock import UnfilledBlock
+import sqlite3
+import re
 
 
 # todo: blockchain freeze before new block
@@ -134,8 +135,8 @@ class Blockchain:
         :return: Smart contract
         :type: SmartContrct
         """
-        smartcontract = smartcontract[:-1].split('[')[1].replace(' ', '').split(',')
-        smartcontract = [int(smartcontract[0]), int(smartcontract[1])]
+        smartcontract = re.sub(r'[\[\] ]', '', smartcontract).split(',')
+        smartcontract = list(map(int, smartcontract))
         return self[smartcontract[0]].contracts[smartcontract[1]]
 
     def verify_sc_sign(self, smartcontract, sign):

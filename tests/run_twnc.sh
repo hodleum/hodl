@@ -2,7 +2,7 @@
 docker stop Alice Bob Chuck Dave miner evil_miner
 docker rm Alice Bob Chuck Dave miner evil_miner
 ./twnc.sh
-sleep 5
+sleep 10
 echo "Alice:"
 docker container logs Alice
 echo "Bob:"
