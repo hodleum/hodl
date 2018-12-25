@@ -1,1 +1,1 @@
-from .Wallet import *
+from .wallet import *
