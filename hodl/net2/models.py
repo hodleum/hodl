@@ -1,10 +1,10 @@
 # TODO: docstring
 
+from hodl.cryptogr import get_random, verify, sign, encrypt, decrypt
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from typing import TypeVar, List, Any, Dict
-from cryptogr import get_random, verify, sign, encrypt, decrypt
 from threading import RLock
 from .errors import *
 import logging
@@ -40,9 +40,10 @@ class TempStructure:
 
 
 class TempDict(dict, TempStructure):
-    def __init__(self, *args):
+    def __init__(self, *args, factory=list):
         dict.__init__(self, *args)
         TempStructure.__init__(self)
+        self.factory = factory
 
     def __setitem__(self, key: T, value: Any):
         self.check()
@@ -51,9 +52,13 @@ class TempDict(dict, TempStructure):
             'value': value
         })
 
-    def __getitem__(self, item: T):
+    def __getitem__(self, key: T):
         self.check()
-        return super().__getitem__(item)['value']
+        if key not in self and self.factory:
+            value = self.factory()
+            self[key] = value
+            return value
+        return super().__getitem__(key)['value']
 
     def check(self):
         if time.time() - self.last_check < self.update_time:
@@ -69,6 +74,7 @@ class Message:
     name = attr.ib(type=str)
     data = attr.ib(factory=dict)
     salt = attr.ib(type=str)
+    callback = attr.ib(factory=lambda: str(uuid.uuid4()))
 
     @salt.default
     def _salt_gen(self):
@@ -102,7 +108,6 @@ class MessageWrapper:
     id = attr.ib(type=str)
     sign = attr.ib(type=str, default=None)
     tunnel_id = attr.ib(type=str, default=None)
-    callback = attr.ib(type=T, default=None)
 
     acceptable_types = ['message', 'request', 'shout']
     acceptable_encodings = ['json']
@@ -144,10 +149,8 @@ class MessageWrapper:
                                           not isinstance(signature, str)):
             raise BadRequest('Sign required')
         tunnel_id = wrapper.get('tunnel_id')
-        callback = wrapper.get('callback')
-        if tunnel_id and not isinstance(tunnel_id, str) or \
-                callback and type(callback) not in [str, int]:
-            raise BadRequest('Are u idiot?')
+        if tunnel_id and not isinstance(tunnel_id, str):
+            raise BadRequest('Wrong metadata')
 
         wrapper = cls(
             message,
@@ -156,8 +159,7 @@ class MessageWrapper:
             encoding,
             uid,
             signature,
-            tunnel_id,
-            callback
+            tunnel_id
         )
         return wrapper
 
