@@ -1,5 +1,5 @@
-from cryptogr import h
-from block.sc.executors.js.jstools import CTX
+from hodl.cryptogr import h
+from hodl.block.sc.executors.js.jstools import CTX
 import json
 import time
 from threading import Thread

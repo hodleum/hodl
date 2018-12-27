@@ -18,11 +18,12 @@ bch - blockchain
 tnx - transaction
 sc - smart contract(DApp)
 """
-import sqlite3  # TODO: Use SQLAlchemy instead
-from block.sc import *
-from block.Transaction import *
-from block.Block import Block
-from block.UnfilledBlock import UnfilledBlock
+from .sc import *
+from .Transaction import *
+from .Block import Block
+from .UnfilledBlock import UnfilledBlock
+import sqlite3
+import re
 
 
 # todo: blockchain freeze before new block
@@ -43,9 +44,9 @@ class Blockchain:
         """
         self.f = filename
         if m != 'ro':
-            self.conn = sqlite3.connect('db/' + filename)
+            self.conn = sqlite3.connect('hodl/db/' + filename)
         else:
-            self.conn = sqlite3.connect('db/' + filename + '?mode=ro', uri=True)
+            self.conn = sqlite3.connect('hodl/db/' + filename + '?mode=ro', uri=True)
         self.cursor = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
@@ -134,8 +135,8 @@ class Blockchain:
         :return: Smart contract
         :type: SmartContrct
         """
-        smartcontract = smartcontract[:-1].split('[')[1].replace(' ', '').split(',')
-        smartcontract = [int(smartcontract[0]), int(smartcontract[1])]
+        smartcontract = re.sub(r'[\[\] ]', '', smartcontract).split(',')
+        smartcontract = list(map(int, smartcontract))
         return self[smartcontract[0]].contracts[smartcontract[1]]
 
     def verify_sc_sign(self, smartcontract, sign):

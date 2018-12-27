@@ -1,7 +1,7 @@
 import json
-import cryptogr as cg
+from hodl import cryptogr as cg
 import json
-from block.Transaction import *
+from .Transaction import *
 
 
 class UnfilledBlock:

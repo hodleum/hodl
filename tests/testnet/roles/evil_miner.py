@@ -2,7 +2,7 @@
 This miner is an evil miner.
 Thread for sync must be started separately, wallet must be already created.
 """
-import block
+from hodl import block
 import logging as log
 
 

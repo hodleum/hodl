@@ -1,12 +1,12 @@
 import json
 import time
 import logging as log
-import cryptogr as cg
-from block.sc.memory import SCMemory
-from block.sc.executors.js.jstask import js
-from block.sc.task import Task
-from block.sc.executors.js.jstools import CTX
-from block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
+from hodl import cryptogr as cg
+from .memory import SCMemory
+from .executors.js.jstask import js
+from .task import Task
+from .executors.js.jstools import CTX
+from hodl.block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
 
 
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark

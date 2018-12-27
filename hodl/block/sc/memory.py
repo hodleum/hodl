@@ -1,6 +1,5 @@
 import json
-import net2
-from block.constants import sc_base_mem, one_peer_mem
+from hodl.block.constants import sc_base_mem, one_peer_mem
 
 
 class SCMemoryError(Exception):
@@ -54,6 +53,7 @@ class SCMemory:
                 self.accepts[i][address]['hash'] = mem_hash
                 self.accepts[i][address]['sign'] = sign
                 self.accepts[i][address]['accepts'] = {}
+                break
 
     def clean_accepts(self):
         """
