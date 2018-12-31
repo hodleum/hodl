@@ -45,3 +45,5 @@ You can put your data to HODL (encrypted, of course) for low price. (It is low b
 ***Decentralized internet***
 
 Smart contracts can have graphical interface written in HML (HODL Markup Language) and domain name, so it can be used as decentralized internet.
+
+2019.
