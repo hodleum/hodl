@@ -5,8 +5,8 @@ import time
 from threading import Thread
 import json
 
-from net2.protocol import server as main_server, protocol
-from net2.models import Peer, Message, create_db, drop_db
+from hodl.net2.protocol import server as main_server, protocol
+from hodl.net2.models import Peer, Message, create_db, drop_db
 
 
 class NetTest(unittest.TestCase):
@@ -27,8 +27,10 @@ class NetTest(unittest.TestCase):
         for i in range(8001, 8000 + self.server_counts):
             peer = Peer(protocol, addr=f'127.0.0.1:{i}')
             peer.request(Message('ping'))
-            time.sleep(1)
+        time.sleep(3)
         self.assertAlmostEqual(len(protocol.peers), self.server_counts, delta=1)
+        protocol.send_all(Message('ping'))
+        time.sleep(1)
 
     @staticmethod
     def change_config(port):

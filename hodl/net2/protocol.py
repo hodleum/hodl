@@ -3,7 +3,7 @@ from .server import peer, protocol, server
 
 
 @server.handle('share_peers', 'request')
-def share_peers():
+async def share_peers():
     peers = [_peer.dump() for _peer in session.query(Peer).all()]
     peer.request(Message(
         name='peers',
@@ -14,7 +14,7 @@ def share_peers():
 
 
 @server.handle('share_users', 'request')
-def share_users():
+async def share_users():
     users = [_user.dump() for _user in session.query(User).all()]
     peer.request(Message(
         name='users',
@@ -25,7 +25,7 @@ def share_users():
 
 
 @server.handle('new_user', 'request')
-def record_new_user(key: str, name: str):
+async def record_new_user(key: str, name: str):
     new_user = session.query(User).filter_by(name=name).first()
     if not new_user:
         new_user = User(protocol, public_key=key, name=name)
@@ -38,7 +38,7 @@ def record_new_user(key: str, name: str):
 
 
 @server.handle('peers', 'request')
-def record_peers(peers: List[Dict[str, str]]):
+async def record_peers(peers: List[Dict[str, str]]):
     with lock:
         for data in peers:
             if not session.query(Peer).filter_by(addr=data['address']).first():
@@ -48,7 +48,7 @@ def record_peers(peers: List[Dict[str, str]]):
 
 
 @server.handle('users', 'request')
-def record_users(users: List[Dict[str, str]]):
+async def record_users(users: List[Dict[str, str]]):
     with lock:
         for data in users:
             if not session.query(User).filter_by(name=data['name']):
@@ -58,7 +58,7 @@ def record_users(users: List[Dict[str, str]]):
 
 
 @server.handle('ping', 'request')
-def ping():
+async def ping():
     pass
 
 
