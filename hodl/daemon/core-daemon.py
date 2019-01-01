@@ -2,6 +2,7 @@ from .daemon import app
 import json
 from hodl.block.Blockchain import Blockchain
 
+
 bch = Blockchain()
 
 
