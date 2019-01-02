@@ -5,7 +5,6 @@ import time
 from itertools import chain
 from unittest.mock import sentinel, MagicMock, patch
 
-
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
 
@@ -41,7 +40,7 @@ class BlockUnittest(unittest.TestCase):
         d = bch[1].__dict__
         d1 = b2.__dict__
         for k in d.keys():
-            if d[k]!=d1[k]:
+            if d[k] != d1[k]:
                 print(k, d[k], d1[k])
         print(bch[1].txs, b2.txs)
         self.assertEqual(b2, bch[1])
@@ -89,7 +88,7 @@ class TestHash(unittest.TestCase):
     def test_hash(self):
         self.assertEqual('2122914021714301784233128915223624866126', cg.h(''))
         self.assertEqual('20720532132149213101239102231223249249135100218', cg.h('0'))
-        
+
 
 class TestTimestamp(unittest.TestCase):
     @patch('block.time.time', return_value=5051)

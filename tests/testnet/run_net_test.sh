@@ -3,7 +3,7 @@ cd ../hodl
 docker stop Alice Bob Chuck Dave
 docker rm Alice Bob Chuck Dave
 docker network rm hodlnet
-./test_sync.sh
+net_test.sh
 sleep 15
 echo "Alice:"
 docker container logs Alice

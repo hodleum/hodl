@@ -7,7 +7,6 @@ import cryptogr as cg
 import json
 import os
 
-
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
 
@@ -19,7 +18,7 @@ class TestSmartContracts(unittest.TestCase):
 
     def test_str(self):
         sc = SmartContract('__answer__="hello, world"', my_keys[1], [1, 1])
-        self.assertEqual(str(SmartContract.from_json(str(sc))), str(sc ))
+        self.assertEqual(str(SmartContract.from_json(str(sc))), str(sc))
 
 
 class TestTaskExecutors(unittest.TestCase):
