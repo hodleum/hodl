@@ -58,7 +58,6 @@ Smart contracts can have graphical interface written in HML (HODL Markup Languag
 
 .. toctree::
    :maxdepth: 3
-   :glob:
    :hidden:
 
-   ./
+   blockchain
