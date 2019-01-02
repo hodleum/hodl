@@ -297,8 +297,7 @@ class Blockchain:
         add proof-of-work miner
         miner = [hash, n, address, t]
 
-        :param miner: miner
-        :type miner: list
+        :param list miner: miner
         """
         b = self[-1]
         b.powminers.append(miner)
@@ -316,7 +315,8 @@ class Blockchain:
         Add smart contract
 
         :param sc: smart contract to add
-        :return:
+        :return: index of added sc
+        :rtype: list or tuple
         """
         b = self[-1]
         b.contracts.append(sc)
