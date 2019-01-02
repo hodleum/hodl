@@ -17,6 +17,7 @@ def indexmany(a, k):
 def rm_dubl_from_outs(outs, outns):
     """
     Remove dublicated addresses from tnx's outs
+
     :param outs: list, tnx.outs
     :param outns: list, tnx.outns
     :return: clean outs: list, clean outns: list
@@ -40,6 +41,7 @@ def rm_dubl_from_outs(outs, outns):
 def is_tnx_money_valid(self, bch):
     """
     Validate tnx
+
     :param self: Transaction
     :param bch: Blockchain
     :return: validness(bool)
@@ -81,6 +83,7 @@ def is_tnx_money_valid(self, bch):
 def sign_tnx(self, sign, privkey, t):
     """
     Sign tnx with privkey or use existing sign
+
     :param self: tnx
     :param sign: existing sign or 'signing'
     :param privkey: private key or nothing
@@ -151,7 +154,8 @@ class Transaction:
         """Returns validness of transaction.
         Checks:
         is sign valid
-        are all money spent"""
+        are all money spent
+        """
         # check outs and outns are not empty
         if (not (self.outs and self.outns)) and not self.sc:
             log.warning('{} is not valid: outs or outns are empty and there is no connected sc'.format(str(self.index)))
@@ -188,6 +192,8 @@ class Transaction:
 
     def spent(self, bch, exc=tuple()):
         """
+        Checks if money from transaction are spent
+
         :param bch: Blockchain
         :param exc: txs to exclude
         :return: Is transaction used by other transaction

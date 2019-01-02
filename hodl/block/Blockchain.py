@@ -29,6 +29,7 @@ import re
 # todo: blockchain freeze before new block
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
 # todo: smart contracts and SC messages connected to transaction
+# todo: remove transaction froms
 
 
 class Blockchain:
@@ -37,6 +38,7 @@ class Blockchain:
     def __init__(self, filename='bch.db', m='w'):
         """
         Init
+
         :param filename: filename for database
         :type filename: str
         :param m: mode
@@ -78,6 +80,7 @@ class Blockchain:
     def append(self, block):
         """
         Appends blockchain with a block
+
         :param block: block to add in blockchain
         :type block: Block
         """
@@ -87,6 +90,7 @@ class Blockchain:
     def index(self, block):
         """
         Finds block in chain (by hash)
+
         :param block: block to index
         :type block: Block
         :return: index
@@ -99,6 +103,7 @@ class Blockchain:
     def tnxiter(self, maxn=None, fr=(0, 0)):
         """
         Iterate in all transactions in blockchain
+
         :param maxn: maximum tnx index (latest tnx of all transactions to iterate in)
         :param fr: minimum tnx index (earliest tnx of all transactions to iterate in)
         """
@@ -130,6 +135,7 @@ class Blockchain:
     def get_sc(self, smartcontract):
         """
         Get smart contract by index
+
         :param smartcontract: index
         :type smartcontract: str
         :return: Smart contract
@@ -142,6 +148,7 @@ class Blockchain:
     def verify_sc_sign(self, smartcontract, sign):
         """
         Verify smart contract's sign
+
         :param smartcontract: smart contract's index
         :type smartcontract: str
         :param sign: sign
@@ -154,6 +161,7 @@ class Blockchain:
     def money(self, wallet, at=None):
         """
         Count balance of wallet
+
         :param wallet: wallet to count balance at
         :type wallet: str
         :param at: latest tnx to count
@@ -176,6 +184,7 @@ class Blockchain:
     def is_valid(self):
         """
         Checks validness of the whole chain
+
         :return: validness of the whole chain
         """
         for i in range(1, len(self)):
@@ -188,20 +197,15 @@ class Blockchain:
     def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):
         """
         Creates new transaction and adds it to the chain
-        :param author: transaction author
-        :type author: str
-        :param froms: transaction froms
-        :type froms: list
-        :param outs: transaction outs
-        :type outs: list
-        :param outns: transaction outns
-        :type outns: list
-        :param sign: transaction sign if it's already signed or 'signing'
-        :type sign: str
-        :param privkey: private key if tnx is not already signed
-        :type privkey: str
+
+        :param str author: transaction author
+        :param list froms: transaction froms
+        :param list outs: transaction outs
+        :param list outns: transaction outns
+        :param str sign: transaction sign if it's already signed or 'signing'
+        :param str privkey: private key if tnx is not already signed
         :param sc: index of smart contract connected with transaction or ()/[]/None
-        :type sc: tuple[int]
+        :type sc: tuple or list
         :return: index of created transaction
         :rtype: list
         """
@@ -229,16 +233,12 @@ class Blockchain:
     def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):
         """
         Creates new smart contract and adds it to the chain
-        :param text: smart contract code
-        :type text: str
-        :param author: SC's author
-        :type author: str
-        :param author_priv: author's private key
-        :type author_priv: str
-        :param memsize: SC's memory size
-        :type memsize: int
-        :param lang: SC language
-        :type lang: str
+
+        :param str text: smart contract code
+        :param str author: SC's author
+        :param str author_priv: author's private key
+        :param int memsize: SC's memory size
+        :param str lang: SC language
         :return: [index of created sc, index of transaction this SC is connected with]
         :rtype: [list[int], list[int]]
         """
@@ -280,6 +280,7 @@ class Blockchain:
         """
         Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
         then get full block from other peer)
+
         :param i: block's index
         :type i: int
         :param sync_get: function than gets object (block, transaction, smart contract) from network
@@ -292,8 +293,10 @@ class Blockchain:
             return sync_get(json.dumps([{'type': 'block', 'index': i}]))
 
     def add_miner(self, miner):
-        """add proof-of-work miner
+        """
+        add proof-of-work miner
         miner = [hash, n, address, t]
+
         :param miner: miner
         :type miner: list
         """
@@ -311,6 +314,7 @@ class Blockchain:
     def add_sc(self, sc):
         """
         Add smart contract
+
         :param sc: smart contract to add
         :return:
         """
@@ -329,6 +333,7 @@ class Blockchain:
         """
         Nicks can be used in transactions. Nicks can be defined in transaction with author=pubkey;nick;
         Nick can be transfered in transaction with autor=pubkey;nick;new pubkey;
+
         :param nick: str: pubkey, nick or nick definition
         :param maxn: tuple: maximum index or ('l', 'l') for entire blockchain
         :return: str: pubkey
@@ -352,6 +357,7 @@ class Blockchain:
         """
         HODL has no commission, so, to avoid spam, user has limit of actions in proportion to his balance.
         Next actions must be mined by this user. (todo)
+
         :param user: author of action to confirm
         :type user: str
         :param time_to: time of action (index of last tnx at than moment)

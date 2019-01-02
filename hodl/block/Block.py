@@ -31,7 +31,8 @@ def get_prevhash(bch):
 class Block:
     """Class for blocks.
     To convert block to string, use str(block)
-    To convert string to block, use Block.from_json(string)"""
+    To convert string to block, use Block.from_json(string)
+    """
 
     def __init__(self, bch=(), txs=(), contracts=(), t='now'):
         self.prevhash = get_prevhash(bch)
@@ -48,6 +49,7 @@ class Block:
     def __str__(self):
         """
         Encodes block to str using JSON
+
         :return:block, converted to str
         """
         return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash, [str(c) for c in self.contracts],
@@ -58,6 +60,7 @@ class Block:
     def from_json(cls, s):
         """
         Decodes block from str using JSON
+
         :param s: string - encoded block
         :return: Block
         """
@@ -81,13 +84,16 @@ class Block:
     def append(self, txn):
         """
         Adds txn to block
+
         :param txn: Transaction to add to block
         """
         self.txs.append(txn)  # Add transaction to transaction list
         self.update()  # update hash
 
     def update(self):
-        """Updates hash"""
+        """
+        Updates hash
+        """
         self.sort()
         h = json.dumps((str(self.prevhash), [str(t.hash) for t in self.txs],
                     [str(sc) for sc in self.contracts], hash(self.miners), [str(task) for task in self.sc_tasks]))
@@ -96,6 +102,7 @@ class Block:
     def is_valid(self, bch):
         """
         Validate block
+
         :param bch: Blockchain
         :return: validness (bool)
         """
@@ -126,7 +133,8 @@ class Block:
 
     def __eq__(self, other):
         """
-        compare blocks
+        Compare blocks
+
         :param other: Block
         :return: is equal
         """
