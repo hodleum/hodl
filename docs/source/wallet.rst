@@ -1,5 +1,5 @@
 Wallet
 ============
 
-.. automodule:: hodl.wallet.wallet
+.. automodule:: hodl.wallet.Wallet
     :members:
