@@ -45,7 +45,7 @@ Computing
 You can purchase computing which will be 100% right. Prices will be low because some money that come to miners for computing are new money.
 
 Decentralized storage
---------------------
+--------------------------------
 
 You can put your data to HODL (encrypted, of course) for low price. (It is low because some money that come to miners for storing are new money, like in decentralized computing)
 
@@ -55,3 +55,10 @@ Decentralized internet
 Smart contracts can have graphical interface written in HML (HODL Markup Language) and domain name, so it can be used as decentralized internet.
 
 2019.
+
+.. toctree::
+   :maxdepth: 3
+   :glob:
+   :hidden:
+
+   ./
