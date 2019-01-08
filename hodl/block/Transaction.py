@@ -122,15 +122,19 @@ class Transaction:
 
     @classmethod
     def from_json(cls, s):
-        """Decodes transacion from str using JSON"""
+        """
+        Decodes transacion from str using JSON
+
+        :param str s: Transaction's str representation got by str(tnx)
+        :return: transaction
+        :rtype: Transaction
+        """
         s = json.loads(s)
         self = cls()
         try:
             self.gen(s[0], s[1], s[2], s[3], list(s[4]), s[5], '', s[6])
         except TypeError:
             self.gen(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6])
-        for i in range(len(self.outns)):
-            self.outns[i] = round(self.outns[i], 10)
         self.update()
         return self
 
@@ -155,6 +159,10 @@ class Transaction:
         Checks:
         is sign valid
         are all money spent
+
+        :param Blockchain bch: blockchain
+        :return: Transaction validness
+        :rtype: bool
         """
         # check outs and outns are not empty
         if (not (self.outs and self.outns)) and not self.sc:

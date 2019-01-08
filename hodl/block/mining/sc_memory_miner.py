@@ -33,6 +33,7 @@ class PoKMiner:
     def calculate_hash(self, scind, addr=None):
         """
         Calculate hash of memory and address
+
         :param scind: index (list) of smart contract, which memory will be taken for hash calculation
         :type scind: list
         :param addr: address to hash with memory
@@ -49,6 +50,7 @@ class PoKMiner:
     def mine(self, scind, bch):
         """
         Mine one smart contract: calculate and push hash for self, prove others' hashes
+
         :param scind: Index of smart contract to mine
         :type scind: list
         :param bch: Blockchain
@@ -79,6 +81,12 @@ class PoKMiner:
         bch[scind[0]] = b
 
     def become_peer(self, bch, scind):
+        """
+        Become PoK miner of smartcontract with index scind
+
+        :param Blockchain bch: blockchain
+        :param scind: index of smartcontract
+        """
         b = bch[scind[0]]
         b.contracts[scind[1]].memory.peers.append(self.addr)
         bch[scind[0]] = b
@@ -92,6 +100,7 @@ class PoKMiner:
     def handle_get_request(self, request):
         """
         Handle get request
+
         :param request: request (JSON)
         :type request: str
         :return: answer if needed
@@ -103,6 +112,7 @@ class PoKMiner:
     def handle_set_request(self, request):
         """
         Handle set request
+
         :param request: request
         :type request: str
         :return: ''
@@ -116,6 +126,7 @@ class PoKMiner:
     def __getitem__(self, item):
         """
         Get smart contract memory
+
         :param item: SC's index
         :type item: list
         :return: memory of this SC
@@ -127,6 +138,7 @@ class PoKMiner:
     def __setitem__(self, key, value):
         """
         Set smart contract memory
+
         :param key: SC's index
         :type key: list
         :param value: memory
@@ -145,6 +157,7 @@ class PoKMiner:
     def from_json(cls, s):
         """
         Restore PoKMiner object from its representation
+        
         :param s: PoKMiner object's representation (str(pokminer_object))
         :type s: str
         """
