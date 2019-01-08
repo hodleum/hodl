@@ -1,8 +1,10 @@
 from v8cffi import shortcuts
 import json
 
-
-shortcuts.set_up()
+try:
+    shortcuts.set_up()
+except AssertionError:
+    pass
 
 
 def bch_replace(ctx, line, bch):

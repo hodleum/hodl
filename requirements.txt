@@ -1,3 +1,4 @@
+flask
 attrs
 sqlalchemy
 werkzeug
@@ -9,6 +10,5 @@ mmh3
 twisted
 dpath
 v8-cffi
-ppci
 python-vagrant
 fabric

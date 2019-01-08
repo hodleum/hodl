@@ -40,6 +40,7 @@ class Wallet:
     def new_transaction(self, outs, outns, nick=''):
         """
         Performs tnx
+
         :param outs: wallets to send money to
         :type outs: list
         :param outns: amounts of money to send to outs
@@ -86,6 +87,7 @@ class Wallet:
     def new_sc(self, code, memsize=10000000, lang="js"):
         """
         Create smart contract
+
         :param code: SC's code
         :type code: str
         :param memsize: SC's memory size
@@ -129,6 +131,7 @@ class Wallet:
 def new_wallet(keys=None):
     """
     Create new wallet
+
     :param keys: keys of wallet
     :type keys: list
     :return: wallet

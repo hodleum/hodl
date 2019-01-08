@@ -1,7 +1,0 @@
-{
-  "debug": true,
-  "ip": "0.0.0.0",
-  "port": 8002,
-  "name": "8002",
-  "message_size": 8192
-}
