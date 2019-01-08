@@ -10,7 +10,7 @@ Installation
 ------
 **On Linux:**
 ```bash
-	git clone https:github.com/hodleum/hodl.git
+	git clone https://github.com/hodleum/hodl.git
 	cd hodl
 	sudo ./install.sh
 ```	
