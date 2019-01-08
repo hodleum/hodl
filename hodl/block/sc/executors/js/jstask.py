@@ -21,6 +21,9 @@ Thread(target=benchmark).start()
 
 
 class JSTask:
+    """
+    JS Task - a part of JavaScript code with context
+    """
     def __init__(self, code):
         self.code = code
         self.done = False
@@ -29,6 +32,10 @@ class JSTask:
         self.context = str(CTX())
 
     def run(self, ctx=None):
+        """
+        Run JavaScript task
+        :param ctx: custom context
+        """
         if not ctx:
             ctx = CTX.from_json(self.context)
         if not BENCHMARK:
@@ -63,27 +70,46 @@ class JSTask:
         return json.dumps([str(self.context), str(self.ans)])
 
 
-def code_to_tasks(code):
+def split_code_to_tasks(code):
+    """
+    Splits JS code (str) to tasks
+    :param str code: JS code
+    :return: list
+    """
     tasks = []
     code = code.split('\n')
-    l = 0
-    for i in range(len(code)+1):
-        if i - l >= 10:
-            if '\n'.join(code[:i]).count('{') == '\n'.join(code[:i]).count('}'):
-                tasks.append(JSTask('\n'.join(code[l:i])))
-                l = i
-    if l != len(code):
-        task = JSTask('\n'.join(code[l:]))
-        tasks.append(task)
+    last_tasks_last_line = 0
+    for i in range(len(code) + 1):
+        if i - last_tasks_last_line >= 10:
+            code_before = '\n'.join(code[:i])
+            if code_before.count('{') == code_before.count('}'):
+                tasks.append(JSTask('\n'.join(code[last_tasks_last_line:i])))
+                last_tasks_last_line = i
+    if last_tasks_last_line != len(code):
+        tasks.append(JSTask('\n'.join(code[last_tasks_last_line:])))
     return tasks
 
 
 def msg_task(author, msg):
+    """
+    Create task by message to smart contract
+    :param str author: message's author
+    :param str msg: message
+    :return: Task
+    :rtype: JSTask
+    """
     return JSTask('''__msg__("{}")'''.format(json.dumps([author, msg])))
 
 
 def net_task(author, msg):
+    """
+    Create task by HDI request to smart contract
+    :param str author: request's author
+    :param str msg: request
+    :return: Task
+    :rtype: JSTask
+    """
     return JSTask('''__net__("{}")'''.format(json.dumps([author, msg])))
 
 
-js = [JSTask, code_to_tasks, msg_task, net_task]
+js = [JSTask, split_code_to_tasks, msg_task, net_task]

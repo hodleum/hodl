@@ -12,11 +12,6 @@ Transaction:
 Class for storing transaction.
 Smart_contract:
 Class for storing smart contract.
-
-Some abbreviations:
-bch - blockchain
-tnx - transaction
-sc - smart contract(DApp)
 """
 from .sc import *
 from .Transaction import *
