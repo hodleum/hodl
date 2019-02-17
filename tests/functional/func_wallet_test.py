@@ -1,10 +1,10 @@
 import unittest
 import logging as log
 import json
-import cryptogr as cg
-import block
-from block import mining
-import wallet
+from hodl import cryptogr as cg
+from hodl import block
+from hodl.block import mining
+from hodl import wallet
 
 log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 
@@ -103,4 +103,5 @@ class TestFunc(unittest.TestCase):
         print('Passed!')
 
 
-unittest.main()
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
