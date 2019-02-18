@@ -10,9 +10,10 @@ import logging as log
 
 
 class PoWMiner:
-    def __init__(self, address):
+    def __init__(self, address, privkey):
         log.info('PoWMiner sc_calculator created')
         self.address = address
+        self.privkey = privkey
         self.tasks = []
         self.answers = {}
 

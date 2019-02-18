@@ -6,6 +6,7 @@ from hodl import cryptogr as cg
 import json
 import sqlite3
 import logging as log
+from threading import Thread
 
 
 class PoKNotMiningError(Exception):
@@ -91,15 +92,18 @@ class PoKMiner:
         bch[scind[0]] = b
         self.mining_scs.append(scind)
 
-    def mining(self, bch):
+    def mining_thread(self, bch):
         """
-        Start mining loop
+        Start mining loop in thread
         :param bch: blockchain
         :type bch: Blockchain
         """
-        while True:
-            for sc in self.mining_scs:
-                self.mine(sc, bch)
+        def mining():
+            log.info('PoK mining thread started')
+            while True:
+                for sc in self.mining_scs:
+                    self.mine(sc, bch)
+        Thread(target=mining, name="PoK").start()
 
     def handle_get_request(self, request):
         """

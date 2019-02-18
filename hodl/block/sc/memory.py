@@ -1,5 +1,5 @@
-import json
 from hodl.block.constants import sc_base_mem, one_peer_mem
+import json
 
 
 class SCMemoryError(Exception):
@@ -21,7 +21,6 @@ class SCMemory:
     def distribute_peers(self):
         """
         Distribute memory between miners
-        :return:
         """
         self.peers.sort()
         mem_len = len(self)
