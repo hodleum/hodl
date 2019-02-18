@@ -79,12 +79,24 @@ class PoKMiner:
         bch[scind[0]] = b
 
     def become_peer(self, bch, scind):
+        """
+        Become PoK peer for SC
+        :param bch: blockchain
+        :type bch: Blockchain
+        :param scind: index of SC to mine
+        :type scind: list
+        """
         b = bch[scind[0]]
         b.contracts[scind[1]].memory.peers.append(self.addr)
         bch[scind[0]] = b
         self.mining_scs.append(scind)
 
     def mining(self, bch):
+        """
+        Start mining loop
+        :param bch: blockchain
+        :type bch: Blockchain
+        """
         while True:
             for sc in self.mining_scs:
                 self.mine(sc, bch)

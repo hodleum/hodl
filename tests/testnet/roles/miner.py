@@ -1,6 +1,7 @@
 """
 This miner is just a honest miner.
 Thread for sync must be started separately, wallet must be already created.
+TODO: PoK mining test
 """
 from hodl import block
 from hodl.block.mining import sc_calculator

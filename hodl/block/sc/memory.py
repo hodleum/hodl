@@ -66,6 +66,11 @@ class SCMemory:
                     pass   # todo: verify accept (sign)
 
     def __len__(self):
+        """
+        Length of the memory
+        :return: lenght
+        :rtype: int
+        """
         return self.size
 
     def __str__(self):
