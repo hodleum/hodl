@@ -24,7 +24,7 @@ class PoKMiner:
         self.mining_scs = []
         self.addr = addr
         self.privkey = privkey
-        self.conn = sqlite3.connect('hodl/db/pok-' + cg.h(addr))
+        self.conn = sqlite3.connect('hodl/db/pok-' + cg.h(addr), check_same_thread=False)
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
                      (scind text, n integer, mem text)''')
@@ -61,7 +61,7 @@ class PoKMiner:
             if self.addr in part.keys():
                 part = i
         if part is None:
-            raise PoKNotMiningError()
+            raise PoKNotMiningError(f'No part in {scind}')
         else:
             # calculate and push hash
             mem_hash = self.calculate_hash(scind)
@@ -87,12 +87,14 @@ class PoKMiner:
         :param scind: index of SC to mine
         :type scind: list
         """
+        # todo: do nothing if this SC doesn't needs PoK miners or if no space left
         b = bch[scind[0]]
         b.contracts[scind[1]].memory.peers.append(self.addr)
         bch[scind[0]] = b
         self.mining_scs.append(scind)
+        log.info(f'became peer of SC {scind}')
 
-    def mining_thread(self, bch):
+    def main_thread(self, bch):
         """
         Start mining loop in thread
         :param bch: blockchain
@@ -103,7 +105,14 @@ class PoKMiner:
             while True:
                 for sc in self.mining_scs:
                     self.mine(sc, bch)
-        Thread(target=mining, name="PoK").start()
+
+        def become_peer_loop():
+            while True:
+                for i in range(len(bch)):
+                    for j in range(len(bch[i].txs)):
+                        self.become_peer(bch, [i, j])
+        Thread(target=mining, name="PoK mining").start()
+        Thread(target=become_peer_loop, name="PoK discovering").start()
 
     def handle_get_request(self, request):
         """

@@ -23,9 +23,11 @@ from .Transaction import *
 from .Block import Block
 from .UnfilledBlock import UnfilledBlock
 import sqlite3
+from threading import Lock
 import re
 
 
+lock = Lock()
 # todo: blockchain freeze before new block
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
 # todo: smart contracts and SC messages connected to transaction
@@ -46,9 +48,9 @@ class Blockchain:
         """
         self.f = filename
         if m != 'ro':
-            self.conn = sqlite3.connect('hodl/db/' + filename)
+            self.conn = sqlite3.connect('hodl/db/' + filename, check_same_thread=False)
         else:
-            self.conn = sqlite3.connect('hodl/db/' + filename + '?mode=ro', uri=True)
+            self.conn = sqlite3.connect('hodl/db/' + filename + '?mode=ro', uri=True, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
@@ -73,8 +75,10 @@ class Blockchain:
                 return tnx
         if item < 0:
             item += len(self)
+        lock.acquire(True)
         self.cursor.execute("SELECT * FROM blocks WHERE ind=?", (item,))
         s = self.cursor.fetchone()[1]
+        lock.release()
         return Block.from_json(s)
 
     def append(self, block):
@@ -270,11 +274,13 @@ class Blockchain:
             raise StopIteration
 
     def __setitem__(self, key, value):
+        lock.acquire(True)
         # todo: tuple indexes, for example bch[1, 2] = tnx
         if key < 0:
             key += len(self)
         self.cursor.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
         self.conn.commit()
+        lock.release()
 
     def get_block(self, i, sync_get):
         """

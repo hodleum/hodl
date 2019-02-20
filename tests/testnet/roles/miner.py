@@ -18,9 +18,10 @@ def main(wallet, keys=None):
     time.sleep(5.5)
     log.info('task application_loop will be started just now')
     powminer.task_application_loop(wallet.bch)
-    powminer.run_tasks(wallet.bch)
     # start pok mining thread
     pokminer = sc_memory_miner.PoKMiner(keys['miner'][1], keys['miner'][0])
-    pokminer.mining_thread(wallet.bch)
+    pokminer.main_thread(wallet.bch)
+    # run pow task
+    powminer.run_tasks(wallet.bch)
     # wait
     pass   # todo

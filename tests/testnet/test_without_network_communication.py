@@ -19,7 +19,7 @@ with open('tests/keys', 'r') as f:
 
 
 def main(name):
-    log.basicConfig(level=log.DEBUG, format=name + ':%(module)s:%(lineno)d:%(message)s')
+    log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s')
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
         wallet.bch.clean()

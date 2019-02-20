@@ -1,5 +1,6 @@
 from hodl.block.constants import sc_base_mem, one_peer_mem
 import json
+import logging as log
 
 
 class SCMemoryError(Exception):
@@ -22,12 +23,13 @@ class SCMemory:
         """
         Distribute memory between miners
         """
+        log.info(f'distributing peers for {self.scind}')
         self.peers.sort()
         mem_len = len(self)
         peers_len = len(self.peers)
         segment_num = mem_len // one_peer_mem
         if peers_len < segment_num:
-            raise SCMemoryError
+            raise SCMemoryError(f'Not enough peers. Peers_len: {peers_len}, segment num: {segment_num}')
         peers_per_segment = peers_len // segment_num
         self.accepts = []
         for i in range(segment_num):
@@ -36,6 +38,7 @@ class SCMemory:
         if peers_len >= segment_num * peers_per_segment:
             for i, peer in enumerate(self.peers[segment_num * peers_per_segment:]):
                 self.accepts[i][peer] = {}
+        log.info(f'Peers for {self.scind} distributed')
 
     def push_memory(self, address, sign, mem_hash):
         """
