@@ -36,8 +36,14 @@ def main(name):
     elif name == 'Dave':
         my_wallet = wallet.new_wallet(keys['Dave'])
         Dave.main(wallet, keys)
-    elif name == 'miner':
-        my_wallet = wallet.new_wallet(keys['miner'])
+    elif name == 'miner0':
+        my_wallet = wallet.new_wallet(keys['miner0'])
+        miner.main(wallet, keys)
+    elif name == 'miner1':
+        my_wallet = wallet.new_wallet(keys['miner1'])
+        miner.main(wallet, keys)
+    elif name == 'miner2':
+        my_wallet = wallet.new_wallet(keys['miner2'])
         miner.main(wallet, keys)
     elif name == 'evil_miner':
         my_wallet = wallet.new_wallet(keys['evil_miner'])
