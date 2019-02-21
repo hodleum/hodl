@@ -38,13 +38,13 @@ def main(name):
         Dave.main(wallet, keys)
     elif name == 'miner0':
         my_wallet = wallet.new_wallet(keys['miner0'])
-        miner.main(wallet, keys)
+        miner.main(wallet, keys['miner0'])
     elif name == 'miner1':
         my_wallet = wallet.new_wallet(keys['miner1'])
-        miner.main(wallet, keys)
+        miner.main(wallet, keys['miner1'])
     elif name == 'miner2':
         my_wallet = wallet.new_wallet(keys['miner2'])
-        miner.main(wallet, keys)
+        miner.main(wallet, keys['miner2'])
     elif name == 'evil_miner':
         my_wallet = wallet.new_wallet(keys['evil_miner'])
         evil_miner.main(wallet, keys)
