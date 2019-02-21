@@ -111,3 +111,4 @@ ENV/
 tmp/
 net2/keys
 hodl/db
+db

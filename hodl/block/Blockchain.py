@@ -23,11 +23,11 @@ from .Transaction import *
 from .Block import Block
 from .UnfilledBlock import UnfilledBlock
 import sqlite3
-from threading import Lock
+from threading import RLock
 import re
 
 
-lock = Lock()
+lock = RLock()
 # todo: blockchain freeze before new block
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
 # todo: smart contracts and SC messages connected to transaction
@@ -48,9 +48,9 @@ class Blockchain:
         """
         self.f = filename
         if m != 'ro':
-            self.conn = sqlite3.connect('hodl/db/' + filename, check_same_thread=False)
+            self.conn = sqlite3.connect('db/' + filename, check_same_thread=False)
         else:
-            self.conn = sqlite3.connect('hodl/db/' + filename + '?mode=ro', uri=True, check_same_thread=False)
+            self.conn = sqlite3.connect('db/' + filename + '?mode=ro', uri=True, check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
@@ -88,8 +88,10 @@ class Blockchain:
         :param block: block to add in blockchain
         :type block: Block
         """
+        lock.acquire(True)
         self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(block)))
         self.conn.commit()
+        lock.release()
 
     def index(self, block):
         """
@@ -259,8 +261,11 @@ class Blockchain:
         return ind, tnxind
 
     def __len__(self):
+        lock.acquire(True)
         self.cursor.execute("SELECT ind FROM blocks")
-        return len(self.cursor.fetchall())
+        l = len(self.cursor.fetchall())
+        lock.release()
+        return l
 
     def __iter__(self):
         self.current = -1
@@ -313,8 +318,10 @@ class Blockchain:
         """
         Delete all blocks from blockchain
         """
+        lock.acquire(True)
         self.cursor.execute('''DELETE FROM blocks''')
         self.conn.commit()
+        lock.release()
 
     def add_sc(self, sc):
         """

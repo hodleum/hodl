@@ -24,7 +24,7 @@ class PoKMiner:
         self.mining_scs = []
         self.addr = addr
         self.privkey = privkey
-        self.conn = sqlite3.connect('hodl/db/pok-' + cg.h(addr), check_same_thread=False)
+        self.conn = sqlite3.connect('db/pok-' + cg.h(addr), check_same_thread=False)
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
                      (scind text, n integer, mem text)''')

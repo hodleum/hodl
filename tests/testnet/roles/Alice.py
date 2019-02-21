@@ -4,6 +4,7 @@ Thread for sync must be started separately, wallet must be already created.
 """
 from hodl import block
 import logging as log
+from threading import RLock
 import time
 
 

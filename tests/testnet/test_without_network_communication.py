@@ -4,8 +4,7 @@ from hodl import block
 from hodl import wallet
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
-import multiprocessing
-import time
+from threading import RLock
 import logging as log
 
 
@@ -14,6 +13,7 @@ import logging as log
 # Two seconds later Bob creates block & sends it to Alice & Chuck
 
 
+lock = RLock()
 with open('tests/keys', 'r') as f:
     keys = json.loads(f.readline())
 
