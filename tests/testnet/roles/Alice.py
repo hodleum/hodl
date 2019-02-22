@@ -17,7 +17,7 @@ def main(wallet, keys=None):
     ind = wallet.wallets[0].new_sc('__answer__="hello, world!"')
     log.info('created sc with indicies {}'.format(ind))
     log.info(f"length of last block's sc_tasks: {len(wallet.bch[-1].sc_tasks)}")
-    time.sleep(10)
+    time.sleep(5)
     b = wallet.bch[ind[0][0]]
     b.contracts[ind[0][1]].memory.distribute_peers()
     wallet.bch[ind[0][0]] = b

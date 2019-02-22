@@ -53,6 +53,7 @@ class PoWMiner:
         my_task = task.find_miner(self.address)
         self.answers[cg.h(str(task.parent))] = my_task.run(task.task)
         task.set_miner(self.address, my_task)
+        # todo: send info to PoK miner
         return task
 
     def __str__(self):

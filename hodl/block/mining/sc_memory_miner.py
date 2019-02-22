@@ -31,58 +31,6 @@ class PoKMiner:
         self.conn.commit()
         log.info('PoKMiner object created')
 
-    def calculate_hash(self, scind, addr=None):
-        """
-        Calculate hash of memory and address
-        :param scind: index (list) of smart contract, which memory will be taken for hash calculation
-        :type scind: list
-        :param addr: address to hash with memory
-        :type addr: str
-        :return: hash
-        :rtype: str
-        """
-        log.debug('calculating hash')
-        mem = self[scind]
-        log.debug('got mem')
-        if not addr:
-            addr = self.addr
-        log.debug('got mem and addr')
-        h = cg.h(json.dumps((mem, addr)))
-        return h
-
-    def mine(self, scind, bch):
-        """
-        Mine one smart contract: calculate and push hash for self, prove others' hashes
-        :param scind: Index of smart contract to mine
-        :type scind: list
-        :param bch: Blockchain
-        :type bch: block.Blockchain
-        """
-        sc = bch[scind[0]].contracts[scind[1]]
-        part = None
-        for i, part in enumerate(sc.memory.accepts):
-            if self.addr in part.keys():
-                part = i
-        if part is None:
-            raise PoKNotMiningError(f'No part in {scind}')
-        log.info('part is not none')
-        # calculate and push hash
-        mem_hash = self.calculate_hash(scind)
-        sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
-        log.debug('memory pushed')
-        # prove others' hashes
-        for addr in sc.memory.accepts[part].keys():
-            mem_hash = self.calculate_hash(scind, addr)
-            if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
-                    sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'],
-                                   addr, []):
-                sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
-                    json.dumps(('v', mem_hash, self.addr)), self.privkey)])
-        b = bch[scind[0]]
-        b.contracts[scind[1]] = sc
-        bch[scind[0]] = b
-        log.info(f'mining sc {scind} done')
-
     def become_peer(self, bch, scind):
         """
         Become PoK peer for SC
@@ -100,6 +48,59 @@ class PoKMiner:
         self.mining_scs.append(scind)
         self.add_sc(scind)
         log.info(f'became peer of SC {scind}')
+
+    def calculate_hash(self, scind, addr=None):
+        """
+        Calculate hash of memory and address
+        :param scind: index (list) of smart contract, which memory will be taken for hash calculation
+        :type scind: list
+        :param addr: address to hash with memory
+        :type addr: str
+        :return: hash
+        :rtype: str
+        """
+        log.debug(f'calculating hash for SC {scind}')
+        mem = self[scind]
+        if not addr:
+            addr = self.addr
+        h = cg.h(json.dumps((mem, addr)))
+        log.debug('hash calculated')
+        return h
+
+    def mine(self, scind, bch):
+        """
+        Mine one smart contract: calculate and push hash for self, prove others' hashes
+        :param scind: Index of smart contract to mine
+        :type scind: list
+        :param bch: Blockchain
+        :type bch: block.Blockchain
+        """
+        sc = bch[scind[0]].contracts[scind[1]]
+        part = None
+        for i, part in enumerate(sc.memory.accepts):
+            if self.addr in part.keys():
+                part = i
+        if part is None:
+            raise PoKNotMiningError(f'No part in {scind}')
+        log.info(f'part is not none in {scind}')
+        # calculate and push hash
+        mem_hash = self.calculate_hash(scind)
+        sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
+        log.debug('memory pushed')
+        # prove others' hashes
+        miners = sc.memory.accepts[part].keys()
+        for addr in miners:
+            log.debug(f'proving PoK miner {addr} in SC {scind}')
+            mem_hash = self.calculate_hash(scind, addr)
+            if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
+                    sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'], addr, []):
+                sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
+                    json.dumps(('v', mem_hash, self.addr)), self.privkey)])
+        log.debug('all miners proved')
+        b = bch[scind[0]]
+        b.contracts[scind[1]] = sc
+        bch[scind[0]] = b
+        log.info(f'mining sc {scind} done')
 
     def main_thread(self, bch):
         """
@@ -160,16 +161,6 @@ class PoKMiner:
         res = self.c.fetchone()[1]
         return res
 
-    def add_sc(self, key):
-        """
-        Add new SC to mine in local DB
-        :param key: SC's index
-        :type key: list
-        """
-        log.debug(f'adding SC {key} to db')
-        self.c.execute("INSERT INTO scs VALUES (?, ?)", (str([int(e) for e in key]), ''))
-        self.conn.commit()
-
     def __setitem__(self, key, value):
         """
         Set smart contract memory
@@ -186,6 +177,16 @@ class PoKMiner:
         Create this object's string representation
         """
         return json.dumps((self.addr, self.privkey, self.mining_scs))
+
+    def add_sc(self, key):
+        """
+        Add new SC to mine in local DB
+        :param key: SC's index
+        :type key: list
+        """
+        log.debug(f'adding SC {key} to db')
+        self.c.execute("INSERT INTO scs VALUES (?, ?)", (str([int(e) for e in key]), ''))
+        self.conn.commit()
 
     @classmethod
     def from_json(cls, s):
