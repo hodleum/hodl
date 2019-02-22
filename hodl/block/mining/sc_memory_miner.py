@@ -167,7 +167,7 @@ class PoKMiner:
         :type key: list
         """
         log.debug(f'adding SC {key} to db')
-        self.c.execute("INSERT INTO scs VALUES (?, ?)", (key, ''))
+        self.c.execute("INSERT INTO scs VALUES (?, ?)", (str([int(e) for e in key]), ''))
         self.conn.commit()
 
     def __setitem__(self, key, value):
