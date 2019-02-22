@@ -31,11 +31,11 @@ class TaskMiner:
 
 
 class Task:
-    def __init__(self, parents, n, task_class, miners=tuple(), task_data=None):
+    def __init__(self, parent, n, task_class, miners=tuple(), task_data=None):
         """
         init
-        :param parents: sc-parent index
-        :type parents: list
+        :param parent: sc-parent index
+        :type parent: list
         :param n: number of this task in sc
         :type n: int
         :param task_class: executor type (str, 'js' or 'wasm')
@@ -45,7 +45,7 @@ class Task:
         :param task_data: task data
         :type task_data: str
         """
-        self.parent = parents
+        self.parent = parent
         self.n = n
         self.miners = list(miners)
         self.task_class = task_class
@@ -82,7 +82,9 @@ class Task:
                 return
 
     def task_application(self, miner):
-        if len(self.miners) > MAXMINERS:
+        if len(self.miners) >= MAXMINERS:
+            return False
+        if miner in self.miners:
             return False
         self.miners.append(miner)
         return True

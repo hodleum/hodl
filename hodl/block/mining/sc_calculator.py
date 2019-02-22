@@ -1,9 +1,9 @@
-from hodl import block
 from hodl.block.sc.task import TaskMiner, Task
 from hodl import cryptogr as cg
 import json
 import time
 import logging as log
+from multiprocessing import Process
 
 
 # todo: PoW miner which wants to run task gets memory from PoK miner and pushes it after running task
@@ -17,18 +17,31 @@ class PoWMiner:
         self.tasks = []
         self.answers = {}
 
-    def task_application_loop(self, bch):
-        log.info('PoWMiner.task_application_loop')
+    def task_application(self, bch):
         for i in range(len(bch)):
-            for task in bch[i].sc_tasks:
-                if task.is_open():
-                    log.info('PoWMiner.task_application_loop: attending task')
-                    task.task_application(TaskMiner(address=self.address))
-                    self.tasks.append(task)
-                    log.info('PoWMiner.task_application_loop: attended task')
+            b = bch[i]
+            for j in range(len(b.sc_tasks)):
+                if b.sc_tasks[j].is_open() and b.sc_tasks[j] not in self.tasks:
+                    if b.sc_tasks[j].task_application(TaskMiner(address=self.address)):
+                        self.tasks.append(b.sc_tasks[j])
+                        log.info(f'PoWMiner.task_application_loop: attended task of SC {b.sc_tasks[j].parent}')
+                        bch[i] = b
+
+    def run_task(self, task):
+        """
+        Run task
+        :param task: task to run
+        :return: done task
+        """
+        my_task = task.find_miner(self.address)
+        self.answers[cg.h(str(task.parent))] = my_task.run(task.task)
+        task.set_miner(self.address, my_task)
+        # todo: send info to PoK miner
+        return task
 
     def run_tasks(self, bch):
-        log.info(f'PoWMiner.run_tasks. len(self.tasks): {len(self.tasks)}')
+        if len(self.tasks):
+            log.info(f'PoWMiner.run_tasks. len(self.tasks): {len(self.tasks)}')
         for i in range(len(self.tasks)):
             if not self.tasks[i].find_miner(self.address).result_hash:
                 log.info('PoWMiner.run_tasks: found task')
@@ -42,19 +55,23 @@ class PoWMiner:
                 b = bch[-1]
                 b.sc_tasks[index] = self.tasks[i]
                 bch[-1] = b
-        log.info('PoWMiner.run_tasks done')
 
-    def run_task(self, task):
+    def main_process(self, bch):
         """
-        Run task
-        :param task: task to run
-        :return: done task
+        Start mining loop in another process
+        :param bch: blockchain
+        :type bch: Blockchain
         """
-        my_task = task.find_miner(self.address)
-        self.answers[cg.h(str(task.parent))] = my_task.run(task.task)
-        task.set_miner(self.address, my_task)
-        # todo: send info to PoK miner
-        return task
+        def task_application_loop():
+            while True:
+                self.task_application(bch)
+                time.sleep(1)
+
+        def task_running_loop():
+            while True:
+                self.run_tasks(bch)
+        Process(target=task_application_loop, name='PoW task application loop').start()
+        Process(target=task_running_loop, name='PoW task running loop').start()
 
     def __str__(self):
         return json.dumps([self.address, [str(task) for task in self.tasks], self.answers])

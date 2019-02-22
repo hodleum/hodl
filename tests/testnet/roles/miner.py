@@ -13,11 +13,9 @@ def main(wallet, keys=None):
     # todo: start blockchain checking thread
     # start pok mining thread
     pokminer = sc_memory_miner.PoKMiner(keys[1], keys[0])
-    pokminer.main_thread(wallet.bch)
+    pokminer.main_process(wallet.bch)
     # start pow mining thread
     powminer = sc_calculator.PoWMiner(keys[1], keys[0])
     log.info('task application_loop will be started just now')
-    powminer.task_application_loop(wallet.bch)
-    # run pow task
-    powminer.run_tasks(wallet.bch)
+    powminer.main_process(wallet.bch)
     # wait

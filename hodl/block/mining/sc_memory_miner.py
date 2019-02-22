@@ -6,7 +6,7 @@ from hodl import cryptogr as cg
 import json
 import sqlite3
 import logging as log
-from threading import Thread
+from multiprocessing import Process
 
 
 class PoKNotMiningError(Exception):
@@ -102,9 +102,9 @@ class PoKMiner:
         bch[scind[0]] = b
         log.info(f'mining sc {scind} done')
 
-    def main_thread(self, bch):
+    def main_process(self, bch):
         """
-        Start mining loop in thread
+        Start mining loop in another process
         :param bch: blockchain
         :type bch: Blockchain
         """
@@ -122,8 +122,8 @@ class PoKMiner:
                 for i in range(len(bch)):
                     for j in range(len(bch[i].contracts)):
                         self.become_peer(bch, [i, j])
-        Thread(target=mining, name="PoK mining").start()
-        Thread(target=become_peer_loop, name="PoK discovering").start()
+        Process(target=mining, name="PoK mining").start()
+        Process(target=become_peer_loop, name="PoK discovering").start()
 
     def handle_get_request(self, request):
         """
