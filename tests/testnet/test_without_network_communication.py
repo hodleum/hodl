@@ -6,6 +6,7 @@ from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 from threading import RLock
 import logging as log
+import sys
 
 
 # Alice, Bob, Chuck, Dave are creating clear blockchain with genesis block
@@ -19,7 +20,7 @@ with open('tests/keys', 'r') as f:
 
 
 def main(name):
-    log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s')
+    log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s', stream=sys.stdout)
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
         wallet.bch.clean()

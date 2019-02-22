@@ -12,3 +12,4 @@ dpath
 v8-cffi
 python-vagrant
 fabric
+coloredlogs

@@ -27,7 +27,7 @@ class PoKMiner:
         self.conn = sqlite3.connect('db/pok-' + cg.h(addr), check_same_thread=False)
         self.c = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS scs
-                     (scind text, n integer, mem text)''')
+                     (scind text, mem text)''')
         self.conn.commit()
         log.info('PoKMiner object created')
 
@@ -41,9 +41,12 @@ class PoKMiner:
         :return: hash
         :rtype: str
         """
+        log.debug('calculating hash')
         mem = self[scind]
+        log.debug('got mem')
         if not addr:
             addr = self.addr
+        log.debug('got mem and addr')
         h = cg.h(json.dumps((mem, addr)))
         return h
 
@@ -62,19 +65,19 @@ class PoKMiner:
                 part = i
         if part is None:
             raise PoKNotMiningError(f'No part in {scind}')
-        else:
-            # calculate and push hash
-            mem_hash = self.calculate_hash(scind)
-            sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
-            # prove others' hashes
-            for addr in sc.memory.accepts[part].keys():
-                mem_hash = self.calculate_hash(scind, addr)
-                if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
-                        sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'],
-                                       addr, []):
-                    sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
-                        json.dumps(('v', mem_hash, self.addr)), self.privkey)])
-                # todo: debug
+        log.info('part is not none')
+        # calculate and push hash
+        mem_hash = self.calculate_hash(scind)
+        sc.memory.push_memory(self.addr, cg.sign(mem_hash, self.privkey), mem_hash)
+        log.debug('memory pushed')
+        # prove others' hashes
+        for addr in sc.memory.accepts[part].keys():
+            mem_hash = self.calculate_hash(scind, addr)
+            if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
+                    sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'],
+                                   addr, []):
+                sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
+                    json.dumps(('v', mem_hash, self.addr)), self.privkey)])
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
         bch[scind[0]] = b
@@ -95,6 +98,7 @@ class PoKMiner:
         b.contracts[scind[1]].memory.peers.append(self.addr)
         bch[scind[0]] = b
         self.mining_scs.append(scind)
+        self.add_sc(scind)
         log.info(f'became peer of SC {scind}')
 
     def main_thread(self, bch):
@@ -153,7 +157,18 @@ class PoKMiner:
         :rtype: str
         """
         self.c.execute("SELECT * FROM scs WHERE scind=?", (str([int(e) for e in item]),))
-        return self.c.fetchone()[2]
+        res = self.c.fetchone()[1]
+        return res
+
+    def add_sc(self, key):
+        """
+        Add new SC to mine in local DB
+        :param key: SC's index
+        :type key: list
+        """
+        log.debug(f'adding SC {key} to db')
+        self.c.execute("INSERT INTO scs VALUES (?, ?)", (key, ''))
+        self.conn.commit()
 
     def __setitem__(self, key, value):
         """

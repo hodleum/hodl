@@ -55,7 +55,7 @@ class SCMemory:
                 self.accepts[i][address]['hash'] = mem_hash
                 self.accepts[i][address]['sign'] = sign
                 self.accepts[i][address]['accepts'] = {}
-                break
+                return
 
     def clean_accepts(self):
         """
