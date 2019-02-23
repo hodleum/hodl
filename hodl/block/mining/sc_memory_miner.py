@@ -6,6 +6,7 @@ from hodl import cryptogr as cg
 import json
 import sqlite3
 import logging as log
+from threading import Thread
 from multiprocessing import Process
 
 
@@ -134,8 +135,14 @@ class PoKMiner:
                 for i in range(len(bch)):
                     for j in range(len(bch[i].contracts)):
                         self.become_peer(bch, [i, j])
-        Process(target=mining, name="PoK mining").start()
-        Process(target=become_peer_loop, name="PoK discovering").start()
+
+        def threads():
+            Thread(target=mining, name='PoK discovering').start()
+            Thread(target=become_peer_loop, name='PoK mining').start()
+            while True:
+                pass
+
+        Process(target=threads, name='PoW mining loop').start()
 
     def handle_get_request(self, request):
         """

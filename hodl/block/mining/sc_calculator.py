@@ -3,6 +3,7 @@ from hodl import cryptogr as cg
 import json
 import time
 import logging as log
+from threading import Thread
 from multiprocessing import Process
 
 
@@ -25,23 +26,6 @@ class PoWMiner:
         self.tasks = []
         self.answers = {}
 
-    def task_application(self, bch):
-        """
-        Attend task
-
-        :param bch: blockchain
-        :type bch: Blockchain
-        """
-        for i in range(len(bch)):
-            b = bch[i]
-            for j in range(len(b.sc_tasks)):
-                if b.sc_tasks[j].is_open() and b.sc_tasks[j] not in self.tasks:
-                    if b.sc_tasks[j].task_application(TaskMiner(address=self.address)):
-                        self.tasks.append(b.sc_tasks[j])
-                        log.info(f"PoWMiner.task_application_loop: attended task of SC {b.sc_tasks[j].parent}. len of "
-                                 f"its' miners list: {len(b.sc_tasks[j].miners)}")
-                        bch[i] = b
-
     def run_task(self, task):
         """
         Run task
@@ -55,6 +39,23 @@ class PoWMiner:
         # todo: send info to PoK miner
         return task
 
+    def task_application(self, bch):
+        """
+        Attend task
+
+        :param bch: blockchain
+        :type bch: Blockchain
+        """
+        for i in range(len(bch)):
+            b = bch[i]
+            for j in range(len(b.sc_tasks)):
+                if b.sc_tasks[j].is_open() and hash(b.sc_tasks[j]) not in map(hash, self.tasks):
+                    if b.sc_tasks[j].task_application(TaskMiner(address=self.address)):
+                        self.tasks.append(b.sc_tasks[j])
+                        log.info(f"PoWMiner.task_application_loop: attended task of SC {b.sc_tasks[j].parent}. len of "
+                                 f"its' miners list: {len(b.sc_tasks[j].miners)}, len of self.tasks: {len(self.tasks)}")
+                        bch[i] = b
+
     def run_tasks(self, bch):
         """
         Run all available tasks
@@ -62,8 +63,8 @@ class PoWMiner:
         :param bch: blockchain
         :type bch: Blockchain
         """
-        if len(self.tasks):
-            log.info(f'PoWMiner.run_tasks. len(self.tasks): {len(self.tasks)}')
+        if not len(self.tasks):
+            time.sleep(1)
         for i in range(len(self.tasks)):
             if not self.tasks[i].find_miner(self.address).result_hash:
                 log.info('PoWMiner.run_tasks: found task')
@@ -86,15 +87,22 @@ class PoWMiner:
         :type bch: Blockchain
         """
         def task_application_loop():
+            log.info('task application loop started')
             while True:
                 self.task_application(bch)
                 time.sleep(1)
 
         def task_running_loop():
+            log.info('task running loop started')
             while True:
                 self.run_tasks(bch)
-        Process(target=task_application_loop, name='PoW task application loop').start()
-        Process(target=task_running_loop, name='PoW task running loop').start()
+
+        def threads():
+            Thread(target=task_application_loop, name='PoW task application loop').start()
+            Thread(target=task_running_loop, name='PoW task running loop').start()
+            while True:
+                pass
+        Process(target=threads, name='PoW mining loop').start()
 
     def __str__(self):
         """
