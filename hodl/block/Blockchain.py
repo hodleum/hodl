@@ -224,18 +224,6 @@ class Blockchain:
         log.info(f'created transaction with index {ind}')
         return ind
 
-    def __str__(self):
-        """Encodes blockchain to str"""
-        return json.dumps([str(e) for e in self])
-
-    def from_json(self, s):
-        """Decodes blockchain from str"""
-        bs = json.loads(s)
-        for b in bs:
-            block = Block()
-            block.from_json(b)
-            self.append(block)
-
     def new_sc(self, text, author, author_priv, memsize=10000000, lang="js"):
         """
         Creates new smart contract and adds it to the chain

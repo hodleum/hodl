@@ -43,6 +43,7 @@ class SCMemory:
     def push_memory(self, address, sign, mem_hash):
         """
         Update hash for miner's memory part
+
         :param address: miner
         :type address: str
         :param sign: sign hash
@@ -70,6 +71,7 @@ class SCMemory:
     def __len__(self):
         """
         Length of the memory
+
         :return: lenght
         :rtype: int
         """
@@ -78,7 +80,9 @@ class SCMemory:
     def __str__(self):
         """
         Save memory to str so it can be restored
-        :return:
+
+        :return: Memory string representation
+        :rtype: str
         """
         return json.dumps([self.scind, self.size, self.peers, self.accepts])
 
@@ -86,6 +90,7 @@ class SCMemory:
     def from_json(cls, s):
         """
         Restore memory from str
+
         :param s: str
         :return: SCMemory
         """

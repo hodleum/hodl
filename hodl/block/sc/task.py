@@ -6,17 +6,15 @@ import mmh3
 
 
 class TaskMiner:
-    def __init__(self, difficulty=None, result_hash=None, address=None):
+    def __init__(self, address=None, difficulty=None, result_hash=None):
         self.difficulty = difficulty
         self.result_hash = result_hash
         self.address = address
 
-    def __str__(self):
-        return json.dumps((self.address, self.difficulty, self.result_hash))
-
     def run(self, task):
         """
         Run task
+
         :param task: task to run
         """
         t = task
@@ -25,8 +23,34 @@ class TaskMiner:
         self.result_hash = t.result_hash()
         return t.result_dump()
 
+    def __hash__(self):
+        """
+        Needed to index miners
+
+        :return: hash of miner's address
+        :rtype: str
+        """
+        return mmh3.hash(self.address)
+
+    def __str__(self):
+        """
+        String representation of TaskMiner
+
+        :return: representation
+        :rtype: str
+        """
+        return json.dumps((self.address, self.difficulty, self.result_hash))
+
     @classmethod
     def from_json(cls, s):
+        """
+        Restore TaskMiner from JSON
+
+        :param s: representation
+        :rtype s: str
+        :return: TaskMiner
+        :rtype: TaskMiner
+        """
         return cls(*json.loads(s))
 
 
@@ -34,6 +58,7 @@ class Task:
     def __init__(self, parent, n, task_class, miners=tuple(), task_data=None):
         """
         init
+
         :param parent: sc-parent index
         :type parent: list
         :param n: number of this task in sc
@@ -93,11 +118,18 @@ class Task:
         return len(self.miners) <= MAXMINERS and not self.done
 
     def __hash__(self):
+        """
+        Hash of task
+
+        :return: hash
+        :rtype: int
+        """
         return mmh3.hash(json.dumps((self.parent, self.n)))
 
     def __str__(self):
         """
         Convert task to JSON
+
         :return: task's JSON representation
         :rtype: str
         """
@@ -107,6 +139,7 @@ class Task:
     def from_json(cls, s):
         """
         Restore task from JSON
+
         :param s: task's JSON representation (from Task.__str__)
         :type s: str
         :return: task

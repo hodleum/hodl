@@ -1,5 +1,5 @@
 """
-module describing block - an item of blockchain
+Module describing block - an item of blockchain
 """
 import time
 import json
@@ -45,41 +45,6 @@ class Block:
         self.h = None
         self.sc_tasks = []   # completed tasks add here
         self.update()
-
-    def __str__(self):
-        """
-        Encodes block to str using JSON
-
-        :return:block, converted to str
-        """
-        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash, [str(c) for c in self.contracts],
-                           str(self.fixer) if self.fixer else None, str(self.miners),
-                           [str(task) for task in self.sc_tasks]))
-
-    @classmethod
-    def from_json(cls, s):
-        """
-        Decodes block from str using JSON
-
-        :param s: string - encoded block
-        :return: Block
-        """
-        self = cls()
-        s = json.loads(s)
-        self.txs = []
-        self.contracts = []
-        for t in s[0]:
-            self.txs.append(Transaction.from_json(t))
-        for c in s[3]:
-            sc = SmartContract.from_json(c)
-            self.contracts.append(sc)
-        self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[4], s[5]
-        if self.fixer:
-            self.fixer = BlockFixer.from_json(self.fixer)
-        self.miners = Miners.from_json(self.miners)
-        self.sc_tasks = [Task.from_json(task) for task in s[6]]
-        self.update()
-        return self
 
     def append(self, txn):
         """
@@ -168,3 +133,38 @@ class Block:
                 self.contracts.pop(i)
         self.sort()
         self.update()
+
+    def __str__(self):
+        """
+        Encodes block to str using JSON
+
+        :return:block, converted to str
+        """
+        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash, [str(c) for c in self.contracts],
+                           str(self.fixer) if self.fixer else None, str(self.miners),
+                           [str(task) for task in self.sc_tasks]))
+
+    @classmethod
+    def from_json(cls, s):
+        """
+        Decodes block from str using JSON
+
+        :param s: string - encoded block
+        :return: Block
+        """
+        self = cls()
+        s = json.loads(s)
+        self.txs = []
+        self.contracts = []
+        for t in s[0]:
+            self.txs.append(Transaction.from_json(t))
+        for c in s[3]:
+            sc = SmartContract.from_json(c)
+            self.contracts.append(sc)
+        self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[4], s[5]
+        if self.fixer:
+            self.fixer = BlockFixer.from_json(self.fixer)
+        self.miners = Miners.from_json(self.miners)
+        self.sc_tasks = [Task.from_json(task) for task in s[6]]
+        self.update()
+        return self

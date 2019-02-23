@@ -24,12 +24,14 @@ class PoWMiner:
                 if b.sc_tasks[j].is_open() and b.sc_tasks[j] not in self.tasks:
                     if b.sc_tasks[j].task_application(TaskMiner(address=self.address)):
                         self.tasks.append(b.sc_tasks[j])
-                        log.info(f'PoWMiner.task_application_loop: attended task of SC {b.sc_tasks[j].parent}')
+                        log.info(f"PoWMiner.task_application_loop: attended task of SC {b.sc_tasks[j].parent}. len of "
+                                 f"its' miners list: {len(b.sc_tasks[j].miners)}")
                         bch[i] = b
 
     def run_task(self, task):
         """
         Run task
+
         :param task: task to run
         :return: done task
         """
@@ -40,6 +42,12 @@ class PoWMiner:
         return task
 
     def run_tasks(self, bch):
+        """
+        Run all available tasks
+
+        :param bch: blockchain
+        :type bch: Blockchain
+        """
         if len(self.tasks):
             log.info(f'PoWMiner.run_tasks. len(self.tasks): {len(self.tasks)}')
         for i in range(len(self.tasks)):
@@ -59,6 +67,7 @@ class PoWMiner:
     def main_process(self, bch):
         """
         Start mining loop in another process
+
         :param bch: blockchain
         :type bch: Blockchain
         """
@@ -74,10 +83,23 @@ class PoWMiner:
         Process(target=task_running_loop, name='PoW task running loop').start()
 
     def __str__(self):
+        """
+        Get string representation of PoW miner
+
+        :return: representation
+        :rtype: str
+        """
         return json.dumps([self.address, [str(task) for task in self.tasks], self.answers])
 
     @classmethod
     def from_json(cls, s):
+        """
+        Restore PoW miner from JSON
+
+        :param s: string representation
+        :type s: str
+        :return: PoWMiner
+        """
         s = json.loads(s)
         self = cls(s[0])
         self.answers = s[2]
