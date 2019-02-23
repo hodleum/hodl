@@ -11,6 +11,14 @@ from multiprocessing import Process
 
 class PoWMiner:
     def __init__(self, address, privkey):
+        """
+        Init
+
+        :param address: address of miner
+        :type address: str
+        :param privkey: miner's private key
+        :type privkey: str
+        """
         log.info('PoWMiner sc_calculator created')
         self.address = address
         self.privkey = privkey
@@ -18,6 +26,12 @@ class PoWMiner:
         self.answers = {}
 
     def task_application(self, bch):
+        """
+        Attend task
+
+        :param bch: blockchain
+        :type bch: Blockchain
+        """
         for i in range(len(bch)):
             b = bch[i]
             for j in range(len(b.sc_tasks)):
@@ -89,7 +103,7 @@ class PoWMiner:
         :return: representation
         :rtype: str
         """
-        return json.dumps([self.address, [str(task) for task in self.tasks], self.answers])
+        return json.dumps([self.address, [str(task) for task in self.tasks], self.answers, self.privkey])
 
     @classmethod
     def from_json(cls, s):
@@ -101,7 +115,7 @@ class PoWMiner:
         :return: PoWMiner
         """
         s = json.loads(s)
-        self = cls(s[0])
+        self = cls(s[0], s[3])
         self.answers = s[2]
         self.tasks = [Task.from_json(task) for task in s[1]]
         return self

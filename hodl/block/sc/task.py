@@ -6,7 +6,17 @@ import mmh3
 
 
 class TaskMiner:
-    def __init__(self, address=None, difficulty=None, result_hash=None):
+    def __init__(self, address='', difficulty=None, result_hash=None):
+        """
+        Init
+
+        :param address: miner's address
+        :type address: str
+        :param difficulty: difficulty of task estimated by this miner
+        :type difficulty: float
+        :param result_hash: hash of this miner's result
+        :type result_hash: int
+        """
         self.difficulty = difficulty
         self.result_hash = result_hash
         self.address = address
@@ -82,6 +92,12 @@ class Task:
             self.task = None
 
     def awards(self):
+        """
+        Calculate awards
+
+        :return: awards
+        :rtype: dict
+        """
         results = dict(Counter([miner.result_hash for miner in self.miners]))
         results, numbers = results.keys(), results.values()
         number = max(numbers)
@@ -95,18 +111,40 @@ class Task:
         self.done = True
         return awards
 
-    def find_miner(self, miner):
+    def find_miner(self, address):
+        """
+        Find miner by address
+
+        :param address: miner's address
+        :type address: str
+        :return: miner
+        :rtype: TaskMiner
+        """
         for m in self.miners:
-            if m.address == miner:
+            if m.address == address:
                 return m
 
     def set_miner(self, address, miner):
+        """
+        Update miner by address (if task is solved)
+
+        :param address: address of miner
+        :type address: str
+        :param miner: TaskMiner object
+        :type miner: TaskMiner
+        """
         for i, m in enumerate(self.miners):
             if m.address == address:
                 self.miners[i] = miner
                 return
 
     def task_application(self, miner):
+        """
+        Add miner to task
+
+        :param miner: miner to add
+        :return:
+        """
         if len(self.miners) >= MAXMINERS:
             return False
         if hash(miner) in map(hash, self.miners):
@@ -115,6 +153,12 @@ class Task:
         return True
 
     def is_open(self):
+        """
+        If task is open: are new miners needed
+
+        :return: is task open or not
+        :rtype: bool
+        """
         return len(self.miners) <= MAXMINERS and not self.done
 
     def __hash__(self):

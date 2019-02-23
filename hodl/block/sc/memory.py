@@ -59,7 +59,7 @@ class SCMemory:
                 log.info(f'memory pushed in {self.scind}')
                 return
 
-    def clean_accepts(self):
+    def clear_accepts(self):
         """
         Delete all accepts with invalid sign (for example, previous hash was sign)
         """

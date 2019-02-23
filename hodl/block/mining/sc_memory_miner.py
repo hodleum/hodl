@@ -21,6 +21,14 @@ class PoKMiner:
     miner writes changes to local database or calculates hash to proof validity.
     """
     def __init__(self, addr, privkey):
+        """
+        Init
+
+        :param addr: address of miner
+        :type addr: str
+        :param privkey: miner's private key
+        :type privkey: str
+        """
         self.mining_scs = []
         self.addr = addr
         self.privkey = privkey
