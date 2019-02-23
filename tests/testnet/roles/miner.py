@@ -10,12 +10,7 @@ import time
 def main(wallet, keys=None):
     log.info("miner's main started")
     log.debug("miner's money: " + str(wallet.bch.money(keys[1])))
-    # todo: start blockchain checking thread
-    # start pok mining thread
-    pokminer = sc_memory_miner.PoKMiner(keys[1], keys[0])
-    pokminer.main_process(wallet.bch)
-    # start pow mining thread
-    powminer = sc_calculator.PoWMiner(keys[1], keys[0])
-    log.info('task application_loop will be started just now')
-    powminer.main_process(wallet.bch)
+    # start mining
+    wallet.act()
     # wait
+    input()

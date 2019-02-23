@@ -15,12 +15,16 @@ Main methods:
 TODO mining tools in wallet
 TODO requests to smart contracts
 """
-import json
-import logging as log
 from hodl import cryptogr as cg
-from hodl.block.Blockchain import Blockchain
+from hodl.block import Blockchain
 from hodl.block.Transaction import rm_dubl_from_outs
 from hodl.block import mining
+from hodl.block.mining.sc_memory_miner import PoKMiner
+from hodl.block.mining.sc_calculator import PoWMiner
+import json
+import logging as log
+import time
+from multiprocessing import Process
 
 
 bch = Blockchain()
@@ -32,10 +36,13 @@ class NotEnoughMoney(Exception):
 
 
 class Wallet:
-    def __init__(self, keys=None):
+    def __init__(self, keys=None, is_pow_miner=False, is_pok_miner=False):
         if not keys:
             keys = cg.gen_keys()
         self.privkey, self.pubkey = keys
+        self.powminer = PoWMiner(keys[1], keys[0]) if is_pow_miner else None
+        self.pokminer = PoKMiner(keys[1], keys[0]) if is_pok_miner else None
+        self.bch = bch
 
     def new_transaction(self, outs, outns, nick=''):
         """
@@ -103,14 +110,6 @@ class Wallet:
     def my_money(self):
         return bch.money(self.pubkey)
 
-    @staticmethod
-    def act():
-        """
-        Appending blockchain with new blocks
-        """
-        if bch[-1].is_full:
-            bch.append(mining.mine(bch))
-
     def set_nick(self, nick):
         """
         Set nick for wallet
@@ -120,12 +119,32 @@ class Wallet:
         self.new_transaction([self.pubkey], [0], nick=nick)
         self.pubkey = nick
 
+    def act(self):
+        """
+        Start all processes like cleaning, mining
+        todo: start cleaning
+        """
+        if self.powminer:
+            self.powminer.main_process(bch)
+        if self.pokminer:
+            self.pokminer.main_process(bch)
+
     def __str__(self):
         return json.dumps((self.privkey, self.pubkey))
 
     @classmethod
     def from_json(cls, st):
         return cls(json.loads(st))
+
+
+def appending_loop():
+    while True:
+        if bch[-1].is_full:
+            bch.append(mining.mine(bch))
+        time.sleep(1)
+
+
+Process(target=appending_loop, name="blockchain appending loop")
 
 
 def new_wallet(keys=None):

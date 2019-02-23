@@ -2,6 +2,7 @@
 import os
 from hodl import block
 from hodl import wallet
+from hodl.wallet import Wallet
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 from threading import RLock
@@ -26,29 +27,29 @@ def main(name):
         wallet.bch.clean()
         with open('tests/genblock.bl', 'r') as f:
             wallet.bch.append(block.Block.from_json(f.readline()))
-        my_wallet = wallet.new_wallet(keys['Alice'])
-        Alice.main(wallet, keys)
+        my_wallet = Wallet(keys['Alice'])
+        Alice.main(my_wallet, keys)
     elif name == 'Bob':
-        my_wallet = wallet.new_wallet(keys['Bob'])
-        Bob.main(wallet, keys)
+        my_wallet = Wallet(keys['Bob'])
+        Bob.main(my_wallet, keys)
     elif name == 'Chuck':
-        my_wallet = wallet.new_wallet(keys['Chuck'])
-        Chuck.main(wallet, keys)
+        my_wallet = Wallet(keys['Chuck'])
+        Chuck.main(my_wallet, keys)
     elif name == 'Dave':
-        my_wallet = wallet.new_wallet(keys['Dave'])
-        Dave.main(wallet, keys)
+        my_wallet = Wallet(keys['Dave'])
+        Dave.main(my_wallet, keys)
     elif name == 'miner0':
-        my_wallet = wallet.new_wallet(keys['miner0'])
-        miner.main(wallet, keys['miner0'])
+        my_wallet = Wallet(keys['miner0'], True, True)
+        miner.main(my_wallet, keys['miner0'])
     elif name == 'miner1':
-        my_wallet = wallet.new_wallet(keys['miner1'])
-        miner.main(wallet, keys['miner1'])
+        my_wallet = Wallet(keys['miner1'], True, True)
+        miner.main(my_wallet, keys['miner1'])
     elif name == 'miner2':
-        my_wallet = wallet.new_wallet(keys['miner2'])
-        miner.main(wallet, keys['miner2'])
+        my_wallet = Wallet(keys['miner2'], True, True)
+        miner.main(my_wallet, keys['miner2'])
     elif name == 'evil_miner':
-        my_wallet = wallet.new_wallet(keys['evil_miner'])
-        evil_miner.main(wallet, keys)
+        my_wallet = Wallet(keys['evil_miner'])
+        evil_miner.main(my_wallet, keys)
 
 
 main(os.getenv('HODL_NAME'))
