@@ -109,7 +109,7 @@ class Task:
     def task_application(self, miner):
         if len(self.miners) >= MAXMINERS:
             return False
-        if miner in self.miners:
+        if hash(miner) in map(hash, self.miners):
             return False
         self.miners.append(miner)
         return True

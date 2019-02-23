@@ -56,6 +56,7 @@ class SCMemory:
                 self.accepts[i][address]['hash'] = mem_hash
                 self.accepts[i][address]['sign'] = sign
                 self.accepts[i][address]['accepts'] = {}
+                log.info(f'memory pushed in {self.scind}')
                 return
 
     def clean_accepts(self):
