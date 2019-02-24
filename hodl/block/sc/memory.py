@@ -1,5 +1,6 @@
-import json
 from hodl.block.constants import sc_base_mem, one_peer_mem
+import json
+import logging as log
 
 
 class SCMemoryError(Exception):
@@ -21,14 +22,14 @@ class SCMemory:
     def distribute_peers(self):
         """
         Distribute memory between miners
-        :return:
         """
+        log.info(f'distributing peers for {self.scind}')
         self.peers.sort()
         mem_len = len(self)
         peers_len = len(self.peers)
         segment_num = mem_len // one_peer_mem
         if peers_len < segment_num:
-            raise SCMemoryError
+            raise SCMemoryError(f'Not enough peers. Peers_len: {peers_len}, segment num: {segment_num}')
         peers_per_segment = peers_len // segment_num
         self.accepts = []
         for i in range(segment_num):
@@ -37,10 +38,12 @@ class SCMemory:
         if peers_len >= segment_num * peers_per_segment:
             for i, peer in enumerate(self.peers[segment_num * peers_per_segment:]):
                 self.accepts[i][peer] = {}
+        log.info(f'Peers for {self.scind} distributed')
 
     def push_memory(self, address, sign, mem_hash):
         """
         Update hash for miner's memory part
+
         :param address: miner
         :type address: str
         :param sign: sign hash
@@ -52,10 +55,11 @@ class SCMemory:
             if address in self.accepts[i].keys():
                 self.accepts[i][address]['hash'] = mem_hash
                 self.accepts[i][address]['sign'] = sign
-                self.accepts[i][address]['accepts'] = {}
-                break
+                self.accepts[i][address]['accepts'] = []
+                log.info(f'memory pushed in {self.scind}')
+                return
 
-    def clean_accepts(self):
+    def clear_accepts(self):
         """
         Delete all accepts with invalid sign (for example, previous hash was sign)
         """
@@ -66,12 +70,20 @@ class SCMemory:
                     pass   # todo: verify accept (sign)
 
     def __len__(self):
+        """
+        Length of the memory
+
+        :return: lenght
+        :rtype: int
+        """
         return self.size
 
     def __str__(self):
         """
         Save memory to str so it can be restored
-        :return:
+
+        :return: Memory string representation
+        :rtype: str
         """
         return json.dumps([self.scind, self.size, self.peers, self.accepts])
 
@@ -79,6 +91,7 @@ class SCMemory:
     def from_json(cls, s):
         """
         Restore memory from str
+
         :param s: str
         :return: SCMemory
         """

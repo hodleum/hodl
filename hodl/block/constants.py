@@ -5,11 +5,11 @@ This file contains important constants
 """
 reward_percent = 1/4000000
 reward_percent_at_start = 1/200000
-# todo: higher reward percent at start
+# todo: higher reward percent at start, sigmoid
 # total reward for PoW
-pow_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) + sum(b.txs[1].outns) for b in bch])
+pow_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) for b in bch])
 # total reward for PoK
-pok_total = lambda bch: reward_percent * sum([sum(b.txs[0].outns) + sum(b.txs[1].outns) for b in bch])
+pok_total = lambda bch: reward_percent * sum([sum(b.txs[1].outns) for b in bch])
 # maximum miners for one task
 MAXMINERS = 5
 # maximum hash to be a miner (will be removed)

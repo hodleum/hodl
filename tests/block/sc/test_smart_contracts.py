@@ -1,9 +1,9 @@
-import block
-from block.sc.executors.js.jstask import JSTask
-from block.sc.executors.js.jstools import CTX
-from block.sc import SmartContract
+from hodl import block
+from hodl.block.sc.executors.js.jstask import JSTask
+from hodl.block.sc.executors.js.jstools import CTX
+from hodl.block.sc import SmartContract
 import unittest
-import cryptogr as cg
+from hodl import cryptogr as cg
 import json
 import os
 

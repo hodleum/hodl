@@ -11,6 +11,7 @@ from hodl.block.constants import sc_base_code_size, sc_memprice, sc_code_price, 
 
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark
 # todo: smart contract's signs
+# todo: automatically start memory distribution
 
 
 def check_sc_award_tnx(bch, tnxind, sc):

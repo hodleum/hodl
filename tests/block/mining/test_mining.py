@@ -1,6 +1,6 @@
-from block import mining
-import block
-import cryptogr as cg
+from hodl.block import mining
+import hodl.block
+import hodl.cryptogr as cg
 import unittest
 from unittest.mock import sentinel, patch, MagicMock
 
