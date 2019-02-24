@@ -55,7 +55,7 @@ class SCMemory:
             if address in self.accepts[i].keys():
                 self.accepts[i][address]['hash'] = mem_hash
                 self.accepts[i][address]['sign'] = sign
-                self.accepts[i][address]['accepts'] = {}
+                self.accepts[i][address]['accepts'] = []
                 log.info(f'memory pushed in {self.scind}')
                 return
 

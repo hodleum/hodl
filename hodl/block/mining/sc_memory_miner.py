@@ -104,10 +104,11 @@ class PoKMiner:
         for addr in miners:
             log.debug(f'proving PoK miner {addr} in SC {scind}')
             mem_hash = self.calculate_hash(scind, addr)
-            if mem_hash == sc.memory.accepts[part][addr]['hash'] and cg.verify_sign(
-                    sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'], addr, []):
-                sc.memory.accepts[part][addr]['accepts'].append([self.addr, cg.sign(
-                    json.dumps(('v', mem_hash, self.addr)), self.privkey)])
+            valid_sign = cg.verify_sign(
+                    sc.memory.accepts[part][addr]['sign'], sc.memory.accepts[part][addr]['hash'], addr, [])
+            if mem_hash == sc.memory.accepts[part][addr]['hash'] and valid_sign:
+                accept = [self.addr, cg.sign(json.dumps(('v', mem_hash, self.addr)), self.privkey)]
+                sc.memory.accepts[part][addr]['accepts'].append(accept)
         log.debug('all miners proved')
         b = bch[scind[0]]
         b.contracts[scind[1]] = sc
