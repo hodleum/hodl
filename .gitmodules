@@ -2,5 +2,5 @@
 	path = hodl/net
 	url = https://github.com/hodleum/hodl_net.git
 [submodule "hodl/vagrant"]
-	path = vagrant
+	path = hodl/vagrant
 	url = https://github.com/hodleum/hodl_vpack.git
