@@ -13,7 +13,6 @@ class WasmProcess:
         self.prg = wasm.Module(prg)
         self.backend = backend
 
-
     def run_script(self, params=[]) -> Process:
         loaded = wasm.instantiate(self.prg, hdlib.pyimports, "python")
         thr = Process(target=loaded.exports.main, args=params)
@@ -28,13 +27,13 @@ class WasmProcess:
     def from_json(self):
         pass
 
-
     def get_mem_block(self, block: int, size: int):
         try:
-          return self.instance.exports.memory.read(block, size)
+            return self.instance.exports.memory.read(block, size)
         except AttributeError:
-          print("Memory is not available")
-          return None
+            print("Memory is not available")
+            return None
+
     def get_self_diag(self):
         try:
             mem_info = str(self.instance._memories)
@@ -62,6 +61,7 @@ Dir's info:
 
         return diagnose
 
+
 if __name__ == '__main__':
     test_prgs = [
         "(module (func (export main) (result i32) (i32.const 42) (return)))",
@@ -76,7 +76,7 @@ if __name__ == '__main__':
  )
 )
 
-""","""
+""", """
 (module
  (table 0 anyfunc)
  (memory $0 1)
@@ -90,7 +90,7 @@ if __name__ == '__main__':
  )
 )
 
-""","""
+""", """
 (module
  (table 0 anyfunc)
  (memory $0 1)
@@ -114,19 +114,20 @@ if __name__ == '__main__':
     for i in test_prgs:
         inst = WasmProcess(i)
         try:
-          inst.run_script()
+            inst.run_script()
         except TypeError:
-          inst.run_script(params=[2])
+            inst.run_script(params=[2])
 
         print(inst.get_self_diag())
         mvar = inst.get_mem_block(0, 64)
         if mvar is not None:
-          print("ZBlock: ", mvar)
-          try:
-            if int.from_bytes(mvar, byteorder='big', signed=False) != 2-45: raise BaseException("Test failed: result is not -43")
-          except ValueError:
-            pass
+            print("ZBlock: ", mvar)
+            try:
+                if int.from_bytes(mvar, byteorder='big', signed=False) != 2 - 45: raise BaseException(
+                    "Test failed: result is not -43")
+            except ValueError:
+                pass
         try:
-           inst.thr.terminate()
+            inst.thr.terminate()
         except AttributeError:
-           print("Already Stopped...")
+            print("Already Stopped...")
