@@ -46,7 +46,6 @@ class Blockchain:
         :param m: mode
         :type m: str
         """
-        self.f = filename
         if m != 'ro':
             self.conn = sqlite3.connect('db/' + filename, check_same_thread=False)
         else:

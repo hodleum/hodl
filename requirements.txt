@@ -1,15 +1,6 @@
 flask
-attrs
-sqlalchemy
-werkzeug
 pycryptodome
 json5
-docker
-raven
 mmh3
-twisted
 dpath
 v8-cffi
-python-vagrant
-fabric
-coloredlogs
