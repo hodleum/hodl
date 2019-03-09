@@ -4,7 +4,7 @@ docker rm Alice Bob Chuck Dave miner0 miner1 miner2 evil_miner
 rm -f ../db/pok-2283324386201704913611015020843666292235918222617817014529141752335014299241241 ../db/pok-17996223138107222202377230874529513975511642551523777249172252515418524872198194 ../db/pok-109672917314017523867209239114132102118240421885719212451951543047141123164179232135140
 ./twnc.sh
 date
-sleep 25
+python3 -c "total = 20;import time;from progress.bar import IncrementalBar;bar = IncrementalBar('Running', max=total);[(time.sleep(1), bar.next()) for i in range(total)]"
 echo "Alice:"
 docker container logs Alice
 echo "Bob:"
