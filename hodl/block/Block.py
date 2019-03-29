@@ -96,15 +96,6 @@ class Block:
             pass    # todo: write first block processing - hash comparation
         return v
 
-    def __eq__(self, other):
-        """
-        Compare blocks
-
-        :param other: Block
-        :return: is equal
-        """
-        return self.h == other.h
-
     def is_full(self):
         """is block full"""
         return time.time() > block_time + self.timestamp  # int(((0.005*bch_len)**0.95)/30+5)
@@ -133,6 +124,15 @@ class Block:
                 self.contracts.pop(i)
         self.sort()
         self.update()
+
+    def __eq__(self, other):
+        """
+        Compare blocks
+
+        :param other: Block
+        :return: is equal
+        """
+        return self.h == other.h
 
     def __str__(self):
         """
