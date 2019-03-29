@@ -55,31 +55,6 @@ class Blockchain:
                      (ind integer, block text)''')
         self.conn.commit()
 
-    def __getitem__(self, item):
-        if type(item) == slice:
-            l = []
-            if item.step is None:
-                step = 1
-            else:
-                step = item.step
-            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is None],
-                           [step, len(self)][item.stop is not None]):
-                l.append(self[i])
-            return l
-        if type(item) == tuple:
-            tnx = self[item[0]].txs[item[1]]
-            if tnx.sc:
-                return tnx.sc
-            else:
-                return tnx
-        if item < 0:
-            item += len(self)
-        lock.acquire(True)
-        self.cursor.execute("SELECT * FROM blocks WHERE ind=?", (item,))
-        s = self.cursor.fetchone()[1]
-        lock.release()
-        return Block.from_json(s)
-
     def append(self, block):
         """
         Appends blockchain with a block
@@ -247,33 +222,6 @@ class Blockchain:
         log.info(f'created sc with index {ind} connected to tnx {tnxind}')
         return ind, tnxind
 
-    def __len__(self):
-        lock.acquire(True)
-        self.cursor.execute("SELECT ind FROM blocks")
-        l = len(self.cursor.fetchall())
-        lock.release()
-        return l
-
-    def __iter__(self):
-        self.current = -1
-        return self
-
-    def __next__(self):
-        self.current += 1
-        if self.current != len(self):
-            return self[self.current]
-        else:
-            raise StopIteration
-
-    def __setitem__(self, key, value):
-        lock.acquire(True)
-        # todo: tuple indexes, for example bch[1, 2] = tnx
-        if key < 0:
-            key += len(self)
-        self.cursor.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
-        self.conn.commit()
-        lock.release()
-
     def get_block(self, i, sync_get):
         """
         Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
@@ -300,6 +248,58 @@ class Blockchain:
         b = self[-1]
         b.powminers.append(miner)
         self[-1] = b
+
+    def __len__(self):
+        lock.acquire(True)
+        self.cursor.execute("SELECT ind FROM blocks")
+        l = len(self.cursor.fetchall())
+        lock.release()
+        return l
+
+    def __iter__(self):
+        self.current = -1
+        return self
+
+    def __next__(self):
+        self.current += 1
+        if self.current != len(self):
+            return self[self.current]
+        else:
+            raise StopIteration
+
+    def __getitem__(self, item):
+        if type(item) == slice:
+            l = []
+            if item.step is None:
+                step = 1
+            else:
+                step = item.step
+            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is None],
+                           [step, len(self)][item.stop is not None]):
+                l.append(self[i])
+            return l
+        if type(item) == tuple:
+            tnx = self[item[0]].txs[item[1]]
+            if tnx.sc:
+                return tnx.sc
+            else:
+                return tnx
+        if item < 0:
+            item += len(self)
+        lock.acquire(True)
+        self.cursor.execute("SELECT * FROM blocks WHERE ind=?", (item,))
+        s = self.cursor.fetchone()[1]
+        lock.release()
+        return Block.from_json(s)
+
+    def __setitem__(self, key, value):
+        lock.acquire(True)
+        # todo: tuple indexes, for example bch[1, 2] = tnx
+        if key < 0:
+            key += len(self)
+        self.cursor.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
+        self.conn.commit()
+        lock.release()
 
     def clean(self):
         """
