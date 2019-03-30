@@ -12,12 +12,13 @@ If Alice's blockchain is shorter, A sends request,
 if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or contracts are shorter, A sends request
 """
 import logging as log
-import block
-from net2.protocol import server
-from net2.models import Message
-from net2.server import protocol, user
+from hodl import block
+# todo: fix import problem here
+from hodl.net import server
+from hodl.net import Message, User
 
 
+user = User
 bch = block.Blockchain()
 syncs = []
 keys = []

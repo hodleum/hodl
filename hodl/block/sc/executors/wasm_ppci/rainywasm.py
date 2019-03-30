@@ -2,10 +2,10 @@
 It's rainy today, isn't it? 61 48 52 30 63 48 4d 36 4c 79 39 70 59 6d 49 75 59 32 38 76 61 31 68 78 51 55 4e 6d
 """
 from multiprocessing import Process
-
 from ppci import wasm
 
-from sc_api import hdlib
+
+pyimports = {}
 
 
 class WasmProcess:
@@ -14,7 +14,7 @@ class WasmProcess:
         self.backend = backend
 
     def run_script(self, params=[]) -> Process:
-        loaded = wasm.instantiate(self.prg, hdlib.pyimports, "python")
+        loaded = wasm.instantiate(self.prg, pyimports, "python")
         thr = Process(target=loaded.exports.main, args=params)
         thr.run()
         self.thr = thr
@@ -47,7 +47,7 @@ class WasmProcess:
         except AttributeError:
             ms, me = "null", "null"
         diagnose = """
-RainyWasm self-diagnostics by DanGSun v0.1
+RainyWasm self-diagnostics v0.1
 --------------------------
 Memory:
     Memories: {0}

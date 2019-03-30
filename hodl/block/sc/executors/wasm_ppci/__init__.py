@@ -1,1 +1,1 @@
-from block.sc.executors.wasm.rainywasm import WasmProcess
+from .rainywasm import WasmProcess
