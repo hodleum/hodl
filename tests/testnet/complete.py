@@ -57,4 +57,4 @@ def main(name):
 
 
 Thread(target=main, args=(os.getenv('HODL_NAME'), ))
-sync.handle.loop(my_keys)
+sync.loop(keys[os.getenv('HODL_NAME')])

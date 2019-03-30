@@ -1,7 +1,10 @@
-echo "UNITTESTS:\n\n"
+#!/usr/bin/env bash
+echo "UNITTESTS:";echo;echo
 python -m unittest
-echo "FUNCTIONAL:\n\n"
-echo "TWNC:\n"
-./testnet/run_twnc.sh
-echo "COMPLETE TESTNET:\n"
-./testnet/run_complete.sh
+echo "FUNCTIONAL:";echo;echo
+echo "TWNC:";echo
+cd tests/testnet
+./run_twnc.sh
+cd tests/testnet
+echo "COMPLETE TESTNET:";echo
+./run_complete.sh

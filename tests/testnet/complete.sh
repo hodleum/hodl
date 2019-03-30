@@ -1,11 +1,10 @@
 #!/bin/bash
-cd ../hodl
-docker network create hodlnet
-docker run -d --name=Alice -v "$(pwd)":/home/hodl/ --env HODL_NAME="Alice" hodl-container python3 test_sync.py
-docker network connect hodlnet Alice
-docker run -d --name=Bob -v "$(pwd)":/home/hodl/ --env HODL_NAME="Bob" hodl-container python3 test_sync.py
-docker network connect hodlnet Bob
-docker run -d --name=Chuck -v "$(pwd)":/home/hodl/ --env HODL_NAME="Chuck" hodl-container python3 test_sync.py
-docker network connect hodlnet Chuck
-docker run -d --name=Dave -v "$(pwd)":/home/hodl/ --env HODL_NAME="Dave" hodl-container python3 test_sync.py
-docker network connect hodlnet Dave
+cd ../..
+docker run -d --name=Alice -v "$(pwd)":/home/hodl/ --env HODL_NAME="Alice" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=Bob -v "$(pwd)":/home/hodl/ --env HODL_NAME="Bob" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=Chuck -v "$(pwd)":/home/hodl/ --env HODL_NAME="Chuck" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=Dave -v "$(pwd)":/home/hodl/ --env HODL_NAME="Dave" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=miner0 -v "$(pwd)":/home/hodl/ --env HODL_NAME="miner0" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=miner1 -v "$(pwd)":/home/hodl/ --env HODL_NAME="miner1" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=miner2 -v "$(pwd)":/home/hodl/ --env HODL_NAME="miner2" hodl-container ./tests/testnet/complete_inside.sh
+docker run -d --name=evil_miner -v "$(pwd)":/home/hodl/ --env HODL_NAME="evil_miner" hodl-container ./tests/testnet/complete_inside.sh
