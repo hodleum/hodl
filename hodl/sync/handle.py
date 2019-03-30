@@ -14,12 +14,11 @@ if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or con
 import logging as log
 from hodl import block
 # todo: fix import problem here
-import hodl.net.protocol.server as server
-import hodl.net.models.Message as Message
-import hodl.net.server.protocol as protocol
-import hodl.net.server.user as user
+from hodl.net import server
+from hodl.net import Message, User
 
 
+user = User
 bch = block.Blockchain()
 syncs = []
 keys = []
