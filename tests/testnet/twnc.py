@@ -1,4 +1,8 @@
 #!/usr/bin/python3
+"""
+TWNC is test_without_net_communication - testnet with several roles which are connected
+to one database and do not communicate each other using net module
+"""
 import os
 from hodl import block
 from hodl import wallet
