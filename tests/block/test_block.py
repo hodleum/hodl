@@ -1,23 +1,22 @@
 import unittest
 from hodl import block
 from hodl import cryptogr as cg
-import time
-from itertools import chain
+from threading import Lock
 from unittest.mock import sentinel, MagicMock, patch
+from hodl.block.Blockchain import genblock
+import os
 
+
+os.system('rm db/bch.db')
 my_keys = cg.gen_keys()
 your_pub_key = cg.gen_keys()[1]
-with open('tests/genblock.bl', 'r') as f:
-    genblock = block.Block.from_json(f.readline())
+bch = block.Blockchain()
 
 
 class BlockchainUnittest(unittest.TestCase):
-    def test_block_iter(self):
-        bch = block.Blockchain()
-        bch.clean()
+    def test_blockchain_creation_and_block_addition(self):
         bch.append(genblock)
         bch.append(genblock)
-        self.assertEqual(len([b for b in bch]), len(bch))
         self.assertEqual(len(bch), 2)
 
 

@@ -28,7 +28,7 @@ def main(name):
     log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s', stream=sys.stdout)
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
-        wallet.bch.clean()
+        wallet.bch.clear()
         with open('tests/genblock.bl', 'r') as f:
             wallet.bch.append(block.Block.from_json(f.readline()))
         my_wallet = Wallet(keys['Alice'])

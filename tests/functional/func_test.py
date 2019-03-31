@@ -9,7 +9,7 @@ class TestFunc(unittest.TestCase):
         my_keys = cg.gen_keys()
         your_pub_key = cg.gen_keys()[1]
         bch = block.Blockchain()
-        bch.clean()
+        bch.clear()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
         with open('tests/genblock.bl', 'r') as f:

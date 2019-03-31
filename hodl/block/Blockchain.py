@@ -27,6 +27,9 @@ import re
 
 
 lock = RLock()
+# genesis block
+with open('tests/genblock.bl', 'r') as f:
+    genblock = Block.from_json(f.readline())
 # todo: blockchain freeze before new block
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
 # todo: smart contracts and SC messages connected to transaction
@@ -288,7 +291,7 @@ class Blockchain:
         self.conn.commit()
         lock.release()
 
-    def clean(self):
+    def clear(self):
         """
         Delete all blocks from blockchain
         """

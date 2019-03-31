@@ -16,7 +16,7 @@ class TestFunc(unittest.TestCase):
         my_wallet = wallet.new_wallet(my_keys)
         with open('tests/your_key', 'r') as f:
             your_pub_key = json.loads(f.read())[0]
-        wallet.bch.clean()
+        wallet.bch.clear()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
         with open('tests/genblock.bl', 'r') as f:
