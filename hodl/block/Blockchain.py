@@ -19,7 +19,7 @@ sc - smart contract(DApp)
 """
 from .sc import *
 from .Transaction import *
-from .Block import Block
+from .Block import Block, get_prevhash
 from .UnfilledBlock import UnfilledBlock
 import sqlite3
 from threading import RLock
@@ -30,10 +30,14 @@ lock = RLock()
 # genesis block
 with open('tests/genblock.bl', 'r') as f:
     genblock = Block.from_json(f.readline())
-# todo: blockchain freeze before new block
+
+
+# todo: blockchain freeze before new block or other consensus mechanism
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
 # todo: smart contracts and SC messages connected to transaction
 # todo: remove transaction froms
+# todo: remove nicks
+# todo: Block and UnfilledBlock as one class
 
 
 class Blockchain:
@@ -54,6 +58,11 @@ class Blockchain:
         self.cursor = self.conn.cursor()
         self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
                      (ind integer, block text)''')
+        try:
+            self[0]
+        except:
+            self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(genblock)))
+            self.conn.commit()
         self.conn.commit()
 
     def append(self, block):
@@ -62,6 +71,7 @@ class Blockchain:
         :param block: block to add in blockchain
         :type block: Block
         """
+        block.prevhash = get_prevhash(self)
         lock.acquire(True)
         self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(block)))
         self.conn.commit()
@@ -85,9 +95,9 @@ class Blockchain:
         :param maxn: maximum tnx index (latest tnx of all transactions to iterate in)
         :param fr: minimum tnx index (earliest tnx of all transactions to iterate in)
         """
-        maxn = list(maxn)
         if maxn is None:
             maxn = ['l', 'l']
+        maxn = list(maxn)
         if maxn[0] == 'l':
             maxn[0] = len(self)
         if maxn[1] == 'l':
@@ -98,17 +108,14 @@ class Blockchain:
             maxn[1] = len(self[-1].txs) + maxn[1]
         if fr[0] > maxn[0]:
             return
-        elif fr[0] == maxn[0]:
-            for tnx in self[fr[0]].txs[fr[1]:maxn[1]]:
-                yield tnx
         else:
-            for tnx in self[fr[0]].txs[fr[1]:]:
-                yield tnx
-            for i in range(fr[0] + 1, maxn[0] - 1):
-                for tnx in self[i].txs:
-                    yield tnx
-            for tnx in self[maxn[0] - 1].txs[:maxn[1]]:
-                yield tnx
+            for i in range(fr[0], maxn[0]):
+                for j in range(len(self[i].txs)):
+                    if i == fr[0] and j < fr[1]:
+                        continue
+                    if i == maxn and j >= maxn[1]:
+                        break
+                    yield self[i].txs[j]
 
     def get_sc(self, smartcontract):
         """
@@ -155,18 +162,6 @@ class Blockchain:
                         and 'mining' not in tnx.outs:
                     money += n
         return round(money, 10)
-
-    def is_valid(self):
-        """
-        Checks validness of the whole chain
-        :return: validness of the whole chain
-        """
-        for i in range(1, len(self)):
-            if not self[i].is_unfilled:
-                if not self[i].is_valid(self):
-                    print('block not valid:', i + 1)
-                    return False
-        return True
 
     def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):
         """
@@ -247,15 +242,8 @@ class Blockchain:
         return l
 
     def __iter__(self):
-        self.current = -1
-        return self
-
-    def __next__(self):
-        self.current += 1
-        if self.current != len(self):
-            return self[self.current]
-        else:
-            raise StopIteration
+        for i in range(len(self)):
+            yield self[i]
 
     def __getitem__(self, item):
         if type(item) == slice:

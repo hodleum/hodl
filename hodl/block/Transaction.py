@@ -196,6 +196,8 @@ class Transaction:
 
     def __eq__(self, other):
         """Compare with other tnx"""
+        self.update()
+        other.update()
         return self.hash == other.hash
 
     def spent(self, bch, exc=tuple()):
