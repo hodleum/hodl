@@ -6,7 +6,7 @@ import os
 from hodl import block
 from hodl import wallet
 from hodl.wallet import Wallet
-from hodl import sync
+from hodl.sync.handle import loop
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 from threading import RLock, Thread
@@ -57,4 +57,4 @@ def main(name):
 
 
 Thread(target=main, args=(os.getenv('HODL_NAME'), ))
-sync.loop(keys[os.getenv('HODL_NAME')])
+loop(keys[os.getenv('HODL_NAME')])

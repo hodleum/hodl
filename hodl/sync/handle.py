@@ -13,9 +13,9 @@ if len(A.bch) == len(B.bch), if lengths of Alice's lists of bch[-1]'s txs or con
 """
 import logging as log
 from hodl import block
-# todo: fix import problem here
 from hodl.net import server
 from hodl.net import Message, User
+from .gettools import get_sc
 
 
 user = User
@@ -74,6 +74,14 @@ def handle_msg(msg):
 
 @server.handle('sc_mem_get')
 def handle_mem_get_request(msg):
+    pass   # todo
+
+
+@server.handle('sc_get')
+def handle_sc_get_request(msg):
+    # get index from msg
+    # check if there is such a contract in local chain
+    # if yes, send it, if no, send request to others by get_sc(index)
     pass   # todo
 
 

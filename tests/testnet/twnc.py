@@ -7,6 +7,7 @@ import os
 from hodl import block
 from hodl import wallet
 from hodl.wallet import Wallet
+from hodl.block.Blockchain import genblock
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 from threading import RLock
@@ -29,8 +30,9 @@ def main(name):
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
         wallet.bch.clear()
-        with open('tests/genblock.bl', 'r') as f:
-            wallet.bch.append(block.Block.from_json(f.readline()))
+        print(len(wallet.bch))
+        wallet.bch[0] = genblock
+        print(len(wallet.bch))
         my_wallet = Wallet(keys['Alice'])
         Alice.main(my_wallet, keys)
     elif name == 'Bob':

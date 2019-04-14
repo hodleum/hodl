@@ -20,7 +20,6 @@ sc - smart contract(DApp)
 from .sc import *
 from .Transaction import *
 from .Block import Block, get_prevhash
-from .UnfilledBlock import UnfilledBlock
 import sqlite3
 from threading import RLock
 import re
@@ -37,6 +36,7 @@ with open('tests/genblock.bl', 'r') as f:
 # todo: smart contracts and SC messages connected to transaction
 # todo: remove transaction froms
 # todo: remove nicks
+# todo: use records instead of sqlite3
 # todo: Block and UnfilledBlock as one class
 
 
@@ -71,8 +71,12 @@ class Blockchain:
         :param block: block to add in blockchain
         :type block: Block
         """
-        block.prevhash = get_prevhash(self)
         lock.acquire(True)
+        if len(self) == 0:
+            self[0] = block
+            lock.release()
+            return
+        block.prevhash = get_prevhash(self)
         self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(block)))
         self.conn.commit()
         lock.release()

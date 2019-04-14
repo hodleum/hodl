@@ -1,11 +1,15 @@
 import unittest
 import logging as log
 import json
+import os
 from hodl import cryptogr as cg
 from hodl import block
 from hodl.block import mining
+from hodl.block.Blockchain import genblock
 from hodl import wallet
 
+
+os.system('rm db/bch.db')
 log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 
 
@@ -16,13 +20,10 @@ class TestFunc(unittest.TestCase):
         my_wallet = wallet.new_wallet(my_keys)
         with open('tests/your_key', 'r') as f:
             your_pub_key = json.loads(f.read())[0]
-        wallet.bch.clear()
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
-        with open('tests/genblock.bl', 'r') as f:
-            bl = f.readline()
-            bl = block.Block.from_json(bl)
-            wallet.bch.append(bl)
+        wallet.bch[0] = genblock
+        print(len(wallet.bch))
         # 0 1
         wallet.bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05],
                                    'signing', keys['Alice'][0])

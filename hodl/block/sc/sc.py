@@ -1,12 +1,13 @@
 import json
 import time
 import logging as log
+from mmh3 import hash
 from hodl import cryptogr as cg
 from .memory import SCMemory
 from .executors.js.jstask import js
 from .task import Task
-from .executors.js.jstools import CTX
 from hodl.block.constants import sc_base_code_size, sc_memprice, sc_code_price, sc_price, sc_base_mem
+from hodl.sync.gettools import get_sc
 
 
 # todo: remove tasks from smart contracts, create pool of calculating tasks with difficulty mark
@@ -20,6 +21,52 @@ def check_sc_award_tnx(bch, tnxind, sc):
 
 def jstask_to_task(scind, n, task):
     return Task(scind, n, 'js', task_data=str(task))
+
+
+class SCLink:
+    """
+    Smart contract with only some important parameters, such as author, code hash, memory size and type
+    """
+    def __init__(self, codehash, author, index, sign, memsize=sc_base_mem, langr="js"):
+        self.codehash, self.author, self.index, self.sign, self.memsize, self.langr = \
+            codehash, author, index, sign, memsize, langr
+        self.link = True
+
+    def sign_str(self):
+        return hash(json.dumps((self.codehash, str(self.author), self.index, self.memsize)))
+
+    def is_valid(self, bch):
+        """
+        Validate SC
+        :param bch: Blockchain
+        :return: validness(bool)
+        """
+        # todo: sign check
+        pr = sc_price
+        if self.memsize > sc_base_mem:
+            mp = ((self.memsize - sc_base_mem) * sc_memprice)
+            if mp < 0:
+                mp = 0
+            pr += mp
+        pr = round(pr, 10)
+        payed = bch.money('sc' + str(list(self.index)))
+        if payed < pr:
+            log.debug('sc not payed. payed: ' + str(payed) + ', needed: ' + str(pr))
+            return False
+        if not cg.verify_sign(self.sign, self.sign_str(), bch.pubkey_by_nick(self.author), bch):
+            log.debug('not valid sign in sc')
+            return False
+        return True
+
+    def get_full(self):
+        return get_sc(self.index)
+
+    def __str__(self):
+        return json.dumps((self.codehash, self.author, self.index, self.memsize, self.langr))
+
+    @classmethod
+    def from_json(cls, s):
+        return cls(*json.loads(s))
 
 
 class SmartContract:
@@ -43,22 +90,19 @@ class SmartContract:
         self.author = author
         self.index = index
         self.memory = SCMemory(self.index, memsize)
-        self.timestamp = time.time()
-        self.calculators = []
         self.signs = []
         self.membs = []
         self.n = 0
         self.tasks = None
+        self.link = False
         if langr == 'js':
             # todo: do not split code to tasks every time
             self.tasks = list(map(lambda task: jstask_to_task(self.index, self.n, task), js[1](code)))
             for i in range(len(self.tasks)):
                 self.tasks[i].n = i
             self.n = len(self.tasks)
-        self.awards = {}
         self.msg_tasks = []
         self.sign = ''
-        self.memory_distribution = []   # [[Miners for part1]]
         self.signs = []
         self.h = self.sign_str()
         self.langr = langr
@@ -72,7 +116,7 @@ class SmartContract:
         :return: str
         """
         return json.dumps((self.code, self.author, self.index, self.msg_tasks,
-                           self.timestamp, self.sign, str(self.memory), [str(task) for task in self.tasks],
+                           self.sign, str(self.memory), [str(task) for task in self.tasks],
                            self.n))
 
     @classmethod
@@ -84,19 +128,11 @@ class SmartContract:
         """
         s = json.loads(s)
         self = cls(*s[0:3])
-        self.msg_tasks, self.timestamp, self.sign = s[3:6]
-        self.memory = SCMemory.from_json(s[6])
-        self.tasks = [Task.from_json(task) for task in s[7]]
-        self.n = s[8]
+        self.msg_tasks, self.sign = s[3:5]
+        self.memory = SCMemory.from_json(s[5])
+        self.tasks = [Task.from_json(task) for task in s[6]]
+        self.n = s[7]
         return self
-
-    def __eq__(self, other):
-        """
-        Compare SCs
-        :param other: SC
-        :return: is equal
-        """
-        return self.__dict__ == other.__dict__
 
     def is_valid(self, bch):
         """
@@ -121,24 +157,12 @@ class SmartContract:
             return False
         return True
 
-    def validate_sign(self, o_sign):
+    def calc_pok_awards(self, bch):
         """
-        Validate transaction made by smart contract
-        :param o_sign: sign to verify
-        :return: validness: bool
+        Calculates how much to pay to PoK miners.
+        :param bch: Blockchain
         """
-        for sign in self.signs:
-            if sign == o_sign:
-                return True
-        return False
-
-    def calc_awards(self, bch):
-        """
-        Calculates how much to pay to miners.
-        :param bch:Blockchain
-        """
-        self.awards = {}
-        # Memory miners
+        awards = {}
         for p in self.memory.accepts:
             for m in p:
                 acceptions = 0
@@ -147,27 +171,20 @@ class SmartContract:
                         if a[0] == 'a':
                             acceptions += 1
                 if acceptions >= len(p[m][1]) * 0.7:
-                    self.awards[m] = sc_memprice / (len(self.memory.accepts)*len(p))
+                    awards[m] = sc_memprice / (len(self.memory.accepts)*len(p))
+        return awards
 
-        # Calculators
-        # todo: calculators awards
-
-    def distribute_tasks(self):
+    def calc_pow_awards(self, bch):
         """
-        Distribute tasks between miners
-        :return:
+        Calculates how much to pay to PoW miners.
+        :param bch: Blockchain
         """
-        self.calculators.sort()
-        for i in range(len(self.tasks)):
-            for j in range(self.tasks[i][2]):
-                try:
-                    self.tasks[i][1][self.calculators[j]] = []
-                    self.calculators.remove(self.calculators[j])
-                except:
-                    break
+        awards = {}
+        # todo
+        return awards
 
     def sign_str(self):
-        return json.dumps((self.code, str(self.author), self.index, self.memory.size, self.timestamp))
+        return hash(json.dumps((hash(self.code), str(self.author), self.index, self.memory.size)))
 
     def verify_sign(self, sign):
         return sign in self.signs
