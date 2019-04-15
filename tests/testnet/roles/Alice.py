@@ -9,6 +9,8 @@ import time
 def main(wallet, keys=None):
     log.info("Alice's main started")
     log.debug("Alice's money: " + str(wallet.bch.money(keys['Alice'][1])))
+    log.debug(f'len(bch): {len(wallet.bch)}')
+    wallet.bch[0]
     # start blockchain checking thread
     # create transaction:
     ind = wallet.new_transaction([keys['Bob'][1]], [0.01])

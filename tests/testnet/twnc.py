@@ -30,9 +30,7 @@ def main(name):
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
         wallet.bch.clear()
-        print(len(wallet.bch))
         wallet.bch[0] = genblock
-        print(len(wallet.bch))
         my_wallet = Wallet(keys['Alice'])
         Alice.main(my_wallet, keys)
     elif name == 'Bob':

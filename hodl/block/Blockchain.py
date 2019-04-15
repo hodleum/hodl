@@ -71,13 +71,14 @@ class Blockchain:
         :param block: block to add in blockchain
         :type block: Block
         """
+        log.debug(f'appending blockchain with block, len(self): {len(self)}')
         lock.acquire(True)
         if len(self) == 0:
             self[0] = block
             lock.release()
             return
         block.prevhash = get_prevhash(self)
-        self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(block)))
+        self.cursor.execute("INSERT OR REPLACE INTO blocks VALUES (?, ?)", (len(self), str(block)))
         self.conn.commit()
         lock.release()
 
@@ -240,8 +241,8 @@ class Blockchain:
 
     def __len__(self):
         lock.acquire(True)
-        self.cursor.execute("SELECT ind FROM blocks")
-        l = len(self.cursor.fetchall())
+        self.cursor.execute("SELECT COUNT(*) FROM blocks")
+        l = int(self.cursor.fetchone()[0])
         lock.release()
         return l
 
@@ -260,17 +261,17 @@ class Blockchain:
                            [step, len(self)][item.stop is not None]):
                 l.append(self[i])
             return l
-        if type(item) == tuple:
+        elif type(item) == tuple:
             tnx = self[item[0]].txs[item[1]]
             if tnx.sc:
                 return tnx.sc
             else:
                 return tnx
-        if item < 0:
+        elif item < 0:
             item += len(self)
         lock.acquire(True)
-        self.cursor.execute("SELECT * FROM blocks WHERE ind=?", (item,))
-        s = self.cursor.fetchone()[1]
+        self.cursor.execute("SELECT block FROM blocks WHERE ind=?", (item,))
+        s = self.cursor.fetchone()[0]
         lock.release()
         return Block.from_json(s)
 
@@ -279,7 +280,7 @@ class Blockchain:
         # todo: tuple indexes, for example bch[1, 2] = tnx
         if key < 0:
             key += len(self)
-        self.cursor.execute("""UPDATE blocks SET block = ? WHERE ind = ?""", (str(value), key))
+        self.cursor.execute("INSERT OR REPLACE INTO blocks VALUES (?, ?)", (key, str(value)))
         self.conn.commit()
         lock.release()
 
