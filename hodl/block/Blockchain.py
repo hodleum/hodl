@@ -19,81 +19,21 @@ sc - smart contract(DApp)
 """
 from .sc import *
 from .Transaction import *
-from .Block import Block, get_prevhash
-import sqlite3
-from threading import RLock
+from .BlockchainDB import BlockchainDB, genblock
 import re
-
-
-lock = RLock()
-# genesis block
-with open('tests/genblock.bl', 'r') as f:
-    genblock = Block.from_json(f.readline())
 
 
 # todo: blockchain freeze before new block or other consensus mechanism
 # todo: transaction and smart contract limit or hash mining, remove smart contract's comission
-# todo: smart contracts and SC messages connected to transaction
+# todo: SC messages connected to transaction
+# todo: make available bch[i].attr = value and bch[i].attr1.attr2 = value using __setattr__
 # todo: remove transaction froms
 # todo: remove nicks
-# todo: use records instead of sqlite3
 # todo: Block and UnfilledBlock as one class
 
 
-class Blockchain:
+class Blockchain(BlockchainDB):
     """Class for blockchain"""
-
-    def __init__(self, filename='bch.db', m='w'):
-        """
-        Init
-        :param filename: filename for database
-        :type filename: str
-        :param m: mode
-        :type m: str
-        """
-        if m != 'ro':
-            self.conn = sqlite3.connect('db/' + filename, check_same_thread=False)
-        else:
-            self.conn = sqlite3.connect('db/' + filename + '?mode=ro', uri=True, check_same_thread=False)
-        self.cursor = self.conn.cursor()
-        self.conn.execute('''CREATE TABLE IF NOT EXISTS blocks
-                     (ind integer, block text)''')
-        try:
-            self[0]
-        except:
-            self.cursor.execute("INSERT INTO blocks VALUES (?, ?)", (len(self), str(genblock)))
-            self.conn.commit()
-        self.conn.commit()
-
-    def append(self, block):
-        """
-        Appends blockchain with a block
-        :param block: block to add in blockchain
-        :type block: Block
-        """
-        log.debug(f'appending blockchain with block, len(self): {len(self)}')
-        lock.acquire(True)
-        if len(self) == 0:
-            self[0] = block
-            lock.release()
-            return
-        block.prevhash = get_prevhash(self)
-        self.cursor.execute("INSERT OR REPLACE INTO blocks VALUES (?, ?)", (len(self), str(block)))
-        self.conn.commit()
-        lock.release()
-
-    def index(self, block):
-        """
-        Finds block in chain (by hash)
-        :param block: block to index
-        :type block: Block
-        :return: index
-        :rtype: int
-        """
-        for i in range(len(self)):
-            if self[i].h == block.h:
-                return i
-
     def tnxiter(self, maxn=None, fr=(0, 0)):
         """
         Iterate in all transactions in blockchain
@@ -239,60 +179,6 @@ class Blockchain:
         b.powminers.append(miner)
         self[-1] = b
 
-    def __len__(self):
-        lock.acquire(True)
-        self.cursor.execute("SELECT COUNT(*) FROM blocks")
-        l = int(self.cursor.fetchone()[0])
-        lock.release()
-        return l
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
-
-    def __getitem__(self, item):
-        if type(item) == slice:
-            l = []
-            if item.step is None:
-                step = 1
-            else:
-                step = item.step
-            for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is None],
-                           [step, len(self)][item.stop is not None]):
-                l.append(self[i])
-            return l
-        elif type(item) == tuple:
-            tnx = self[item[0]].txs[item[1]]
-            if tnx.sc:
-                return tnx.sc
-            else:
-                return tnx
-        elif item < 0:
-            item += len(self)
-        lock.acquire(True)
-        self.cursor.execute("SELECT block FROM blocks WHERE ind=?", (item,))
-        s = self.cursor.fetchone()[0]
-        lock.release()
-        return Block.from_json(s)
-
-    def __setitem__(self, key, value):
-        lock.acquire(True)
-        # todo: tuple indexes, for example bch[1, 2] = tnx
-        if key < 0:
-            key += len(self)
-        self.cursor.execute("INSERT OR REPLACE INTO blocks VALUES (?, ?)", (key, str(value)))
-        self.conn.commit()
-        lock.release()
-
-    def clear(self):
-        """
-        Delete all blocks from blockchain
-        """
-        lock.acquire(True)
-        self.cursor.execute('''DELETE FROM blocks''')
-        self.conn.commit()
-        lock.release()
-
     def add_sc(self, sc):
         """
         Add smart contract
@@ -305,11 +191,6 @@ class Blockchain:
         self[-1] = b
         ind = len(self) - 1, len(self[-1].sc) - 1
         return ind
-
-    def commit(self):
-        self.close()
-        self.conn = sqlite3.connect(self.f)
-        self.cursor = self.conn.cursor()
 
     def pubkey_by_nick(self, nick, maxn=('l', 'l')):
         """
@@ -352,11 +233,6 @@ class Blockchain:
         m = self.money(user, time_to)
         # todo: count all action prices
         return True
-
-    def close(self):
-        """Close connection to database"""
-        self.conn.commit()
-        self.conn.close()
 
     def __repr__(self):
         return str([[len(b.txs), len(b.contracts)] for b in self])

@@ -1,7 +1,7 @@
 import json
 import time
 import logging as log
-from mmh3 import hash
+from mmh3 import hash as mmh
 from hodl import cryptogr as cg
 from .memory import SCMemory
 from .executors.js.jstask import js
@@ -33,7 +33,7 @@ class SCLink:
         self.link = True
 
     def sign_str(self):
-        return hash(json.dumps((self.codehash, str(self.author), self.index, self.memsize)))
+        return json.dumps((self.codehash, str(self.author), self.index, self.memsize))
 
     def is_valid(self, bch):
         """
@@ -184,7 +184,7 @@ class SmartContract:
         return awards
 
     def sign_str(self):
-        return hash(json.dumps((hash(self.code), str(self.author), self.index, self.memory.size)))
+        return json.dumps((mmh(self.code), str(self.author), self.index, self.memory.size))
 
     def verify_sign(self, sign):
         return sign in self.signs
