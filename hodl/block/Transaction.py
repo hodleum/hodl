@@ -3,6 +3,7 @@ import logging as log
 import time as t
 from collections import Counter
 from hodl import cryptogr as cg
+from .sc import SmartContract
 from .constants import nick_av, nick_min, nick_max
 
 
@@ -104,42 +105,7 @@ class Transaction:
     tnx=Transaction()
     tnx.gen(parameters)
     """
-
-    def __init__(self):
-        self.froms = None
-        self.outs = None
-        self.outns = None
-        self.author = None
-        self.index = None
-        self.timestamp = None
-        self.sign = None
-        self.hash = None
-        self.sc = None
-
-    def __str__(self):
-        """Encodes transaction to str using JSON"""
-        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
-                           self.sign, self.timestamp))
-
-    @classmethod
-    def from_json(cls, s):
-        """
-        Decodes transacion from str using JSON
-
-        :param str s: Transaction's str representation got by str(tnx)
-        :return: transaction
-        :rtype: Transaction
-        """
-        s = json.loads(s)
-        self = cls()
-        try:
-            self.gen(s[0], s[1], s[2], s[3], list(s[4]), s[5], '', s[6])
-        except TypeError:
-            self.gen(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6])
-        self.update()
-        return self
-
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=None):
+    def __init__(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=None):
         for i in range(len(outns)):
             outns[i] = round(outns[i], 9)
         self.froms = froms    # transactions to get money from
@@ -154,6 +120,37 @@ class Transaction:
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
         self.update()
+
+    def __str__(self):
+        """Encodes transaction to str using JSON"""
+        if self.sc:
+            sc = str(self.sc)
+        else:
+            sc = None
+        return json.dumps((self.author, self.froms, self.outs, self.outns, self.index,
+                           self.sign, self.timestamp, sc))
+
+    @classmethod
+    def from_json(cls, s):
+        """
+        Decodes transacion from str using JSON
+
+        :param str s: Transaction's str representation got by str(tnx)
+        :return: transaction
+        :rtype: Transaction
+        """
+        s = json.loads(s)
+        if len(s) < 8:
+            s.append(None)
+        else:
+            if s[7]:
+                s[7] = SmartContract.from_json(s[7])
+        try:
+            self = cls(s[0], s[1], s[2], s[3], list(s[4]), s[5], '', s[6], s[7])
+        except TypeError:
+            self = cls(s[0], s[1], s[2], s[3], list(s[4]), 'mining', '', s[6], s[7])
+        self.update()
+        return self
 
     def is_valid(self, bch):
         """Returns validness of transaction.
@@ -223,5 +220,5 @@ class Transaction:
         """
         Update hash
         """
-        x = json.dumps([self.author, self.froms, self.outs, self.outns, self.sc, self.timestamp])
+        x = json.dumps([self.author, self.froms, self.outs, self.outns, str(self.sc), self.timestamp])
         self.hash = cg.h(str(x))

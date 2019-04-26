@@ -42,7 +42,6 @@ class Block:
         self.timestamp = get_timestamp(t)
         self.txs = list(txs)
         self.miners = Miners()
-        print(self.miners, 0)
         self.fixer = None
         self.h = None
         self.sc_tasks = []   # completed tasks add here
@@ -145,7 +144,6 @@ class Block:
 
         :return:block, converted to str
         """
-        print(self.miners, 2)
         return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash,
                            str(self.fixer) if self.fixer else None, str(self.miners),
                            [str(task) for task in self.sc_tasks]))
@@ -167,7 +165,6 @@ class Block:
         self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[3], s[4]
         if self.fixer:
             self.fixer = BlockFixer.from_json(self.fixer)
-        print(self.miners, 1, s[4])
         self.miners = Miners.from_json(self.miners)
         self.sc_tasks = [Task.from_json(task) for task in s[5]]
         self.update()

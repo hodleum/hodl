@@ -122,8 +122,7 @@ class Blockchain(BlockchainDB):
         :return: index of created transaction
         :rtype: list
         """
-        tnx = Transaction()
-        tnx.gen(author, froms, outs, outns, (len(self) - 1, len(self[-1].txs)), sign, privkey, sc=sc)
+        tnx = Transaction(author, froms, outs, outns, (len(self) - 1, len(self[-1].txs)), sign, privkey, sc=sc)
         b = self[-1]
         b.append(tnx)
         self[-1] = b
@@ -143,11 +142,11 @@ class Blockchain(BlockchainDB):
         :rtype: [list[int], list[int]]
         """
         log.debug('Blockchain.new_sc')
-        sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize, langr=lang)
+        sc = SmartContract(text, author, [len(self) - 1, len(self[-1].txs)], memsize=memsize, langr=lang)
         sc.sign_sc(author_priv)
         sc.update(self)
         tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=sc)
-        log.info(f'created sc with index {ind} connected to tnx {tnxind}')
+        log.info(f'created sc connected to tnx {tnxind}')
         return tnxind
 
     def add_miner(self, miner):
