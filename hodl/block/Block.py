@@ -20,7 +20,7 @@ def get_timestamp(t):
 
 def get_prevhash(bch):
     try:
-        if bch[-1].h:
+        if len(bch):
             return bch[-1].h
         else:
             return '0'
@@ -29,22 +29,24 @@ def get_prevhash(bch):
 
 
 class Block:
-    """Class for blocks.
+    """
+    Class for blocks.
     To convert block to string, use str(block)
     To convert string to block, use Block.from_json(string)
     """
 
-    def __init__(self, bch=(), txs=(), contracts=(), t='now'):
-        self.prevhash = get_prevhash(bch)
+    def __init__(self, txs=(), t='now', bch=None, index=None):
+        super().__setattr__('_index', index)
+        super().__setattr__('_bch', bch)
+        self.prevhash = get_prevhash(bch) if bch else None
         self.timestamp = get_timestamp(t)
-        self.is_unfilled = False
         self.txs = list(txs)
-        self.contracts = contracts
         self.miners = Miners()
+        print(self.miners, 0)
         self.fixer = None
         self.h = None
         self.sc_tasks = []   # completed tasks add here
-        self.update()
+        self.update(False)
 
     def append(self, txn):
         """
@@ -55,13 +57,14 @@ class Block:
         self.txs.append(txn)  # Add transaction to transaction list
         self.update()  # update hash
 
-    def update(self):
+    def update(self, sort=True):
         """
         Updates hash
         """
-        self.sort()
+        if sort:
+            self.sort()
         h = json.dumps((str(self.prevhash), [str(t.hash) for t in self.txs],
-                    [str(sc) for sc in self.contracts], hash(self.miners), [str(task) for task in self.sc_tasks]))
+                        hash(self.miners), [str(task) for task in self.sc_tasks]))
         self.h = cg.h(str(h))
 
     def is_valid(self, bch):
@@ -119,11 +122,13 @@ class Block:
         for i in range(len(self.txs)):
             if not self.txs[i].is_valid(bch):
                 self.txs.pop(i)
-        for i in range(len(self.contracts)):
-            if not self.contracts[i].is_valid(bch):
-                self.contracts.pop(i)
         self.sort()
         self.update()
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+        if self._index:
+            self._bch[self._index] = self
 
     def __eq__(self, other):
         """
@@ -140,7 +145,8 @@ class Block:
 
         :return:block, converted to str
         """
-        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash, [str(c) for c in self.contracts],
+        print(self.miners, 2)
+        return json.dumps(([str(t) for t in self.txs], self.timestamp, self.prevhash,
                            str(self.fixer) if self.fixer else None, str(self.miners),
                            [str(task) for task in self.sc_tasks]))
 
@@ -158,13 +164,11 @@ class Block:
         self.contracts = []
         for t in s[0]:
             self.txs.append(Transaction.from_json(t))
-        for c in s[3]:
-            sc = SmartContract.from_json(c)
-            self.contracts.append(sc)
-        self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[4], s[5]
+        self.timestamp, self.prevhash, self.fixer, self.miners = s[1], s[2], s[3], s[4]
         if self.fixer:
             self.fixer = BlockFixer.from_json(self.fixer)
+        print(self.miners, 1, s[4])
         self.miners = Miners.from_json(self.miners)
-        self.sc_tasks = [Task.from_json(task) for task in s[6]]
+        self.sc_tasks = [Task.from_json(task) for task in s[5]]
         self.update()
         return self

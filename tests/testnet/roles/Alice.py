@@ -20,13 +20,13 @@ def main(wallet, keys=None):
     log.info('created sc with indicies {}'.format(ind))
     log.info(f"length of last block's sc_tasks: {len(wallet.bch[-1].sc_tasks)}")
     time.sleep(10)
-    b = wallet.bch[ind[0][0]]
+    b = wallet.bch[ind[0]]
     while True:
         try:
-            b.contracts[ind[0][1]].memory.distribute_peers()
+            b.txs[ind[1]].sc.memory.distribute_peers()
             break
         except SCMemoryError:
             time.sleep(1)
-    wallet.bch[ind[0][0]] = b
+    wallet.bch[ind[0]] = b
     # messages to smart contract
     # decentralized internet request

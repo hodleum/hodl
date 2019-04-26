@@ -59,10 +59,7 @@ class BlockchainDB:
             return blocks
         elif type(item) == tuple:
             tnx = self[item[0]].txs[item[1]]
-            if tnx.sc:
-                return tnx.sc
-            else:
-                return tnx
+            return tnx
         elif item < 0:
             item += len(self)
         lock.acquire(True)

@@ -108,7 +108,7 @@ class Blockchain(BlockchainDB):
                     money += n
         return round(money, 10)
 
-    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=tuple()):
+    def new_transaction(self, author, froms, outs, outns, sign='signing', privkey='', sc=None):
         """
         Creates new transaction and adds it to the chain
         :param str author: transaction author
@@ -118,7 +118,7 @@ class Blockchain(BlockchainDB):
         :param str sign: transaction sign if it's already signed or 'signing'
         :param str privkey: private key if tnx is not already signed
         :param sc: index of smart contract connected with transaction or ()/[]/None
-        :type sc: tuple or list
+        :type sc: SmartContract
         :return: index of created transaction
         :rtype: list
         """
@@ -143,31 +143,12 @@ class Blockchain(BlockchainDB):
         :rtype: [list[int], list[int]]
         """
         log.debug('Blockchain.new_sc')
-        b = self[-1]
         sc = SmartContract(text, author, [len(self) - 1, len(b.contracts)], memsize=memsize, langr=lang)
         sc.sign_sc(author_priv)
-        b.contracts.append(sc)
-        self[-1] = b
         sc.update(self)
-        ind = len(self) - 1, len(self[-1].contracts) - 1
-        tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=ind)
+        tnxind = self.new_transaction(author, [], [], [], privkey=author_priv, sc=sc)
         log.info(f'created sc with index {ind} connected to tnx {tnxind}')
-        return ind, tnxind
-
-    def get_block(self, i, sync_get):
-        """
-        Return full block (In local blockchain might be only unfilled copy of block i (UnfilledBlock),
-        then get full block from other peer)
-        :param i: block's index
-        :type i: int
-        :param sync_get: function than gets object (block, transaction, smart contract) from network
-        :type sync_get: function
-        :return: Block
-        """
-        if not self[i].is_unfilled:
-            return self[i]
-        else:
-            return sync_get(json.dumps([{'type': 'block', 'index': i}]))
+        return tnxind
 
     def add_miner(self, miner):
         """

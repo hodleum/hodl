@@ -114,6 +114,7 @@ class Transaction:
         self.timestamp = None
         self.sign = None
         self.hash = None
+        self.sc = None
 
     def __str__(self):
         """Encodes transaction to str using JSON"""
@@ -138,14 +139,14 @@ class Transaction:
         self.update()
         return self
 
-    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=tuple()):
+    def gen(self, author, froms, outs, outns, index, sign='signing', privkey='', ts='now', sc=None):
         for i in range(len(outns)):
             outns[i] = round(outns[i], 9)
         self.froms = froms    # transactions to get money from
         self.outs = outs    # destinations
         self.outns = outns    # values of money on each destination
         self.author = author
-        self.sc = list(sc)    # index of sc connected with transaction or [] if there is no
+        self.sc = sc    # transaction smart-contract if exists or None
         self.index = list(index)
         self.timestamp = timestamp(ts)
         for i in range(len(self.outns)):
