@@ -48,15 +48,15 @@ class BlockchainDB:
 
     def __getitem__(self, item):
         if type(item) == slice:
-            l = []
+            blocks = []
             if item.step is None:
                 step = 1
             else:
                 step = item.step
             for i in range([item.start, len(self)][item.stop is not None], [item.stop, len(self)][item.stop is None],
                            [step, len(self)][item.stop is not None]):
-                l.append(self[i])
-            return l
+                blocks.append(self[i])
+            return blocks
         elif type(item) == tuple:
             tnx = self[item[0]].txs[item[1]]
             if tnx.sc:
@@ -67,15 +67,22 @@ class BlockchainDB:
             item += len(self)
         lock.acquire(True)
         self.cursor.execute("SELECT block FROM blocks WHERE ind=?", (item,))
-        s = self.cursor.fetchone()[0]
+        try:
+            s = self.cursor.fetchone()[0]
+        except TypeError:
+            raise IndexError(f'block {item} does not exists')
         lock.release()
         return Block.from_json(s)
 
     def __setitem__(self, key, value):
         lock.acquire(True)
-        # todo: tuple indexes, for example bch[1, 2] = tnx
         if key < 0:
             key += len(self)
+        if type(key) == tuple:
+            b = self[key[0]]
+            b.txs[key[1]] = value
+            self[key[0]] = b
+            return
         self.cursor.execute("UPDATE blocks SET block=? WHERE ind=?", (str(value), key))
         self.conn.commit()
         lock.release()
