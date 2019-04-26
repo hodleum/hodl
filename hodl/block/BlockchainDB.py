@@ -58,9 +58,8 @@ class BlockchainDB:
                 blocks.append(self[i])
             return blocks
         elif type(item) == tuple:
-            tnx = self[item[0]].txs[item[1]]
-            return tnx
-        elif item < 0:
+            return self[item[0]].txs[item[1]]
+        if item < 0:
             item += len(self)
         lock.acquire(True)
         self.cursor.execute("SELECT block FROM blocks WHERE ind=?", (item,))
@@ -118,12 +117,8 @@ class BlockchainDB:
         lock.acquire(True)
         self.cursor.execute('''DELETE FROM blocks WHERE 1=1''')
         self.conn.commit()
+        self.append(genblock)
         lock.release()
-
-    def commit(self):
-        self.close()
-        self.conn = sqlite3.connect(self.f)
-        self.cursor = self.conn.cursor()
 
     def close(self):
         """Close connection to database"""

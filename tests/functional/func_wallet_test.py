@@ -2,14 +2,10 @@ import unittest
 import logging as log
 import json
 import os
-from hodl import cryptogr as cg
-from hodl import block
 from hodl.block import mining
-from hodl.block.Blockchain import genblock
 from hodl import wallet
 
 
-os.system('rm db/bch.db')
 log.basicConfig(level=log.DEBUG, format='%(module)s:%(lineno)d:%(message)s')
 
 
@@ -22,7 +18,7 @@ class TestFunc(unittest.TestCase):
             your_pub_key = json.loads(f.read())[0]
         with open('tests/keys', 'r') as f:
             keys = json.loads(f.readline())
-        wallet.bch[0] = genblock
+        wallet.bch.clear()
         print(len(wallet.bch))
         # 0 1
         wallet.bch.new_transaction(keys['Alice'][1], [[0, 0]], [my_keys[1], keys['Alice'][1]], [0.95, 0.05],
@@ -71,10 +67,10 @@ class TestFunc(unittest.TestCase):
                  '. Len of bch: {}, of last block: {}'.format(str(len(wallet.bch)), str(len(wallet.bch[-1].txs)))
                  + '\n[{}, {}]'.format(str(len(wallet.bch) - 1), str(len(wallet.bch[-1].txs) - 1)))
         with open('tests/scex.js', 'r') as f:
-            wallet.bch.new_sc('\n'.join(f.readlines()), my_keys[1], my_keys[0], memsize=10000520)
-        wallet.bch.commit()
+            ind = wallet.bch.new_sc('\n'.join(f.readlines()), my_keys[1], my_keys[0], memsize=10000520)
         b = wallet.bch[1]
-        b.contracts[0].execute_task()
+        return   # todo
+        b.txs[ind[1]].sc.execute_task()
         # b.contracts[0].msgs.append(['sell', (my_keys[1], 0.05), str(list(cg.sign(json.dumps(['sell', (str(my_keys[1]), 0.05)]), my_keys[0]))), False])
         wallet.bch[1] = b
         log.info('SC result:\n' + b.contracts[0].tasks[0].ans)
