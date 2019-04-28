@@ -4,10 +4,8 @@ TWNC is test_without_net_communication - testnet with several roles which are co
 to one database and do not communicate each other using net module
 """
 import os
-from hodl import block
 from hodl import wallet
 from hodl.wallet import Wallet
-from hodl.block.Blockchain import genblock
 from tests.testnet.roles import Alice, Bob, Chuck, Dave, miner, evil_miner
 import json
 from threading import RLock

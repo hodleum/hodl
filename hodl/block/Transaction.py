@@ -115,11 +115,11 @@ class Transaction:
         self.sc = sc    # transaction smart-contract if exists or None
         self.index = list(index)
         self.timestamp = timestamp(ts)
+        self.hash = None
         for i in range(len(self.outns)):
             self.outns[i] = round(self.outns[i], 10)
         self.update()
         self.sign = sign_tnx(self, sign, privkey, t)
-        self.update()
 
     def __str__(self):
         """Encodes transaction to str using JSON"""

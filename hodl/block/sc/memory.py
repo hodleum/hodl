@@ -95,8 +95,8 @@ class SCMemory:
         :param s: str
         :return: SCMemory
         """
-        l = json.loads(s)
-        self = cls(l[0], l[1])
-        self.peers = l[2]
-        self.accepts = l[3]
+        s = json.loads(s)
+        self = cls(s[0], s[1])
+        self.peers = s[2]
+        self.accepts = s[3]
         return self

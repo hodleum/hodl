@@ -31,16 +31,16 @@ class BlockchainDB:
                      (ind integer primary key , block text)''')
         try:
             self[0]
-        except:
+        except IndexError:
             self[0] = genblock
         self.conn.commit()
 
     def __len__(self):
         lock.acquire(True)
         self.cursor.execute("SELECT COUNT(*) FROM blocks")
-        l = int(self.cursor.fetchone()[0])
+        length = int(self.cursor.fetchone()[0])
         lock.release()
-        return l
+        return length
 
     def __iter__(self):
         for i in range(len(self)):

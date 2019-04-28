@@ -3,7 +3,6 @@ from hodl.block.sc.executors.js.jstools import CTX
 import json
 import time
 from threading import Thread
-import logging as log
 
 
 BENCHMARK = None

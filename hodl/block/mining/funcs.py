@@ -55,7 +55,6 @@ def pow_validate(bch, num):
         for miner in aw:
             miners[miner] = miners.get(miner, 0) + aw[miner]
     # add transaction with award sending
-    txn = block.Transaction()
     total = pow_total([bch[i] for i in range(num)])
     reward_sum = sum(miners.values())
     outns = list(map(lambda x: x * total / reward_sum, miners.values()))

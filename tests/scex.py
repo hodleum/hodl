@@ -1,8 +1,6 @@
-import sc_api as s
+from hodl import sc_api as s
 import json
-import block
-import cryptogr as cg
-from vpy.decorators import msg_handler
+from hodl import cryptogr as cg
 
 balances, bc, tc = {}, 0, 0
 start = True
@@ -15,7 +13,7 @@ def add_task(sender, task):
 
 def send(sender, money, to):
     if sender in balances.keys():
-        if balances[sender] > money and money > 0:
+        if balances[sender] > money > 0:
             balances[sender] -= money
             balances[to] += money
 
@@ -28,7 +26,7 @@ def sell(sender, money):
             write()
 
 
-@msg_handler
+@s.msg_handler
 def handle(sender, msg):
     if msg[0] == 'sell':
         sell(sender, msg[1])
@@ -39,14 +37,14 @@ def handle(sender, msg):
 
 
 balances['0'] = 0.2
-while True: # IF WHILE TRUE DETECTED, IT WILL BE USED AS MAIN TASK
+while True:   # IF WHILE TRUE DETECTED, IT WILL BE USED AS MAIN TASK
     if not start:
         if tc != len(s.bch[bc-1].txs):
             for tnx in s.bch[bc-1].txs[tc:len(s.bch[bc-1].txs)]:
                 if 'sc' + str(ind) in tnx.outs:
                     try:
                         balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
-                    except:
+                    except KeyError:
                         balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]
     if start:
         start = False
@@ -56,5 +54,5 @@ while True: # IF WHILE TRUE DETECTED, IT WILL BE USED AS MAIN TASK
                 if 'sc' + str(ind) in tnx.outs:
                     try:
                         balances[tnx.author] += tnx.outns[tnx.outs.index('sc' + str(ind))]
-                    except:
+                    except KeyError:
                         balances[tnx.author] = tnx.outns[tnx.outs.index('sc' + str(ind))]

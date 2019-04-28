@@ -1,6 +1,6 @@
 import unittest
-import block
-import cryptogr as cg
+from hodl import block
+from hodl import cryptogr as cg
 import json
 
 

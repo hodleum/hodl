@@ -14,6 +14,7 @@ class BlockFixer:
         self.sclen = sclen
         self.tnx_last_h = tnx_last_h
         self.sc_last_h = sc_last_h
+        self.h = None
         self.update_hash()
 
     @classmethod

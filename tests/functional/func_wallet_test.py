@@ -1,7 +1,6 @@
 import unittest
 import logging as log
 import json
-import os
 from hodl.block import mining
 from hodl import wallet
 

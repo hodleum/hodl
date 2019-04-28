@@ -1,6 +1,6 @@
 import json
 
-from block.sc.executors.wasm_ppci import rainywasm
+from hodl.block.sc.executors.wasm_ppci import rainywasm
 
 
 class WASMTask:

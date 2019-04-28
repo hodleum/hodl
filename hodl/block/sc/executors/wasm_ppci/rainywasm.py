@@ -13,7 +13,7 @@ class WasmProcess:
         self.prg = wasm.Module(prg)
         self.backend = backend
 
-    def run_script(self, params=[]) -> Process:
+    def run_script(self, params=tuple()) -> Process:
         loaded = wasm.instantiate(self.prg, pyimports, "python")
         thr = Process(target=loaded.exports.main, args=params)
         thr.run()

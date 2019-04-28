@@ -101,8 +101,7 @@ class Blockchain(BlockchainDB):
         money = 0
         for tnx in self.tnxiter(maxn=at):  # every tnx in every block
             outs, outns = rm_dubl_from_outs(tnx.outs, tnx.outns)
-            l = zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns)))
-            for w, n, j in l:
+            for w, n, j in zip([self.pubkey_by_nick(o) for o in outs], outns, range(len(outns))):
                 if (w == wallet or w == self.pubkey_by_nick(wallet)) and not tnx.spent(self)[j] \
                         and 'mining' not in tnx.outs:
                     money += n
