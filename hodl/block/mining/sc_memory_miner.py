@@ -51,7 +51,7 @@ class PoKMiner:
             return
         # todo: do nothing if this SC doesn't needs PoK miners or if no space left
         b = bch[scind[0]]
-        b.contracts[scind[1]].memory.peers.append(self.addr)
+        b.txs[scind[1]].sc.memory.peers.append(self.addr)
         bch[scind[0]] = b
         self.mining_scs.append(scind)
         self.add_sc(scind)
@@ -83,7 +83,7 @@ class PoKMiner:
         :param bch: Blockchain
         :type bch: block.Blockchain
         """
-        sc = bch[scind[0]].contracts[scind[1]]
+        sc = bch[scind].sc
         part = None
         for i, part in enumerate(sc.memory.accepts):
             if self.addr in part.keys():
@@ -129,8 +129,9 @@ class PoKMiner:
         def become_peer_loop():
             while True:
                 for i in range(len(bch)):
-                    for j in range(len(bch[i].contracts)):
-                        self.become_peer(bch, [i, j])
+                    for j in range(len(bch[i].txs)):
+                        if bch[i, j].sc:
+                            self.become_peer(bch, [i, j])
 
         def threads():
             Thread(target=mining, name='PoK discovering').start()

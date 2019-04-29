@@ -57,7 +57,7 @@ class BlockchainDB:
                            [step, len(self)][item.stop is not None]):
                 blocks.append(self[i])
             return blocks
-        elif type(item) == tuple:
+        elif type(item) == tuple or type(item) == list:
             return self[item[0]].txs[item[1]]
         if item < 0:
             item += len(self)

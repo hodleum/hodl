@@ -23,7 +23,6 @@ class SCMemory:
         """
         Distribute memory between miners
         """
-        log.info(f'distributing peers for {self.scind}')
         self.peers.sort()
         mem_len = len(self)
         peers_len = len(self.peers)

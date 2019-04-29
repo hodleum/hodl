@@ -24,7 +24,8 @@ with open('tests/keys', 'r') as f:
 
 
 def main(name):
-    log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s', stream=sys.stdout)
+    log.basicConfig(level=log.DEBUG, format=name + ':%(asctime)s:%(module)s:%(lineno)d:%(message)s', stream=sys.stdout,
+                    datefmt='%H:%M:%S')
     # start tester thread (for example for Alice, Bob etc.)
     if name == 'Alice':
         wallet.bch.clear()
